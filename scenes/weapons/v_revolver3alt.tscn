@@ -1,0 +1,293 @@
+[gd_scene load_steps=14 format=3 uid="uid://daq4fl5xcrbck"]
+
+[ext_resource type="PackedScene" uid="uid://dg1cauit38i80" path="res://assets/player/v_revolver.gltf" id="1_8hkww"]
+[ext_resource type="Shader" uid="uid://d2fgnj7k78og" path="res://assets/player/player/textures/viewmodel.gdshader" id="2_8hkww"]
+[ext_resource type="Material" uid="uid://dpsb8b4ts8xg5" path="res://assets/player/ss_player_viewmodel.tres" id="3_8hkww"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_flr7f"]
+render_priority = 0
+shader = ExtResource("2_8hkww")
+shader_parameter/albedo = Color(0, 0, 0, 1)
+shader_parameter/point_size = 0.0
+shader_parameter/roughness = 0.0
+shader_parameter/metallic_texture_channel = Vector4(0, 0, 0, 0)
+shader_parameter/specular = 0.0
+shader_parameter/metallic = 0.0
+shader_parameter/emission = Color(0, 0, 0, 1)
+shader_parameter/emission_energy = 0.0
+shader_parameter/normal_scale = 0.0
+shader_parameter/ao_texture_channel = Vector4(0, 0, 0, 0)
+shader_parameter/ao_light_affect = 0.0
+shader_parameter/uv1_scale = Vector3(0, 0, 0)
+shader_parameter/uv1_offset = Vector3(0, 0, 0)
+shader_parameter/uv2_scale = Vector3(0, 0, 0)
+shader_parameter/uv2_offset = Vector3(0, 0, 0)
+shader_parameter/FOV = 75.0
+
+[sub_resource type="Animation" id="Animation_3bla4"]
+length = 0.001
+tracks/0/type = "position_3d"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("gunframe_001")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = PackedFloat32Array(0, 1, -8.7863, -1.09293, -2.2493)
+tracks/1/type = "rotation_3d"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("hand_template_001")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = PackedFloat32Array(0, 1, -0.191341, -0.687064, 0.46194, 0.527203)
+
+[sub_resource type="Animation" id="Animation_ml67m"]
+resource_name = "bigshot"
+tracks/0/type = "position_3d"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("gunframe_001")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = PackedFloat32Array(0, 1, -8.7863, -1.09293, -2.2493, 0.0333333, 1, -7.45904, -0.489594, -2.2493, 0.1, 1, -7.94985, 0.644874, -2.2493, 0.83324, 1, -8.7863, -1.09293, -2.2493)
+tracks/1/type = "rotation_3d"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("gunframe_001")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = PackedFloat32Array(0, 1, 0, 0, 0, 1, 0.0333333, 1, 0, 0, -0.0771491, 0.99702, 0.10217, 1, 0, 0, -0.225311, 0.974287, 0.83324, 1, 0, 0, 0, 1)
+tracks/2/type = "position_3d"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("hand_template_001")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = PackedFloat32Array(0, 1, -8.09702, -1.57814, -2.11364, 0.0333333, 1, -6.86394, -1.0512, -2.11364, 0.0978301, 1, -7.54409, -0.0933211, -2.11364, 0.83324, 1, -8.09702, -1.57814, -2.11364)
+tracks/3/type = "rotation_3d"
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/path = NodePath("hand_template_001")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/keys = PackedFloat32Array(0, 1, -0.191341, -0.687064, 0.46194, 0.527203, 0.0333333, 1, -0.2449, -0.669845, 0.418949, 0.561973, 0.1, 1, -0.341224, -0.626286, 0.331277, 0.617727, 0.83324, 1, -0.191341, -0.687064, 0.46194, 0.527203)
+
+[sub_resource type="Animation" id="Animation_4fo7l"]
+resource_name = "fire"
+tracks/0/type = "position_3d"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("gunframe_001")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = PackedFloat32Array(0, 1, -8.7863, -1.09293, -2.2493, 0.0195291, 1, -8.72694, -1.0253, -2.2493, 0.83324, 1, -8.7863, -1.09293, -2.2493)
+tracks/1/type = "rotation_3d"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("gunframe_001")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = PackedFloat32Array(0, 1, 0, 0, 0, 1, 0.0184441, 1, 0, 0, -0.10675, 0.994286, 0.83324, 1, 0, 0, 0, 1)
+tracks/2/type = "position_3d"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("hand_template_001")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = PackedFloat32Array(0, 1, -8.09702, -1.57814, -2.11364, 0.0195291, 1, -8.15637, -1.64577, -2.11364, 0.83324, 1, -8.09702, -1.57814, -2.11364)
+tracks/3/type = "rotation_3d"
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/path = NodePath("hand_template_001")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/keys = PackedFloat32Array(0, 1, -0.191341, -0.687064, 0.46194, 0.527203, 0.0184441, 1, -0.263592, -0.662712, 0.403021, 0.573503, 0.83324, 1, -0.191341, -0.687064, 0.46194, 0.527203)
+
+[sub_resource type="Animation" id="Animation_v6bd1"]
+resource_name = "new_animation"
+tracks/0/type = "position_3d"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("gunframe_001")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = PackedFloat32Array(0, 1, -8.7863, -1.09293, -2.2493)
+tracks/1/type = "rotation_3d"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("gunframe_001")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = PackedFloat32Array(0, 1, 0, 0, 0, 1)
+tracks/2/type = "position_3d"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("hand_template_001")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = PackedFloat32Array(0, 1, -8.09702, -1.57814, -2.11364)
+tracks/3/type = "rotation_3d"
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/path = NodePath("hand_template_001")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/keys = PackedFloat32Array(0, 1, -0.191341, -0.687064, 0.46194, 0.527203)
+
+[sub_resource type="Animation" id="Animation_flr7f"]
+resource_name = "idle_1"
+length = 5.0335
+loop_mode = 1
+tracks/0/type = "position_3d"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("gunframe_001")
+tracks/0/interp = 2
+tracks/0/loop_wrap = true
+tracks/0/keys = PackedFloat32Array(0, 1, -8.7863, -1.09293, -2.2493, 2.76667, 1, -8.7863, -1.05754, -2.2493, 5, 1, -8.7863, -1.09293, -2.2493)
+tracks/1/type = "rotation_3d"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("gunframe_001")
+tracks/1/interp = 2
+tracks/1/loop_wrap = true
+tracks/1/keys = PackedFloat32Array(0, 1, 0, 0, 0, 1, 2.76667, 1, 0, 0, 0, 1, 5, 1, 0, 0, 0, 1)
+tracks/2/type = "position_3d"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("hand_template_001")
+tracks/2/interp = 2
+tracks/2/loop_wrap = true
+tracks/2/keys = PackedFloat32Array(0, 1, -8.09702, -1.57814, -2.11364, 2.76667, 1, -8.09702, -1.54275, -2.11364, 5, 1, -8.09702, -1.57814, -2.11364)
+tracks/3/type = "rotation_3d"
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/path = NodePath("hand_template_001")
+tracks/3/interp = 2
+tracks/3/loop_wrap = true
+tracks/3/keys = PackedFloat32Array(0, 1, -0.191341, -0.687064, 0.46194, 0.527203, 2.76667, 1, -0.191341, -0.687064, 0.46194, 0.527203, 5, 1, -0.191341, -0.687064, 0.46194, 0.527203)
+
+[sub_resource type="Animation" id="Animation_wghwt"]
+resource_name = "reload_end"
+length = 0.4675
+tracks/0/type = "position_3d"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("gunframe_001")
+tracks/0/interp = 2
+tracks/0/loop_wrap = true
+tracks/0/keys = PackedFloat32Array(0, 1, -8.44824, -3.85793, -0.718922, 0.0333333, 1, -8.6518, -2.193, -1.64043, 0.1, 1, -8.6895, -1.86292, -2.09484, 0.166667, 1, -8.67987, -1.77683, -4.20408, 0.466667, 1, -8.7863, -1.09293, -2.2493)
+tracks/1/type = "rotation_3d"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("gunframe_001")
+tracks/1/interp = 2
+tracks/1/loop_wrap = true
+tracks/1/keys = PackedFloat32Array(0, 1, 0.417251, 0.386398, 0.293741, 0.768319, 0.0333333, 1, 0.177861, 0.164709, 0.125212, 0.962059, 0.1, 1, 0.0757163, 0.0885493, 0.0970286, 0.988439, 0.166667, 1, -0.313114, -0.136947, 0.142562, 0.928914, 0.466667, 1, 0, 0, 0, 1)
+tracks/2/type = "position_3d"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("hand_template_001")
+tracks/2/interp = 2
+tracks/2/loop_wrap = true
+tracks/2/keys = PackedFloat32Array(0, 1, -7.90737, -3.61327, -1.33255, 0.0333333, 1, -8.02157, -2.38782, -1.80288, 0.1, 1, -8.05057, -2.1112, -2.10643, 0.166667, 1, -8.10472, -1.79226, -3.72643, 0.466667, 1, -8.09702, -1.57814, -2.11364)
+tracks/3/type = "rotation_3d"
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/path = NodePath("hand_template_001")
+tracks/3/interp = 2
+tracks/3/loop_wrap = true
+tracks/3/keys = PackedFloat32Array(0, 1, 0.453277, -0.573124, 0.297034, 0.614687, 0.0333333, 1, 0.0718019, -0.680281, 0.41974, 0.596558, 0.1, 1, -0.0416417, -0.685979, 0.472674, 0.551613, 0.166667, 1, -0.308126, -0.59306, 0.693187, 0.269869, 0.466667, 1, -0.191341, -0.687064, 0.46194, 0.527203)
+
+[sub_resource type="Animation" id="Animation_37jab"]
+resource_name = "reload_loop"
+length = 0.107
+tracks/0/type = "position_3d"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("gunframe_001")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = PackedFloat32Array(0, 1, -8.44824, -3.85793, -0.718922, 0.0666667, 1, -8.43357, -3.28469, -1.50041)
+tracks/1/type = "rotation_3d"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("gunframe_001")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = PackedFloat32Array(0, 1, 0.417251, 0.386398, 0.293741, 0.768319, 0.0666667, 1, 0.417251, 0.386398, 0.293741, 0.768319)
+tracks/2/type = "position_3d"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("hand_template_001")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = PackedFloat32Array(0, 1, -7.90737, -3.61327, -1.33255, 0.0666667, 1, -7.89271, -3.04002, -2.11404)
+tracks/3/type = "rotation_3d"
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/path = NodePath("hand_template_001")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/keys = PackedFloat32Array(0, 1, 0.453277, -0.573124, 0.297034, 0.614687, 0.0666667, 1, 0.453277, -0.573124, 0.297034, 0.614687)
+
+[sub_resource type="Animation" id="Animation_4jjj2"]
+resource_name = "reload_start"
+length = 0.107
+tracks/0/type = "position_3d"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("gunframe_001")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = PackedFloat32Array(0, 1, -8.7863, -1.09293, -2.2493, 0.1, 1, -8.44824, -3.85793, -0.718922)
+tracks/1/type = "rotation_3d"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("gunframe_001")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = PackedFloat32Array(0, 1, 0, 0, 0, 1, 0.1, 1, 0.417251, 0.386398, 0.293741, 0.768319)
+tracks/2/type = "position_3d"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("hand_template_001")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = PackedFloat32Array(0, 1, -8.09702, -1.57814, -2.11364, 0.1, 1, -7.90737, -3.61327, -1.33255)
+tracks/3/type = "rotation_3d"
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/path = NodePath("hand_template_001")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/keys = PackedFloat32Array(0, 1, -0.191341, -0.687064, 0.46194, 0.527203, 0.1, 1, 0.453277, -0.573124, 0.297034, 0.614687)
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_3tn5v"]
+_data = {
+&"RESET": SubResource("Animation_3bla4"),
+&"bigshot": SubResource("Animation_ml67m"),
+&"fire": SubResource("Animation_4fo7l"),
+&"idle": SubResource("Animation_v6bd1"),
+&"idle_1": SubResource("Animation_flr7f"),
+&"reload_end": SubResource("Animation_wghwt"),
+&"reload_loop": SubResource("Animation_37jab"),
+&"reload_start": SubResource("Animation_4jjj2")
+}
+
+[node name="v_revolver" instance=ExtResource("1_8hkww")]
+
+[node name="gunframe_001" parent="." index="0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.7863, -1.09293, -2.2493)
+surface_material_override/0 = SubResource("ShaderMaterial_flr7f")
+
+[node name="hand_template_001" parent="." index="1"]
+transform = Transform3D(-0.370891, -0.224145, -0.90122, 0.749999, 0.5, -0.433014, 0.547668, -0.836516, -0.0173368, -8.09702, -1.57814, -2.11364)
+surface_material_override/0 = ExtResource("3_8hkww")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." index="2"]
+reset_on_save = false
+libraries = {
+&"": SubResource("AnimationLibrary_3tn5v")
+}
+autoplay = "idle_1"

@@ -1,0 +1,40 @@
+[gd_resource type="Environment" load_steps=6 format=3 uid="uid://gbe5rp2uqy22"]
+
+[sub_resource type="Gradient" id="Gradient_rcoch"]
+offsets = PackedFloat32Array(0, 0.00411523, 1)
+colors = PackedColorArray(0, 0, 0, 1, 0.131687, 0.131687, 0.131687, 1, 1, 1, 1, 1)
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_oiwga"]
+noise_type = 0
+frequency = 0.0046
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_4b02c"]
+in_3d_space = true
+seamless = true
+seamless_blend_skirt = 0.415
+color_ramp = SubResource("Gradient_rcoch")
+noise = SubResource("FastNoiseLite_oiwga")
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_8pcla"]
+sky_top_color = Color(0.361649, 0.434206, 0.535156, 1)
+sky_cover = SubResource("NoiseTexture2D_4b02c")
+sky_cover_modulate = Color(0.890625, 0.890625, 0.890625, 1)
+ground_bottom_color = Color(0.090251, 0.11034, 0.125, 1)
+
+[sub_resource type="Sky" id="Sky_tctsc"]
+sky_material = SubResource("ProceduralSkyMaterial_8pcla")
+
+[resource]
+background_mode = 2
+background_color = Color(0.212054, 0.256575, 0.289063, 1)
+sky = SubResource("Sky_tctsc")
+ambient_light_source = 3
+tonemap_mode = 3
+tonemap_exposure = 0.2
+volumetric_fog_enabled = true
+volumetric_fog_density = 0.0044
+volumetric_fog_emission = Color(0.590515, 0.635644, 0.671875, 1)
+volumetric_fog_ambient_inject = 0.85
+volumetric_fog_sky_affect = 0.607
+adjustment_brightness = 1.2
+adjustment_contrast = 1.3

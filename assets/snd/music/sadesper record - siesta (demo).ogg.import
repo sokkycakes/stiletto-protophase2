@@ -1,0 +1,19 @@
+[remap]
+
+importer="oggvorbisstr"
+type="AudioStreamOggVorbis"
+uid="uid://j67yj1ql4xnn"
+path="res://.godot/imported/sadesper record - siesta (demo).ogg-14123961ce12329629e6bdcda879dbcb.oggvorbisstr"
+
+[deps]
+
+source_file="res://assets/snd/music/sadesper record - siesta (demo).ogg"
+dest_files=["res://.godot/imported/sadesper record - siesta (demo).ogg-14123961ce12329629e6bdcda879dbcb.oggvorbisstr"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

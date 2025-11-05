@@ -1,0 +1,310 @@
+# Cursor Rules for Stiletto Proto - Godot Project
+
+## Core Principles
+
+### SOLID Principles (MANDATORY)
+- **Single Responsibility**: Each class/script should have one clear purpose
+- **Open/Closed**: Open for extension, closed for modification
+- **Liskov Substitution**: Derived classes must be substitutable for their base classes
+- **Interface Segregation**: Create focused interfaces rather than monolithic ones
+- **Dependency Inversion**: Depend on abstractions, not concrete implementations
+
+### DRY (Don't Repeat Yourself)
+- Extract common functionality into reusable components
+- Use composition over inheritance
+- Create utility functions for repeated patterns
+- Leverage Godot's resource system for shared data
+
+### Modular & Composition-Based Architecture
+- Build systems as composable components
+- Use dependency injection patterns
+- Create interfaces/abstract classes for flexibility
+- Design for easy replacement and extension
+
+## Godot-Specific Architecture Rules
+
+### 1. Scene Structure & Organization
+```
+- Use clear, descriptive scene names
+- Organize scenes hierarchically by feature
+- Keep scenes focused and single-purpose
+- Use autoloads sparingly and only for truly global systems
+- Prefer composition over deep inheritance trees
+```
+
+### 2. Script Organization
+```
+- One script per scene (unless composition requires multiple)
+- Use descriptive class names that indicate purpose
+- Group related functionality into separate scripts
+- Create base classes for common patterns
+- Use interfaces for flexible component communication
+```
+
+### 3. Resource Management
+```
+- Create custom resources for complex data structures
+- Use ResourceLoader for dynamic loading
+- Implement proper resource cleanup
+- Leverage Godot's resource system for configuration
+- Create resource-based component systems
+```
+
+### 4. Component-Based Design
+```
+- Break complex systems into focused components
+- Use composition to build complex behaviors
+- Create interfaces for component communication
+- Design components to be easily swapped/replaced
+- Use signals for loose coupling between components
+```
+
+## Code Quality Standards
+
+### 1. Naming Conventions
+```
+- Classes: PascalCase (e.g., PlayerController, EnemyAI)
+- Functions: snake_case (e.g., move_player, calculate_damage)
+- Variables: snake_case (e.g., player_health, enemy_speed)
+- Constants: UPPER_SNAKE_CASE (e.g., MAX_HEALTH, DEFAULT_SPEED)
+- Signals: snake_case with descriptive names (e.g., player_died, enemy_spotted)
+```
+
+### 2. Function Design
+```
+- Keep functions small and focused (max 20-30 lines)
+- Use descriptive parameter names
+- Return early to reduce nesting
+- Use type hints for clarity
+- Document complex functions with comments
+```
+
+### 3. Error Handling
+```
+- Use proper error handling patterns
+- Validate inputs at function boundaries
+- Use Godot's built-in error handling
+- Provide meaningful error messages
+- Handle edge cases gracefully
+```
+
+## System-Specific Guidelines
+
+### 1. AI Systems (NextBot, Knight AI)
+```
+- Separate AI logic into distinct components
+- Use state machines for complex behaviors
+- Create reusable action classes
+- Implement interfaces for different AI types
+- Use composition for behavior mixing
+- Design for easy behavior modification
+```
+
+### 2. Player Systems
+```
+- Separate input handling from game logic
+- Use component-based player architecture
+- Create modular weapon/ability systems
+- Implement proper state management
+- Design for easy feature addition/removal
+```
+
+### 3. Multiplayer Systems
+```
+- Separate network logic from game logic
+- Use proper synchronization patterns
+- Implement client-side prediction
+- Create robust error handling for network issues
+- Design for scalability and performance
+```
+
+### 4. UI Systems
+```
+- Create reusable UI components
+- Separate UI logic from game logic
+- Use proper signal communication
+- Implement responsive design patterns
+- Create modular UI systems
+```
+
+## Performance & Optimization
+
+### 1. Memory Management
+```
+- Use object pooling for frequently created/destroyed objects
+- Implement proper cleanup in _exit_tree()
+- Avoid memory leaks in long-running systems
+- Use weak references when appropriate
+- Monitor memory usage in performance-critical systems
+```
+
+### 2. Performance Patterns
+```
+- Use batch processing for similar operations
+- Implement spatial partitioning for large worlds
+- Use LOD systems for complex geometry
+- Optimize update loops for performance
+- Profile and optimize bottlenecks
+```
+
+## Testing & Debugging
+
+### 1. Code Organization for Testing
+```
+- Design systems to be easily testable
+- Use dependency injection for testability
+- Create mock objects for testing
+- Separate business logic from engine dependencies
+- Write self-documenting code
+```
+
+### 2. Debugging Support
+```
+- Add comprehensive logging
+- Create debug visualization tools
+- Implement proper error reporting
+- Use Godot's built-in debugging features
+- Create debug modes for development
+```
+
+## Documentation Standards
+
+### 1. Code Documentation
+```
+- Document public interfaces
+- Explain complex algorithms
+- Use clear, concise comments
+- Document assumptions and constraints
+- Keep documentation up to date
+```
+
+### 2. Architecture Documentation
+```
+- Document system interactions
+- Explain design decisions
+- Create component diagrams
+- Document data flow patterns
+- Maintain system overviews
+```
+
+## Specific Implementation Patterns
+
+### 1. Component Pattern
+```gdscript
+# Example: Reusable component system
+class_name HealthComponent
+extends Node
+
+signal health_changed(new_health, max_health)
+signal died
+
+@export var max_health: float = 100.0
+var current_health: float
+
+func take_damage(amount: float) -> void:
+    current_health = max(0, current_health - amount)
+    health_changed.emit(current_health, max_health)
+    if current_health <= 0:
+        died.emit()
+```
+
+### 2. State Machine Pattern
+```gdscript
+# Example: Flexible state machine
+class_name StateMachine
+extends Node
+
+var current_state: State
+var states: Dictionary = {}
+
+func change_state(new_state: State) -> void:
+    if current_state:
+        current_state.exit()
+    current_state = new_state
+    if current_state:
+        current_state.enter()
+```
+
+### 3. Event System Pattern
+```gdscript
+# Example: Event-driven communication
+class_name EventBus
+extends Node
+
+signal player_died
+signal enemy_spotted(enemy)
+signal level_completed
+
+# Use signals for loose coupling between systems
+```
+
+## Migration & Refactoring Guidelines
+
+### 1. When Refactoring
+```
+- Maintain backward compatibility when possible
+- Use feature flags for gradual rollouts
+- Create migration paths for existing data
+- Test thoroughly before deployment
+- Document breaking changes
+```
+
+### 2. Adding New Features
+```
+- Design for extensibility from the start
+- Use interfaces for future flexibility
+- Consider impact on existing systems
+- Plan for backward compatibility
+- Document new patterns and conventions
+```
+
+## Quality Assurance
+
+### 1. Code Review Checklist
+- [ ] Follows SOLID principles
+- [ ] No code duplication (DRY)
+- [ ] Proper error handling
+- [ ] Clear naming conventions
+- [ ] Appropriate documentation
+- [ ] Performance considerations
+- [ ] Testability maintained
+- [ ] Modular design
+
+### 2. Architecture Review
+- [ ] Component boundaries are clear
+- [ ] Dependencies are properly managed
+- [ ] Interfaces are well-defined
+- [ ] System interactions are documented
+- [ ] Performance implications considered
+- [ ] Scalability maintained
+
+## Godot-Specific Best Practices
+
+### 1. Scene Design
+```
+- Keep scenes focused and single-purpose
+- Use proper node hierarchy
+- Leverage Godot's built-in systems
+- Create reusable scene templates
+- Use proper signal connections
+```
+
+### 2. Resource Management
+```
+- Use custom resources for complex data
+- Implement proper resource loading
+- Use ResourceLoader for dynamic content
+- Create resource-based configuration
+- Leverage Godot's resource system
+```
+
+### 3. Performance Optimization
+```
+- Use object pooling for frequent operations
+- Implement proper cleanup
+- Use spatial partitioning for large worlds
+- Optimize update loops
+- Profile performance bottlenecks
+```
+
+Remember: These rules are designed to create maintainable, flexible, and scalable code. Always prioritize clarity and maintainability over cleverness. When in doubt, choose the more explicit and readable approach. 

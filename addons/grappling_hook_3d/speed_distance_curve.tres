@@ -1,0 +1,6 @@
+[gd_resource type="Curve" load_steps=2 format=3 uid="uid://bqxv8yqxqxqxq"]
+
+[sub_resource type="Curve" id="Curve_1"]
+_data = [Vector2(0, 1), 0.0, 0.0, 0, 0, Vector2(0.5, 1.3), 0.0, 0.0, 0, 0, Vector2(1, 2), 0.0, 0.0, 0, 0]
+
+[resource] 

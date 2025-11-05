@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="MusicSet" load_steps=5 format=3 uid="uid://cie2sytjrslax"]
+
+[ext_resource type="Script" path="res://resource/scripts/music_set.gd" id="1_dhumc"]
+[ext_resource type="AudioStream" uid="uid://cwaw0ie8upmon" path="res://assets/snd/music/iletu_doomloop.ogg" id="1_g15cw"]
+[ext_resource type="AudioStream" uid="uid://cvlwljavxffvf" path="res://assets/snd/music/iletu_loop.ogg" id="2_414kq"]
+[ext_resource type="AudioStream" uid="uid://m83pnvr0fsxo" path="res://assets/snd/music/iletu_pregame.ogg" id="3_b36j1"]
+
+[resource]
+script = ExtResource("1_dhumc")
+set_name = "I Let U"
+pre_game_track = ExtResource("3_b36j1")
+normal_game_track = ExtResource("2_414kq")
+doom_track = ExtResource("1_g15cw")
+description = ""
+tags = Array[String]([])
+metadata/_custom_type_script = "uid://1s38a7u8tojr"

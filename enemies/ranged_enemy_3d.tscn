@@ -1,0 +1,85 @@
+[gd_scene load_steps=10 format=3]
+
+[ext_resource type="Script" path="res://enemies/ranged_enemy_3d.gd" id="1_script"]
+[ext_resource type="BehaviorTree" path="res://enemies/ai/trees/ranged_enemy_3d.tres" id="1_bt"]
+[ext_resource type="PackedScene" path="res://enemies/projectile_3d.tscn" id="2_projectile"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_1"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_body"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ranged"]
+albedo_color = Color(0.2, 0.2, 0.8, 1)
+emission_enabled = true
+emission = Color(0.1, 0.1, 0.3, 1)
+
+[sub_resource type="SphereMesh" id="SphereMesh_eye"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_eye"]
+albedo_color = Color(0, 0, 1, 1)
+emission_enabled = true
+emission = Color(0, 0, 0.5, 1)
+
+[sub_resource type="BlackboardPlan" id="BlackboardPlan_ranged"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_hurt"]
+size = Vector3(1.0, 2.0, 1.0)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_weapon"]
+top_radius = 0.05
+bottom_radius = 0.05
+height = 0.8
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_weapon"]
+albedo_color = Color(0.3, 0.3, 0.3, 1)
+
+[node name="RangedEnemy3D" type="CharacterBody3D" groups=["enemy"]]
+script = ExtResource("1_script")
+projectile_scene = ExtResource("2_projectile")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.0, 0)
+shape = SubResource("CapsuleShape3D_1")
+
+[node name="Model" type="Node3D" parent="."]
+
+[node name="Body" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(0.8, 0, 0, 0, 1.8, 0, 0, 0, 0.8, 0, 1.0, 0)
+mesh = SubResource("BoxMesh_body")
+surface_material_override/0 = SubResource("StandardMaterial3D_ranged")
+
+[node name="Eye" type="MeshInstance3D" parent="Model/Body"]
+transform = Transform3D(0.2, 0, 0, 0, 0.1, 0, 0, 0, 0.2, 0, 0.3, -0.7)
+mesh = SubResource("SphereMesh_eye")
+surface_material_override/0 = SubResource("StandardMaterial3D_eye")
+
+[node name="Weapon" type="MeshInstance3D" parent="Model/Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 0, -0.5)
+mesh = SubResource("CylinderMesh_weapon")
+surface_material_override/0 = SubResource("StandardMaterial3D_weapon")
+
+[node name="BTPlayer" type="BTPlayer" parent="."]
+behavior_tree = ExtResource("1_bt")
+blackboard_plan = SubResource("BlackboardPlan_ranged")
+
+[node name="NavigationAgent3D" type="NavigationAgent3D" parent="."]
+simplify_path = true
+debug_enabled = false
+
+[node name="Hurtbox" type="Area3D" parent="."]
+collision_layer = 2
+collision_mask = 0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Hurtbox"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.0, 0)
+shape = SubResource("BoxShape3D_hurt")
+
+[node name="ShootPoint" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 1.5, -0.5)
+
+[node name="DebugLabel" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.0, 0)
+billboard = 1
+text = "Ranged"
+font_size = 16
+outline_size = 4

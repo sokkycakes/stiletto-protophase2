@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://bq8x7y21aw3m4"]
+
+[ext_resource type="Script" uid="uid://dx0n51ne3j2q2" path="res://scenes/effects/bullet_trail.gd" id="1_bullet_trail"]
+
+[node name="BulletTrail" type="Node3D"]
+script = ExtResource("1_bullet_trail")
+trail_duration = 0.4

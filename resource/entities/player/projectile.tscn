@@ -1,0 +1,24 @@
+[gd_scene load_steps=5 format=3 uid="uid://btwgc82jallc3"]
+
+[ext_resource type="Script" uid="uid://ta0qmg8iquxy" path="res://resource/entities/player/projectile.gd" id="1_projectile"]
+[ext_resource type="Material" uid="uid://1nvrnylcajfg" path="res://addons/prototype_mini_bundle/M_prototype_red.tres" id="2_kf17x"]
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_bvrcp"]
+material = ExtResource("2_kf17x")
+top_radius = 0.152
+radial_segments = 4
+rings = 1
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_projectile"]
+radius = 0.15
+
+[node name="Projectile" type="Area3D"]
+script = ExtResource("1_projectile")
+speed = 100.0
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 0, 0)
+mesh = SubResource("CylinderMesh_bvrcp")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("SphereShape3D_projectile")

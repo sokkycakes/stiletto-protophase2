@@ -1,0 +1,17 @@
+[gd_scene load_steps=3 format=3 uid="uid://de84vgpedqvpn"]
+
+[ext_resource type="PackedScene" uid="uid://dg1cauit38i80" path="res://assets/player/v_revolver.gltf" id="1_dicut"]
+[ext_resource type="AudioStream" uid="uid://cc7vhwpy8si26" path="res://assets/player/sound/gunshot.wav" id="2_o3jji"]
+
+[node name="v_revolver2" instance=ExtResource("1_dicut")]
+
+[node name="gunframe_001" parent="." index="0"]
+transform = Transform3D(0.999302, -0.0340198, 0.0154197, 0.0316627, 0.990551, 0.133442, -0.0198137, -0.132861, 0.990936, -8.72039, -1.38843, -2.28092)
+
+[node name="hand_template_001" parent="." index="1"]
+transform = Transform3D(-0.573536, -0.283611, -0.768519, 0.552472, 0.558769, -0.618508, 0.604839, -0.779322, -0.163787, -7.99384, -1.7903, -2.08203)
+
+[node name="GunSound" type="AudioStreamPlayer" parent="." index="2"]
+stream = ExtResource("2_o3jji")
+volume_db = -6.0
+max_polyphony = 8

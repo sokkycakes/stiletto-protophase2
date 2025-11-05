@@ -1,0 +1,19 @@
+[remap]
+
+importer="oggvorbisstr"
+type="AudioStreamOggVorbis"
+uid="uid://dqtx87x1k3cry"
+path="res://.godot/imported/1-08 NANO RISK - Dayz.ogg-3c3c97f3063d676865fd098ef207f700.oggvorbisstr"
+
+[deps]
+
+source_file="res://assets/snd/music/1-08 NANO RISK - Dayz.ogg"
+dest_files=["res://.godot/imported/1-08 NANO RISK - Dayz.ogg-3c3c97f3063d676865fd098ef207f700.oggvorbisstr"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

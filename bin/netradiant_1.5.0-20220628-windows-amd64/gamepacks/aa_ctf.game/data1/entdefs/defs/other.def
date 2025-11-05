@@ -1,0 +1,39 @@
+/*QUAKED worldspawn (0 0 0) ?
+Every map should have only one worldspawn.
+
+"gravity"               800 is default gravity.
+"message"               Text to print during loading screen.
+"sky"                   Sky to render.
+"skyrotate"		Speed of rotation in degrees/second. Be sure to set skyaxis.
+"skyaxis"		Axis on which to rotate sky. Example value 0 0 1 would rotate on Z.
+
+These are options use during compile by qrad.
+
+"_sun"                  Defines the targetname of the light entity which will act as the sun.
+"_sun_ambient"          Amount of ambient lighting emitted by the sun.
+_sun_color"             RGB color value of the sun.
+_sun_light"             Amount of direct light emitted by the sun.
+*/
+
+
+/*QUAKED light (0 1 0) (-8 -8 -8) (8 8 8) LINEAR
+Lights pointed at a target will be spotlights.
+Linear checkbox gives linear fall off instead of inverse square.
+
+"_color"                Color of light, defined in RGB. Example: 1 0 0 would make the light red.
+"_cone"                 Default 10.
+"light"                 Amount of light.
+"radius"                Radius of spotlight (default 64).
+*/
+
+
+/*QUAKED path_corner (.5 .3 0) (-8 -8 -8) (8 8 8)
+Train path corners.
+
+"targetname"            Name of this target.
+"target"                Name of next path corner.
+"pathtarget"            Name of target to trigger
+"speed"                 Movement speed (100 default).
+"wait"                  Wait at this point before moving to next target.
+*/
+

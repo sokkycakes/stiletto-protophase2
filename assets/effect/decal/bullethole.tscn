@@ -1,0 +1,13 @@
+[gd_scene load_steps=2 format=3 uid="uid://b57y8dpeaq480"]
+
+[ext_resource type="Texture2D" uid="uid://x248i3vehcka" path="res://assets/effect/bullethole.png" id="1_hjhca"]
+
+[node name="Node3D" type="Decal"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0)
+size = Vector3(0.5, 0.5, 0.5)
+texture_albedo = ExtResource("1_hjhca")
+emission_energy = 1.58
+
+[node name="Decal" type="Decal" parent="."]
+size = Vector3(0.5, 0.5, 0.5)
+texture_albedo = ExtResource("1_hjhca")

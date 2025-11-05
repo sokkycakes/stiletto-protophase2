@@ -1,0 +1,14 @@
+/*QUAKED npc_deathray (0 0.5 0) (-16 -16 -16) (16 16 16)
+The deathray fires at players, except the person who triggers it.
+"angle"                 Sets the direction the deathray will face.
+
+-------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
+model="models/misc/deathray/deathray.iqm"
+*/
+
+/*QUAKED npc_piranha (0 0 1) (-16 -16 -16) (16 16 16)
+Flesh eating piranha.
+
+-------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
+model="models/misc/piranha/tris.iqm"  
+*/

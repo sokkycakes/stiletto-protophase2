@@ -1,0 +1,259 @@
+[gd_scene load_steps=13 format=3 uid="uid://dj43ni6cd6v1l"]
+
+[ext_resource type="AudioStream" uid="uid://cgxpsuuornpff" path="res://assets/snd/music/doyouknowwhereyourecomingfrominstrumental.wav" id="1_vam0v"]
+[ext_resource type="AudioStream" uid="uid://da4yrjk2hwqp8" path="res://assets/snd/ambient/sound_ambient_ambience_urban_rooftop_ambloop02.wav" id="2_5vl5d"]
+[ext_resource type="Script" uid="uid://cw71vo1m4dwjr" path="res://resource/scripts/respawn.gd" id="3_efg8r"]
+[ext_resource type="Material" uid="uid://7to3kb1tisdd" path="res://addons/prototype_mini_bundle/M_prototype_orange.tres" id="4_0mc4s"]
+[ext_resource type="Script" uid="uid://25igb7o58rns" path="res://scenes/world/portal.gd" id="5_efg8r"]
+[ext_resource type="PackedScene" uid="uid://ceh84ae048v4y" path="res://resource/entities/player/ss_player.tscn" id="5_loiwq"]
+[ext_resource type="Material" uid="uid://cmu4vfp7y5t6b" path="res://addons/prototype_mini_bundle/M_prototype_purple.tres" id="6_0mc4s"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_is2g0"]
+sky_horizon_color = Color(0.769531, 0.769531, 0.769531, 1)
+ground_bottom_color = Color(0.361649, 0.434206, 0.535156, 1)
+ground_horizon_color = Color(0.769531, 0.769531, 0.769531, 1)
+ground_curve = 0.15
+
+[sub_resource type="Sky" id="Sky_vnyv0"]
+sky_material = SubResource("ProceduralSkyMaterial_is2g0")
+
+[sub_resource type="Environment" id="Environment_uf28w"]
+background_mode = 2
+background_color = Color(0.582092, 0.706264, 0.796875, 1)
+sky = SubResource("Sky_vnyv0")
+ambient_light_source = 3
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_loiwq"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_uf28w"]
+
+[node name="Node3D2" type="Node3D"]
+
+[node name="env" type="Node" parent="."]
+
+[node name="lights" type="Node" parent="env"]
+
+[node name="bgm" type="AudioStreamPlayer" parent="env"]
+stream = ExtResource("1_vam0v")
+volume_db = -2.476
+mix_target = 2
+bus = &"bgm"
+
+[node name="env_ambience" type="AudioStreamPlayer" parent="env"]
+stream = ExtResource("2_5vl5d")
+volume_db = -9.705
+autoplay = true
+max_polyphony = 5
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="env"]
+environment = SubResource("Environment_uf28w")
+
+[node name="respawn" type="Node" parent="env"]
+script = ExtResource("3_efg8r")
+
+[node name="world_props" type="Node3D" parent="."]
+
+[node name="controls" type="Label3D" parent="world_props"]
+transform = Transform3D(3.5, 0, 0, 0, 3.5, 0, 0, 0, 3.5, -8, 1, -12)
+double_sided = false
+texture_filter = 5
+outline_modulate = Color(0, 0, 0, 0.414)
+text = "Controls:
+WASD - Movement
+Left Mouse - Grapple
+Right Mouse - Kickback
+Space - Jump
+Ctrl - Crouch"
+horizontal_alignment = 0
+
+[node name="controls2" type="Label3D" parent="world_props"]
+transform = Transform3D(-7.64949e-08, 0, -1.75, 0, 1.75, 0, 1.75, 0, -7.64949e-08, 9, 0, -9)
+double_sided = false
+texture_filter = 5
+outline_modulate = Color(0, 0, 0, 0.414)
+text = "Grapple Hop - press grapple to do a high speed jump in the direction you're looking.
+"
+horizontal_alignment = 0
+autowrap_mode = 2
+
+[node name="controls4" type="Label3D" parent="world_props"]
+transform = Transform3D(-7.64949e-08, 0, -1.75, 0, 1.75, 0, 1.75, 0, -7.64949e-08, 9, 0, -4.67029)
+double_sided = false
+texture_filter = 5
+outline_modulate = Color(0, 0, 0, 0.414)
+text = "Grapple Hook - hold grapple button to pull yourself to the surface you're aiming at continuously. range is limited"
+horizontal_alignment = 0
+autowrap_mode = 2
+
+[node name="controls5" type="Label3D" parent="world_props"]
+transform = Transform3D(-6.73155e-08, 0, -1.54, 0, 1.54, 0, 1.54, 0, -6.73155e-08, 9, 0, 0)
+double_sided = false
+texture_filter = 5
+outline_modulate = Color(0, 0, 0, 0.414)
+text = "Wall Cling - press against a wall with movement keys to slide slowly down the wall
+Wall Jump - press against a wall and jump to jump off. stop pressing against the wall as you press the jump key to jump backwards."
+horizontal_alignment = 0
+autowrap_mode = 2
+
+[node name="controls6" type="Label3D" parent="world_props"]
+transform = Transform3D(-6.88454e-08, 0, -1.575, 0, 1.575, 0, 1.575, 0, -6.88454e-08, 9, 0, 4)
+double_sided = false
+texture_filter = 5
+outline_modulate = Color(0, 0, 0, 0.414)
+text = "Kickback - Use your legs to kickback off of the ground for extra height. it works like a sort of high jump. doesn't work on walls. It will only work while on the ground."
+horizontal_alignment = 0
+autowrap_mode = 2
+
+[node name="controls7" type="Label3D" parent="world_props"]
+transform = Transform3D(-1.5299e-07, 0, -3.5, 0, 3.5, 0, 3.5, 0, -1.5299e-07, 9, 1, -10)
+visible = false
+double_sided = false
+texture_filter = 5
+outline_modulate = Color(0, 0, 0, 0.414)
+text = "Grapple Hop - press grapple without holding to do a high speed jump in the direction you're looking.
+Grapple Hook - pull yourself to the surface you're aiming at. range is limited
+Wall Cling - press against a wall with movement keys to slide slowly down the wall
+Wall Jump - press against a wall and jump to jump off. let go as you jump to jump backwards."
+horizontal_alignment = 0
+autowrap_mode = 2
+
+[node name="controls3" type="Label3D" parent="world_props"]
+transform = Transform3D(3.5, 0, 0, 0, 3.5, 0, 0, 0, 3.5, -12, -1, -16)
+visible = false
+double_sided = false
+texture_filter = 5
+outline_modulate = Color(0, 0, 0, 0.414)
+text = "Moves:
+Grapple Hop - press grapple without holding to do a high speed jump in the direction you're looking.
+Grapple Hook - pull yourself to the surface you're aiming at. range is limited
+Wall Cling - press against a wall with movement keys to slide slowly down the wall
+Wall Jump - press against a wall and jump to jump off. let go as you jump to jump backwards."
+horizontal_alignment = 0
+
+[node name="world" type="Node3D" parent="."]
+
+[node name="start" type="CSGBox3D" parent="world"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -2, 0)
+material_override = ExtResource("4_0mc4s")
+use_collision = true
+size = Vector3(17.4763, 0.241211, 18.9083)
+
+[node name="wall" type="CSGBox3D" parent="world"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15.2619, -1.12061, -41.0459)
+visible = false
+material_override = ExtResource("4_0mc4s")
+use_collision = true
+size = Vector3(8, 20, 101)
+
+[node name="wall2" type="CSGBox3D" parent="world"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14.7381, -1.12061, -19.5459)
+visible = false
+material_override = ExtResource("4_0mc4s")
+use_collision = true
+size = Vector3(8, 20, 58)
+
+[node name="wall3" type="CSGBox3D" parent="world"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -47.7382, -1.12061, -53.5459)
+visible = false
+material_override = ExtResource("4_0mc4s")
+use_collision = true
+size = Vector3(74, 20, 10)
+
+[node name="wall4" type="CSGBox3D" parent="world"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -36.2382, -1.12061, -95.5459)
+visible = false
+material_override = ExtResource("4_0mc4s")
+use_collision = true
+size = Vector3(97, 20, 10)
+
+[node name="CSGBox3D2" type="CSGBox3D" parent="world"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -2, -10)
+use_collision = true
+size = Vector3(17.4763, 0.241211, 1.15286)
+
+[node name="portal" type="Area3D" parent="world"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0, -8)
+collision_layer = 2
+collision_mask = 2
+script = ExtResource("5_efg8r")
+target_scene = "res://maps/obby00.tscn"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="world/portal"]
+shape = SubResource("BoxShape3D_loiwq")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="world/portal/CollisionShape3D"]
+mesh = SubResource("BoxMesh_uf28w")
+surface_material_override/0 = ExtResource("6_0mc4s")
+
+[node name="Label3D" type="Label3D" parent="world/portal"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+text = "obby00"
+
+[node name="portal2" type="Area3D" parent="world"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, -8)
+collision_layer = 3
+collision_mask = 3
+script = ExtResource("5_efg8r")
+target_scene = "res://maps/sandbox-night.tscn"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="world/portal2"]
+shape = SubResource("BoxShape3D_loiwq")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="world/portal2/CollisionShape3D"]
+mesh = SubResource("BoxMesh_uf28w")
+surface_material_override/0 = ExtResource("6_0mc4s")
+
+[node name="Label3D" type="Label3D" parent="world/portal2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+text = "sandbox_night"
+
+[node name="portal3" type="Area3D" parent="world"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.113539, 0, -8)
+collision_layer = 3
+collision_mask = 3
+script = ExtResource("5_efg8r")
+target_scene = "res://maps/thebox.tscn"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="world/portal3"]
+shape = SubResource("BoxShape3D_loiwq")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="world/portal3/CollisionShape3D"]
+mesh = SubResource("BoxMesh_uf28w")
+surface_material_override/0 = ExtResource("6_0mc4s")
+
+[node name="Label3D" type="Label3D" parent="world/portal3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+text = "thebox"
+
+[node name="portal4" type="Area3D" parent="world"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.08883, 0, -8)
+collision_layer = 3
+collision_mask = 3
+script = ExtResource("5_efg8r")
+target_scene = "res://maps/belltower.tscn"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="world/portal4"]
+shape = SubResource("BoxShape3D_loiwq")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="world/portal4/CollisionShape3D"]
+mesh = SubResource("BoxMesh_uf28w")
+surface_material_override/0 = ExtResource("6_0mc4s")
+
+[node name="Label3D" type="Label3D" parent="world/portal4"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+text = "belltower"
+
+[node name="ss_player" parent="." instance=ExtResource("5_loiwq")]
+
+[node name="respawn hud" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 256.0
+offset_bottom = 40.0
+
+[node name="Label" type="Label" parent="respawn hud"]
+modulate = Color(1, 1, 1, 0.519)
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 23.0
+text = "Press Q to respawn."

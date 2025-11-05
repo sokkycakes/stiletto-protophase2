@@ -1,0 +1,71 @@
+[gd_resource type="BehaviorTree" load_steps=18 format=3 uid="uid://crbv24bu0lkiu"]
+
+[ext_resource type="Script" uid="uid://dkpcg6r6qbq50" path="res://enemies/ai/tasks/get_first_in_group_3d.gd" id="1_2jpsu"]
+[ext_resource type="Script" uid="uid://ecndq5eovtyj" path="res://enemies/ai/tasks/pursue_3d.gd" id="2_h5db5"]
+[ext_resource type="Script" uid="uid://rg6uvnf0u8uj" path="res://enemies/ai/tasks/face_target_3d.gd" id="3_bpmfp"]
+[ext_resource type="Script" uid="uid://qx2uw1484w8g" path="res://enemies/ai/tasks/in_range_3d.gd" id="4_k3g8t"]
+[ext_resource type="Script" uid="uid://bqnkcg5h01l02" path="res://enemies/ai/tasks/attack_melee_3d.gd" id="5_attack"]
+
+[sub_resource type="BlackboardPlan" id="BlackboardPlan_46tbn"]
+var/speed/name = &"speed"
+var/speed/type = 3
+var/speed/value = 5.0
+var/speed/hint = 1
+var/speed/hint_string = "1,20,0.5"
+
+[sub_resource type="BTRandomWait" id="BTRandomWait_aq1dm"]
+min_duration = 0.7
+max_duration = 1.5
+
+[sub_resource type="BTSequence" id="BTSequence_i7kx1"]
+custom_name = "Pause before action"
+children = [SubResource("BTRandomWait_aq1dm")]
+
+[sub_resource type="BTAction" id="BTAction_get_target"]
+script = ExtResource("1_2jpsu")
+group_name = &"player"
+output_var = &"target"
+
+[sub_resource type="BTAction" id="BTAction_pursue"]
+script = ExtResource("2_h5db5")
+target_var = &"target"
+speed_var = &"speed"
+approach_distance = 2.5
+
+[sub_resource type="BTSequence" id="BTSequence_pursue"]
+custom_name = "Pursue player"
+children = [SubResource("BTAction_pursue")]
+
+[sub_resource type="BTCondition" id="BTCondition_in_range"]
+script = ExtResource("4_k3g8t")
+target_var = &"target"
+range = 2.0
+
+[sub_resource type="BTAction" id="BTAction_face"]
+script = ExtResource("3_bpmfp")
+target_var = &"target"
+turn_speed = 5.0
+angle_tolerance = 0.1
+
+[sub_resource type="BTAction" id="BTAction_attack"]
+script = ExtResource("5_attack")
+target_var = &"target"
+attack_range = 2.0
+damage = 25.0
+
+[sub_resource type="BTSequence" id="BTSequence_attack"]
+custom_name = "Attack sequence"
+children = [SubResource("BTCondition_in_range"), SubResource("BTAction_face"), SubResource("BTAction_attack")]
+
+[sub_resource type="BTSelector" id="BTSelector_combat"]
+custom_name = "Combat behavior"
+children = [SubResource("BTSequence_pursue"), SubResource("BTSequence_attack")]
+
+[sub_resource type="BTSequence" id="BTSequence_main"]
+custom_name = "Main behavior"
+children = [SubResource("BTSequence_i7kx1"), SubResource("BTAction_get_target"), SubResource("BTSelector_combat")]
+
+[resource]
+description = "3D Melee Enemy - Simple aggressive melee combat AI that pursues the player and attacks when in range."
+blackboard_plan = SubResource("BlackboardPlan_46tbn")
+root_task = SubResource("BTSequence_main")

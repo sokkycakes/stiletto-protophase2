@@ -1,0 +1,6 @@
+[gd_resource type="Theme" load_steps=2 format=3 uid="uid://boncwem84d835"]
+
+[ext_resource type="FontFile" uid="uid://tuitm4lc211o" path="res://assets/IosevkaStiletto-Condensed.ttf" id="1_hv6am"]
+
+[resource]
+default_font = ExtResource("1_hv6am")

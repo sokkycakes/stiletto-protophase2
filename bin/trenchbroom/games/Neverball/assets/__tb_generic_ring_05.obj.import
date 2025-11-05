@@ -1,0 +1,25 @@
+[remap]
+
+importer="wavefront_obj"
+importer_version=1
+type="Mesh"
+uid="uid://dlx81ql54rnb4"
+path="res://.godot/imported/__tb_generic_ring_05.obj-2fefb563e10157faee7508ede0c17a3f.mesh"
+
+[deps]
+
+files=["res://.godot/imported/__tb_generic_ring_05.obj-2fefb563e10157faee7508ede0c17a3f.mesh"]
+
+source_file="res://bin/trenchbroom/games/Neverball/assets/__tb_generic_ring_05.obj"
+dest_files=["res://.godot/imported/__tb_generic_ring_05.obj-2fefb563e10157faee7508ede0c17a3f.mesh", "res://.godot/imported/__tb_generic_ring_05.obj-2fefb563e10157faee7508ede0c17a3f.mesh"]
+
+[params]
+
+generate_tangents=true
+generate_lods=true
+generate_shadow_mesh=true
+generate_lightmap_uv2=false
+generate_lightmap_uv2_texel_size=0.2
+scale_mesh=Vector3(1, 1, 1)
+offset_mesh=Vector3(0, 0, 0)
+force_disable_mesh_compression=false

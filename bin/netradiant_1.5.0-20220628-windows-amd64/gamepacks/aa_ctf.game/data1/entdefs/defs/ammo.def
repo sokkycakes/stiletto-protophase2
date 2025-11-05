@@ -1,0 +1,34 @@
+/*QUAKED ammo_shells (.3 .3 1) (-16 -16 -16) (16 16 16) 
+Smart Grenades (for Alien Smart Gun)
+-------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
+model="models/items/ammo/shells/medium/tris.iqm"
+*/
+
+
+/*QUAKED ammo_bullets (.3 .3 1) (-16 -16 -16) (16 16 16) 
+Bullets (for Chaingun)
+-------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
+model="models/items/ammo/bullets/medium/tris.iqm"
+*/
+
+
+/*QUAKED ammo_grenades (.3 .3 1) (-16 -16 -16) (16 16 16) 
+Napalm (for Flame Thrower)
+-------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
+model="models/items/ammo/grenades/medium/tris.iqm"
+*/
+
+
+/*QUAKED ammo_cells (.3 .3 1) (-16 -16 -16) (16 16 16) 
+Cells (for Alien Beamgun, Alien Disruptor)
+-------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
+model="models/items/ammo/cells/medium/tris.iqm"
+*/
+
+
+/*QUAKED ammo_rockets (.3 .3 1) (-16 -16 -16) (16 16 16) 
+Rockets (for Rocket Launcher)
+-------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
+model="models/items/ammo/rockets/medium/tris.iqm"
+*/
+

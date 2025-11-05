@@ -1,0 +1,58 @@
+[gd_scene load_steps=2 format=3 uid="uid://77jerkmxd765"]
+
+[ext_resource type="PackedScene" uid="uid://upoffslexyvo" path="res://scenes/ui/hp.tscn" id="1_hp"]
+
+[node name="HPTestScene" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="HP" parent="." instance=ExtResource("1_hp")]
+layout_mode = 0
+offset_left = 50.0
+offset_top = 50.0
+offset_right = 90.0
+offset_bottom = 90.0
+full_health_texture = null
+hurt_texture = null
+dead_texture = null
+
+[node name="TestButtons" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 50.0
+offset_top = -200.0
+offset_right = 250.0
+offset_bottom = -50.0
+grow_vertical = 0
+
+[node name="DamageButton" type="Button" parent="TestButtons"]
+layout_mode = 2
+text = "Take Damage"
+
+[node name="HealButton" type="Button" parent="TestButtons"]
+layout_mode = 2
+text = "Heal"
+
+[node name="DieButton" type="Button" parent="TestButtons"]
+layout_mode = 2
+text = "Die"
+
+[node name="ResurrectButton" type="Button" parent="TestButtons"]
+layout_mode = 2
+text = "Resurrect"
+
+[node name="ShakeButton" type="Button" parent="TestButtons"]
+layout_mode = 2
+text = "Test Shake"
+
+[connection signal="pressed" from="TestButtons/DamageButton" to="HP" method="test_take_damage"]
+[connection signal="pressed" from="TestButtons/HealButton" to="HP" method="test_heal"]
+[connection signal="pressed" from="TestButtons/DieButton" to="HP" method="test_die"]
+[connection signal="pressed" from="TestButtons/ResurrectButton" to="HP" method="test_resurrect"]
+[connection signal="pressed" from="TestButtons/ShakeButton" to="HP" method="trigger_shake"]

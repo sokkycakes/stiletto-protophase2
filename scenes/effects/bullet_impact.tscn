@@ -1,0 +1,35 @@
+[gd_scene load_steps=4 format=3 uid="uid://p262qaitjp3"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_hhq8o"]
+shading_mode = 0
+disable_ambient_light = true
+disable_fog = true
+
+[sub_resource type="BoxMesh" id="BoxMesh_tm812"]
+material = SubResource("StandardMaterial3D_hhq8o")
+size = Vector3(0.075, 1, 0.075)
+
+[sub_resource type="Curve" id="Curve_lq3bg"]
+_data = [Vector2(0.00896861, 1), 0.0, 1.4, 0, 0, Vector2(1, 0), 0.0, 0.0, 0, 0]
+point_count = 2
+
+[node name="bulletimpact" type="Node3D"]
+
+[node name="CPUParticles3D" type="CPUParticles3D" parent="."]
+transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -0.0125046, 0.0200434, -0.00693035)
+emitting = false
+amount = 4
+lifetime = 0.06
+one_shot = true
+speed_scale = 0.3
+explosiveness = 1.0
+use_fixed_seed = true
+seed = 2006919041
+mesh = SubResource("BoxMesh_tm812")
+particle_flag_align_y = true
+spread = 48.39
+initial_velocity_min = 10.0
+initial_velocity_max = 35.1
+angular_velocity_min = 4.35
+angular_velocity_max = 4.35
+scale_amount_curve = SubResource("Curve_lq3bg")

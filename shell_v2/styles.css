@@ -1,0 +1,82 @@
+/* ============================================
+   Stiletto Proto - Web Shell v2 Styles
+   ============================================ */
+
+/* === Base Styles === */
+html, body {
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+}
+
+/* === Application Container === */
+#app-container {
+	height: 100vh;
+}
+
+/* === Sidebar === */
+#sidebar {
+	min-width: 200px;
+	max-width: 200px;
+}
+
+/* === Main Content Area === */
+#main-content {
+	overflow-y: auto;
+}
+
+/* === View Management === */
+.view {
+	display: none;
+}
+
+.view.active {
+	display: block;
+}
+
+/* === Game Container === */
+#game-container {
+	background-color: #000;
+	z-index: 1000;
+}
+
+#canvas {
+	display: block;
+	width: 100%;
+	height: 100%;
+}
+
+#canvas:focus {
+	outline: none;
+}
+
+/* === Game Loading Overlay === */
+#game-loading {
+	background-color: rgba(0, 0, 0, 0.9);
+	z-index: 1001;
+}
+
+/* === Error Display === */
+#error-display {
+	background-color: rgba(0, 0, 0, 0.9);
+	z-index: 1002;
+}
+
+/* === Game Overlay === */
+#game-overlay {
+	z-index: 1001;
+}
+
+/* === Responsive Design === */
+@media (max-width: 768px) {
+	#sidebar {
+		min-width: 60px;
+		max-width: 60px;
+	}
+	
+	#sidebar .nav-link {
+		font-size: 0.875rem;
+		padding: 0.5rem;
+		text-align: center;
+	}
+}

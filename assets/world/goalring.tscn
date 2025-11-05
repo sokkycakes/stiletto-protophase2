@@ -1,0 +1,27 @@
+[gd_scene load_steps=5 format=3 uid="uid://cmtqngsmkib30"]
+
+[ext_resource type="FontFile" uid="uid://dhj8nspajgm8t" path="res://assets/Helvetica Black Regular.otf" id="1_7mrc0"]
+[ext_resource type="Material" uid="uid://b118c7ni4rn3l" path="res://assets/player/wireframe2.tres" id="2_21djd"]
+[ext_resource type="Script" path="res://assets/world/spin.gd" id="3_spin"]
+
+[sub_resource type="TorusMesh" id="TorusMesh_hgdp3"]
+material = ExtResource("2_21djd")
+inner_radius = 0.325
+outer_radius = 0.568
+rings = 8
+ring_segments = 4
+
+[node name="Node3D" type="Node3D"]
+
+[node name="Label3D" type="Label3D" parent="."]
+pixel_size = 0.007
+billboard = 1
+outline_modulate = Color(0, 0.415924, 0.902344, 1)
+text = "GOAL"
+font = ExtResource("1_7mrc0")
+outline_size = 16
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0)
+mesh = SubResource("TorusMesh_hgdp3")
+script = ExtResource("3_spin")

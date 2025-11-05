@@ -1,0 +1,233 @@
+<!DOCTYPE html PUBLIC "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>                    
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">                
+  <title>GtkRadiant and Star Trek Voyager : Elite Force</title>
+  <style TYPE="text/css">
+  <!--
+    a:link    { color: #9999FF ; text-decoration: none ; }
+    a:visited { color: #6666AA ; text-decoration: none ; }
+    a:hover   { color: #6666FF ; text-decoration: none ; }
+    h3        { color: #FFFFFF ; }
+    b         { color: #CCCCCC ; }
+    i         { color: #888888 ; font-size: 10pt ; }
+  //-->
+  </style>
+</head>
+
+<body bgcolor="#000000" text="#BBBBBB">
+
+<div align="center">
+<table cellpadding="0" cellspacing="0" border="0" style="border-collapse: collapse"><tr><td>
+  <div align="center">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr><td bgcolor="#003366" align="center">
+      <h3>GtkRadiant and Star Trek Voyager : Elite Force<br>Getting Started Guide</h3>
+    </td></tr>
+  </table>
+  </div>
+  
+  <p>
+    <b>Table of Contents</b>
+    <ol>
+    - <a href="#intro">
+      Introduction
+    </a><br>
+    - <a href="#games">
+      Multiple games support in GtkRadiant
+    </a><br>
+    - <a href="#project">
+      Project settings for STV:EF
+    </a><br>
+    - <a href="#monitor">
+      Compiling and running your maps
+    </a><br>
+    - <a href="#bspc">
+      BSPC, prepare the map for single player AI
+    </a><br>    
+    - <a href="#ICARUS">
+      ICARUS and advanced AI Scripting
+    </a><br>    
+    - <a href="#help">
+      Troubleshooting
+    </a><br>
+    </ol>
+  
+  <p>
+    <b><a name="intro">Introduction</a></b>
+    <p>
+    The purpose of this document is to highlight the parts of <b>GtkRadiant</b> which have changed
+    in the new version 1.2. We also discuss the basics of level editing for 
+    <b>Star Trek Voyager : Elite Force</b>. This is not the GtkRadiant manual, or a mapping howto though.
+    (those topics are covered in other help documents, and on websites).
+  
+  <p>
+    <b><a name="games">Multiple games support in GtkRadiant</a></b>
+    <p>
+    GtkRadiant supports level editing for multiple games through a central installation
+    and some game specific packages. In the case of <b>Star Trek Voyager : Elite 
+    Force</b> for instance,
+    the editor installs in <i>C:\Program Files\GtkRadiant</i> and puts the game package
+    in <i>C:\Program Files\Raven\Star Trek Voyager Elite Force\Radiant</i> (these are default
+    paths on win32, your mileage may vary).
+    </p>
+    
+    <p>
+    When you execute the editor from the Start Menu, it will look for installed game packages.
+    If only one game pack is present, then it will start loading for this game directly,
+    otherwise it will prompt you with the <b>general preferences</b> dialog, asking you
+    which game you want to edit for.
+    </p>
+    
+    <p>
+    &nbsp;
+    <div align="center">
+      <img src="game1.png" width="488" height="242">
+      <img src="game2.png" width="488" height="242">
+      <br>
+      <i>Game selection dialog</i>
+    </div>    
+    
+    <p>
+    The files describing which game packs are installed and where are in the 
+    <i>C:\Program Files\GtkRadiant\games</i> folder. They are created during setup to
+    match your particular settings.
+    </p>
+    
+  <p>
+    <b><a name="project">Project Settings for STV:EF</a></b>
+    <p>
+    Once you have selected <b>Star Trek Voyager : Elite Force</b>, the editor will continue
+    loading using STV:EF configuration. If it is the first run, it will create a default
+    project configuration for you. You can view and edit your project configuration from
+    the <b>Files > Project settings...</b> menu.
+    </p>
+    
+    <p>
+    <center>
+    <img src="project.png" width="576" height="440">
+    <br>
+    <i>Project settings dialog in STV:EF mode</i>
+    </center>
+    </p>
+    
+    <p>
+    The only thing you should have to modify in the project settings is the mapping mode
+    combo menu. Select the right configuration depending on whether you are doing single 
+    player maps or multiplayer maps. For instance this will change how 
+    <b>Star Trek Voyager : Elite Force</b> is executed after you compile a map.
+    </p>
+    
+    <p>
+    A bit more of information about the project files: those are .qe4 files in 
+    <i>C:\Program Files\Raven\Star Trek Voyager Elite Force\mainEf\scripts</i>. There is a very
+    particular file there, 
+    <i>quakev2.qe4</i> which Radiant uses to generate your actual project. You should 
+    never modify this file unless you know what you are doing. The project files that 
+    Radiant uses for everyday run are the <i>user*.qe4</i> files.
+    </p>
+  
+  <p>
+    <b><a name="monitor">Compiling and running your maps</a></b>
+    <p>
+    Any map (i.e. <i>.map</i> file) needs to be 'compiled' into a <i>.bsp</i> file in order to
+    be loaded into the engine. This is done by <b>q3map</b>, a compiling utility. <b>GtkRadiant</b>
+    provides two ways of compiling maps. It can be done non-interactively by generating a batch file,
+    or you can use the <i>monitored</i> mode. This is configured from the 
+    <b>Edit > Preferences...</b> menu, in the <b>BSP monitoring</b> tab.
+    </p>
+    
+    <p>
+    <center>
+    <img src="monitor.png" width="712" height="423">
+    <br>
+    <i>BSP monitoring preferences</i>
+    </center>
+    </p>
+    
+    <p>
+    When you run a monitored compilation, you can follow the progress of q3map in the editor console.
+    If the compilation fails because of errors in your map, you will be able to get a clean error message
+    and in some cases, a debug window will popup which will help you locate the problem.
+    You can also tell the editor to run the map in the engine when the compilation is done (with
+    some 3D board you may have to turn on "activate sleep mode" so that you have enough OpenGL resources
+    to run the engine)
+    </p>
+    
+    <p>
+    Also note that several sample maps (namely <i>voy1</i>, <i>_brig</i> and <i>
+    ctf_kln1</i>)
+    are provided in the setup. Those are a great source for learning.</p>
+  
+  <p>
+    <b><a name="bspc">BSPC, prepare the map for single player AI</a></b>
+  <p>
+    If you are doing a Multi-player map, and you want support&nbsp; for Bots in
+  the solo match area of Holomatch, you will need to build an .aas file,
+     so that the AI (Bots) know where to run. For instance, if you map is <i>foo.map</i>,
+    you will compile <i>foo.bsp</i> with <b>q3map</b>, and with <b>BSPC</b> you will have to produce
+    <i>foo.aas</i>. A batch file is provided to help the process
+    (BSPC compiling is not integrated into GtkRadiant at the moment) which you can find in
+    <i>C:\Program Files\Raven\Star Trek Voyager Elite Force\Radiant\makeaas.bat</i>.
+  Or download bspc-gui ( A graphic user interface that acts as a front end for
+    BSPC) from <a href="http://www.effiles.com">http://www.effiles.com</a>
+    </p>
+  <pre>@echo off
+setlocal
+
+rem Enable this next line to compile maps without debug info (put in a rem to enable debug info)
+rem set extraparms=-optimize
+
+bspc -threads 1 -ext _b0 -cfg aascfg_sm.c -bsp2aas ..\baseEf\maps\%1.bsp -output ..\baseEf\maps %extraparms%
+copy bspc.log temp_b0.log
+bspc -threads 1 -ext _b1 -cfg aascfg_lg.c -bsp2aas ..\baseEf\maps\%1.bsp -output ..\baseEf\maps %extraparms%
+copy bspc.log temp_b1.log</pre>
+  <p><b><font size="4">.arena,</font> Getting the map to show in the menu.</b>
+  </p>
+  <p>You will need a .arena file in the scripts folder. you can D/L
+  ArenaGen at <a href="http://www.effiles.com">http://www.effiles.com</a> or
+  open one to look at how they're made.
+    </p>
+
+  <p>
+    <b><a name="ICARUS">ICARUS and advanced AI Scripting</a></b>
+    <p>
+    An important part of the <b>Star Trek Voyager : Elite Force</b> was the single player scripted sequences. This is too 
+    broad a subject to embark upon here, and truly it is beyond the scope of 
+    this level editor HOWTO, but included in the <b>GTKRadiant</b> package is 
+    the ICARUS manual in .html format. Feel free to read it and to experiment 
+    with&nbsp; <b>BehavEd</b>, the level and AI scripting tool, which is also included in 
+    this distribution.</p>
+
+  <p>
+    <b><a name="help">Troubleshooting</a></b>
+    <p>
+    If the editor doesn't work correctly, make sure that your installation is not broken,
+    i.e. you have installed newer version above an older one, or you are trying to use
+    and editor binary with incompatible modules and tools (i.e. that came from other sources).    
+    </p>
+    <p>
+    Carefully examine the console of the editor for any error and warning messages. Some
+    important things are happening while the editor is starting, before the console is available,
+    this is why it is possible to have Radiant log everything to a radiant.log file (which
+    will be in <i>C:\Program Files\GtkRadiant\radiant.log</i>). You can turn logging on
+    from the preferences menu.
+    </p>
+    <p>
+    If that fails, see the links page that comes with GtkRadiant setup to find forums and help.
+    In the editor, the <b>Help</b> menu provides a number of useful shortcuts.
+    </p>
+  
+  <div align="center">
+  <table width="100%" cellpadding="1" cellspacing="0" border="0" height="14">
+    <tr><td bgcolor="#003366" align="right" height="12">
+      <i>Last updated: June 3, 2002 &nbsp;</i></td></tr>
+  </table>
+  </div>
+
+</tr></table>
+</div>
+
+
+</body>
+</html>

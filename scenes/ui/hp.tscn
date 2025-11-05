@@ -1,0 +1,49 @@
+[gd_scene load_steps=5 format=3 uid="uid://upoffslexyvo"]
+
+[ext_resource type="Texture2D" uid="uid://bkgy84xw2ho7m" path="res://assets/ui/hp_full.png" id="1_0s0cs"]
+[ext_resource type="Script" uid="uid://dqnjmjmclssvj" path="res://scenes/ui/hp.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://cvhge1u7ongl8" path="res://assets/ui/hp_hurt.png" id="2_hurt"]
+[ext_resource type="Texture2D" uid="uid://frd2chppjd5d" path="res://assets/ui/hp_dead.png" id="3_dead"]
+
+[node name="HP" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+scale = Vector2(0.660769, 0.660769)
+script = ExtResource("1_script")
+full_health_texture = ExtResource("1_0s0cs")
+hurt_texture = ExtResource("2_hurt")
+dead_texture = ExtResource("3_dead")
+
+[node name="shadow" type="TextureRect" parent="."]
+modulate = Color(0, 0, 0, 1)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -1.0
+offset_top = -2.0
+offset_right = -1.0
+offset_bottom = -2.0
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(0.78, 0.78)
+pivot_offset = Vector2(15.125, 15.465)
+texture = ExtResource("1_0s0cs")
+expand_mode = 2
+
+[node name="icon2" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 5.0
+offset_top = 4.0
+offset_right = 5.0
+offset_bottom = 4.0
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(0.63, 0.63)
+texture = ExtResource("1_0s0cs")
+expand_mode = 2

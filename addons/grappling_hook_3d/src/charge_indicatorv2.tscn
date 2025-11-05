@@ -1,0 +1,58 @@
+[gd_scene load_steps=3 format=3 uid="uid://7c8n402dhju"]
+
+[ext_resource type="Script" uid="uid://hdhqo1agrmi2" path="res://addons/grappling_hook_3d/src/charge_indicatorv2.gd" id="1_50u2t"]
+[ext_resource type="Texture2D" uid="uid://dnx2lsiobb1hn" path="res://addons/grappling_hook_3d/example/hook_not_availible.png" id="2_50u2t"]
+
+[node name="ChargeIndicator" type="Control"]
+layout_mode = 3
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -200.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = 60.0
+grow_horizontal = 0
+script = ExtResource("1_50u2t")
+
+[node name="Charge1" type="TextureRect" parent="."]
+custom_minimum_size = Vector2(40, 40)
+layout_mode = 2
+offset_left = -5.0
+offset_top = -9.0
+offset_right = 38.0
+offset_bottom = 34.0
+size_flags_horizontal = 3
+texture = ExtResource("2_50u2t")
+expand_mode = 4
+
+[node name="Charge2" type="TextureRect" parent="."]
+custom_minimum_size = Vector2(40, 40)
+layout_mode = 2
+offset_top = -1.5
+offset_right = 43.0
+offset_bottom = 41.5
+size_flags_horizontal = 3
+texture = ExtResource("2_50u2t")
+expand_mode = 4
+
+[node name="Charge3" type="TextureRect" parent="."]
+custom_minimum_size = Vector2(40, 40)
+layout_mode = 2
+offset_left = 8.0
+offset_top = 3.0
+offset_right = 51.0
+offset_bottom = 46.0
+size_flags_horizontal = 3
+texture = ExtResource("2_50u2t")
+expand_mode = 4
+
+[node name="PanelContainer" type="PanelContainer" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = -137.0
+grow_horizontal = 2
+grow_vertical = 2

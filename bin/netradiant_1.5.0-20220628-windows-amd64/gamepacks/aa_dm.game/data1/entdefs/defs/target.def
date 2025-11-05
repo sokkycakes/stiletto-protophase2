@@ -1,0 +1,32 @@
+/*QUAKED target_speaker (1 0 0) (-8 -8 -8) (8 8 8) looped-on looped-off reliable
+Normal sounds play each time the target is used.  The reliable flag can be set for crucial voiceovers.
+Looped sounds are always attenuation 3 / vol 1, targetting toggles sound on/off.
+Multiple identical looping sounds will just increase volume without any speed cost.
+
+"targetname"            A remote button or trigger activates the door.
+"noise"                 Sound file to play.
+"sounds"                0) No sound 1) Water 2) Lava.
+"attenuation"           -1) None, whole map. 1) Normal 2) Idle sound 3) Ambient.
+"volume"                0.0 to 1.0
+*/
+
+
+/*QUAKED target_laser (0 .5 .8) (-8 -8 -8) (8 8 8) START_ON nofunc nofunc Lightning Vaporbeam
+When triggered, fires a laser. Target an info_notnull for direction. 
+
+Notes: 
+The beam doesn't end at the info_notnull. Using lightning and vaporbeam causes strange 
+behaviour in brushes.
+*/
+
+
+/*QUAKED target_steam (0 .5 .8) (-8 -8 -8) (8 8 8)
+Emits steam.
+"angle"                 Sets the direction of the steam.
+*/
+
+
+/*QUAKED target_fire (1 0 0) (-8 -8 -8) (8 8 8) START_ON
+Emits fire.
+*/
+

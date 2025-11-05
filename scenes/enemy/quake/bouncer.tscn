@@ -1,0 +1,49 @@
+[gd_scene load_steps=6 format=3 uid="uid://cy38ipcwcbqdl"]
+
+[ext_resource type="Script" uid="uid://bug1r4itw1dx1" path="res://scripts/enemy/BouncerEnemy.gd" id="1_ngg00"]
+[ext_resource type="PackedScene" uid="uid://c3m85kqng4tcy" path="res://assets/enemy/bouncer_model.tscn" id="2_k10nd"]
+[ext_resource type="TextMesh" uid="uid://bbmyskg4tvck3" path="res://assets/effect/particles/aware_particlemesh.tres" id="4_pr7mm"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_1"]
+radius = 0.860201
+height = 3.06578
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_fhasb"]
+gravity = Vector3(0, 0, 0)
+
+[node name="Bouncer" type="CharacterBody3D" node_paths=PackedStringArray("aware_particles")]
+script = ExtResource("1_ngg00")
+run_speed = 12.0
+damage = 1
+launch_force = 30.0
+launch_angle = 24.0
+elevation_jump_threshold = 16.0
+max_jump_height = 16.0
+jump_forward_distance = 16.0
+player_path = NodePath("../ss_player/Body")
+aware_particles = NodePath("GPUParticles3D")
+debug_enabled = true
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.52211, 0)
+shape = SubResource("CapsuleShape3D_1")
+
+[node name="model" parent="." instance=ExtResource("2_k10nd")]
+transform = Transform3D(-0.415, 0, -3.62805e-08, 0, 0.415, 0, 3.62805e-08, 0, -0.415, 0, 0.113119, 0)
+
+[node name="NavigationAgent3D" type="NavigationAgent3D" parent="."]
+simplify_path = true
+debug_enabled = true
+
+[node name="GPUParticles3D" type="GPUParticles3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.52879, 0)
+emitting = false
+lifetime = 0.74
+one_shot = true
+process_material = SubResource("ParticleProcessMaterial_fhasb")
+draw_pass_1 = ExtResource("4_pr7mm")
+
+[node name="AimTarget" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.06494, 0)
+
+[editable path="model"]

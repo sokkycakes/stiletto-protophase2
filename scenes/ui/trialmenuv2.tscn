@@ -1,0 +1,843 @@
+[gd_scene load_steps=15 format=3 uid="uid://ci3n4app5u084"]
+
+[ext_resource type="Script" uid="uid://c6q376uibckxd" path="res://scenes/ui/trialmenu.gd" id="1_7171n"]
+[ext_resource type="Texture2D" uid="uid://d1gfr67sorbqa" path="res://assets/ui/stiletto04-godotasset.png" id="2_liwin"]
+[ext_resource type="FontFile" uid="uid://dlo8tyh0vtt2f" path="res://assets/ui/IosevkaStiletto-ExtendedMedium.ttf" id="3_fysu8"]
+[ext_resource type="Theme" uid="uid://boncwem84d835" path="res://scenes/ui/trialmenubutton.tres" id="4_5iptm"]
+[ext_resource type="FontFile" uid="uid://dhj8nspajgm8t" path="res://assets/ui/Helvetica Black Regular.otf" id="4_g2rta"]
+[ext_resource type="Script" uid="uid://mwou4p53qmck" path="res://resource/system/map_list_generator.gd" id="7_abcde"]
+
+[sub_resource type="Gradient" id="Gradient_5iptm"]
+offsets = PackedFloat32Array(0, 0.712766, 1)
+colors = PackedColorArray(0, 0, 0, 0, 0.760638, 0.760638, 0.760638, 0.760638, 1, 1, 1, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_teujw"]
+gradient = SubResource("Gradient_5iptm")
+fill_to = Vector2(0.850427, 0.393162)
+
+[sub_resource type="LabelSettings" id="LabelSettings_g2rta"]
+font = ExtResource("4_g2rta")
+font_size = 32
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_5iptm"]
+
+[sub_resource type="Gradient" id="Gradient_fysu8"]
+offsets = PackedFloat32Array(0, 0.521277, 1)
+colors = PackedColorArray(0, 0, 0, 0, 0, 0, 0, 0.658, 0, 0, 0, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_g2rta"]
+gradient = SubResource("Gradient_fysu8")
+
+[sub_resource type="FontVariation" id="FontVariation_4bcuv"]
+base_font = ExtResource("4_g2rta")
+variation_embolden = -1.03
+
+[sub_resource type="FontVariation" id="FontVariation_2o8h8"]
+base_font = ExtResource("4_g2rta")
+
+[node name="Control" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_7171n")
+tower_scene_path = "res://maps/belltower.tscn"
+obby_scene_path = "res://maps/obby00.tscn"
+
+[node name="bg_front" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = SubResource("GradientTexture2D_teujw")
+expand_mode = 4
+
+[node name="bg_detail" type="Control" parent="."]
+modulate = Color(1, 1, 1, 0.099)
+anchors_preset = 0
+offset_left = -32.0
+offset_top = -127.0
+offset_right = 8.0
+offset_bottom = -87.0
+scale = Vector2(1.3522, 1.30111)
+
+[node name="Label" type="Label" parent="bg_detail"]
+layout_mode = 0
+offset_left = -50.0
+offset_top = -243.0
+offset_right = -10.0
+offset_bottom = -202.333
+scale = Vector2(3.89527, 25.8157)
+theme_override_fonts/font = ExtResource("4_g2rta")
+text = "S"
+label_settings = SubResource("LabelSettings_g2rta")
+horizontal_alignment = 1
+
+[node name="Label2" type="Label" parent="bg_detail"]
+layout_mode = 0
+offset_left = -134.0
+offset_top = 145.0
+offset_right = -94.0
+offset_bottom = 185.667
+scale = Vector2(12.3289, 5.31552)
+theme_override_fonts/font = ExtResource("4_g2rta")
+text = "t"
+label_settings = SubResource("LabelSettings_g2rta")
+horizontal_alignment = 1
+
+[node name="Label3" type="Label" parent="bg_detail"]
+layout_mode = 0
+offset_left = 177.0
+offset_top = 160.0
+offset_right = 217.0
+offset_bottom = 200.667
+scale = Vector2(1.5457, 11.6232)
+theme_override_fonts/font = ExtResource("4_g2rta")
+text = "i"
+label_settings = SubResource("LabelSettings_g2rta")
+horizontal_alignment = 1
+
+[node name="Label4" type="Label" parent="bg_detail"]
+layout_mode = 0
+offset_left = 191.0
+offset_top = 28.0
+offset_right = 231.0
+offset_bottom = 68.6667
+scale = Vector2(2.5737, 12.0776)
+theme_override_fonts/font = ExtResource("4_g2rta")
+text = "L"
+label_settings = SubResource("LabelSettings_g2rta")
+horizontal_alignment = 1
+
+[node name="Label5" type="Label" parent="bg_detail"]
+layout_mode = 0
+offset_left = 87.0
+offset_top = 92.0
+offset_right = 127.0
+offset_bottom = 132.667
+scale = Vector2(14.3473, 5.70673)
+theme_override_fonts/font = ExtResource("4_g2rta")
+text = "e"
+label_settings = SubResource("LabelSettings_g2rta")
+horizontal_alignment = 1
+
+[node name="Label6" type="Label" parent="bg_detail"]
+layout_mode = 0
+offset_left = 428.0
+offset_top = 109.0
+offset_right = 468.0
+offset_bottom = 149.667
+scale = Vector2(6.73778, 3.70346)
+theme_override_fonts/font = ExtResource("4_g2rta")
+text = "t"
+label_settings = SubResource("LabelSettings_g2rta")
+horizontal_alignment = 1
+
+[node name="Label7" type="Label" parent="bg_detail"]
+layout_mode = 0
+offset_left = 557.0
+offset_top = 71.0
+offset_right = 597.0
+offset_bottom = 111.667
+scale = Vector2(3.84719, 7.35329)
+theme_override_fonts/font = ExtResource("4_g2rta")
+text = "t"
+label_settings = SubResource("LabelSettings_g2rta")
+horizontal_alignment = 1
+
+[node name="Label8" type="Label" parent="bg_detail"]
+layout_mode = 0
+offset_left = 498.0
+offset_top = 131.0
+offset_right = 538.0
+offset_bottom = 171.667
+scale = Vector2(14.3314, 4.80599)
+theme_override_fonts/font = ExtResource("4_g2rta")
+text = "o"
+label_settings = SubResource("LabelSettings_g2rta")
+horizontal_alignment = 1
+
+[node name="bg_detail2" type="Control" parent="."]
+modulate = Color(1, 1, 1, 0.099)
+anchors_preset = 0
+offset_left = 123.0
+offset_top = -272.0
+offset_right = 163.0
+offset_bottom = -232.0
+scale = Vector2(1.3522, 1.30111)
+
+[node name="Label" type="Label" parent="bg_detail2"]
+layout_mode = 0
+offset_left = -50.0
+offset_top = -243.0
+offset_right = -10.0
+offset_bottom = -202.333
+scale = Vector2(3.89527, 25.8157)
+theme_override_fonts/font = ExtResource("4_g2rta")
+text = "S"
+label_settings = SubResource("LabelSettings_g2rta")
+horizontal_alignment = 1
+
+[node name="Label2" type="Label" parent="bg_detail2"]
+layout_mode = 0
+offset_left = -134.0
+offset_top = 145.0
+offset_right = -94.0
+offset_bottom = 185.667
+scale = Vector2(12.3289, 5.31552)
+theme_override_fonts/font = ExtResource("4_g2rta")
+text = "t"
+label_settings = SubResource("LabelSettings_g2rta")
+horizontal_alignment = 1
+
+[node name="Label3" type="Label" parent="bg_detail2"]
+layout_mode = 0
+offset_left = 177.0
+offset_top = 160.0
+offset_right = 217.0
+offset_bottom = 200.667
+scale = Vector2(1.5457, 11.6232)
+theme_override_fonts/font = ExtResource("4_g2rta")
+text = "i"
+label_settings = SubResource("LabelSettings_g2rta")
+horizontal_alignment = 1
+
+[node name="Label4" type="Label" parent="bg_detail2"]
+layout_mode = 0
+offset_left = 191.0
+offset_top = 28.0
+offset_right = 231.0
+offset_bottom = 68.6667
+scale = Vector2(2.5737, 12.0776)
+theme_override_fonts/font = ExtResource("4_g2rta")
+text = "L"
+label_settings = SubResource("LabelSettings_g2rta")
+horizontal_alignment = 1
+
+[node name="Label5" type="Label" parent="bg_detail2"]
+layout_mode = 0
+offset_left = 87.0
+offset_top = 92.0
+offset_right = 127.0
+offset_bottom = 132.667
+scale = Vector2(14.3473, 5.70673)
+theme_override_fonts/font = ExtResource("4_g2rta")
+text = "e"
+label_settings = SubResource("LabelSettings_g2rta")
+horizontal_alignment = 1
+
+[node name="Label6" type="Label" parent="bg_detail2"]
+layout_mode = 0
+offset_left = 428.0
+offset_top = 109.0
+offset_right = 468.0
+offset_bottom = 149.667
+scale = Vector2(6.73778, 3.70346)
+theme_override_fonts/font = ExtResource("4_g2rta")
+text = "t"
+label_settings = SubResource("LabelSettings_g2rta")
+horizontal_alignment = 1
+
+[node name="Label7" type="Label" parent="bg_detail2"]
+layout_mode = 0
+offset_left = 557.0
+offset_top = 71.0
+offset_right = 597.0
+offset_bottom = 111.667
+scale = Vector2(3.84719, 7.35329)
+theme_override_fonts/font = ExtResource("4_g2rta")
+text = "t"
+label_settings = SubResource("LabelSettings_g2rta")
+horizontal_alignment = 1
+
+[node name="Label8" type="Label" parent="bg_detail2"]
+layout_mode = 0
+offset_left = 498.0
+offset_top = 131.0
+offset_right = 538.0
+offset_bottom = 171.667
+scale = Vector2(14.3314, 4.80599)
+theme_override_fonts/font = ExtResource("4_g2rta")
+text = "o"
+label_settings = SubResource("LabelSettings_g2rta")
+horizontal_alignment = 1
+
+[node name="bg_detail3" type="Control" parent="."]
+modulate = Color(1, 1, 1, 0.099)
+anchors_preset = 0
+offset_left = -174.0
+offset_top = 462.0
+offset_right = -134.0
+offset_bottom = 502.0
+scale = Vector2(0.967453, 0.539083)
+
+[node name="Label" type="Label" parent="bg_detail3"]
+layout_mode = 0
+offset_left = -50.0
+offset_top = -243.0
+offset_right = -10.0
+offset_bottom = -202.333
+scale = Vector2(3.89527, 25.8157)
+theme_override_fonts/font = ExtResource("4_g2rta")
+text = "S"
+label_settings = SubResource("LabelSettings_g2rta")
+horizontal_alignment = 1
+
+[node name="Label2" type="Label" parent="bg_detail3"]
+layout_mode = 0
+offset_left = -134.0
+offset_top = 145.0
+offset_right = -94.0
+offset_bottom = 185.667
+scale = Vector2(12.3289, 5.31552)
+theme_override_fonts/font = ExtResource("4_g2rta")
+text = "t"
+label_settings = SubResource("LabelSettings_g2rta")
+horizontal_alignment = 1
+
+[node name="Label3" type="Label" parent="bg_detail3"]
+layout_mode = 0
+offset_left = 177.0
+offset_top = 160.0
+offset_right = 217.0
+offset_bottom = 200.667
+scale = Vector2(1.5457, 11.6232)
+theme_override_fonts/font = ExtResource("4_g2rta")
+text = "i"
+label_settings = SubResource("LabelSettings_g2rta")
+horizontal_alignment = 1
+
+[node name="Label4" type="Label" parent="bg_detail3"]
+layout_mode = 0
+offset_left = 191.0
+offset_top = 28.0
+offset_right = 231.0
+offset_bottom = 68.6667
+scale = Vector2(2.5737, 12.0776)
+theme_override_fonts/font = ExtResource("4_g2rta")
+text = "L"
+label_settings = SubResource("LabelSettings_g2rta")
+horizontal_alignment = 1
+
+[node name="Label5" type="Label" parent="bg_detail3"]
+layout_mode = 0
+offset_left = 87.0
+offset_top = 92.0
+offset_right = 127.0
+offset_bottom = 132.667
+scale = Vector2(14.3473, 5.70673)
+theme_override_fonts/font = ExtResource("4_g2rta")
+text = "e"
+label_settings = SubResource("LabelSettings_g2rta")
+horizontal_alignment = 1
+
+[node name="Label6" type="Label" parent="bg_detail3"]
+layout_mode = 0
+offset_left = 428.0
+offset_top = 109.0
+offset_right = 468.0
+offset_bottom = 149.667
+scale = Vector2(6.73778, 3.70346)
+theme_override_fonts/font = ExtResource("4_g2rta")
+text = "t"
+label_settings = SubResource("LabelSettings_g2rta")
+horizontal_alignment = 1
+
+[node name="Label7" type="Label" parent="bg_detail3"]
+layout_mode = 0
+offset_left = 557.0
+offset_top = 71.0
+offset_right = 597.0
+offset_bottom = 111.667
+scale = Vector2(3.84719, 7.35329)
+theme_override_fonts/font = ExtResource("4_g2rta")
+text = "t"
+label_settings = SubResource("LabelSettings_g2rta")
+horizontal_alignment = 1
+
+[node name="Label8" type="Label" parent="bg_detail3"]
+layout_mode = 0
+offset_left = 498.0
+offset_top = 131.0
+offset_right = 538.0
+offset_bottom = 171.667
+scale = Vector2(14.3314, 4.80599)
+theme_override_fonts/font = ExtResource("4_g2rta")
+text = "o"
+label_settings = SubResource("LabelSettings_g2rta")
+horizontal_alignment = 1
+
+[node name="bg_detail4" type="Control" parent="."]
+modulate = Color(1, 1, 1, 0.099)
+anchors_preset = 0
+offset_left = 99.0
+offset_top = 342.0
+offset_right = 139.0
+offset_bottom = 382.0
+scale = Vector2(0.967453, 0.539083)
+
+[node name="Label" type="Label" parent="bg_detail4"]
+layout_mode = 0
+offset_left = -394.851
+offset_top = 1.8549
+offset_right = -354.851
+offset_bottom = 42.5216
+scale = Vector2(15.9253, 12.7827)
+theme_override_fonts/font = ExtResource("4_g2rta")
+text = "S"
+label_settings = SubResource("LabelSettings_g2rta")
+horizontal_alignment = 1
+
+[node name="Label2" type="Label" parent="bg_detail4"]
+layout_mode = 0
+offset_left = -134.0
+offset_top = 145.0
+offset_right = -94.0
+offset_bottom = 185.667
+scale = Vector2(12.3289, 5.31552)
+theme_override_fonts/font = ExtResource("4_g2rta")
+text = "t"
+label_settings = SubResource("LabelSettings_g2rta")
+horizontal_alignment = 1
+
+[node name="Label3" type="Label" parent="bg_detail4"]
+layout_mode = 0
+offset_left = 6.20181
+offset_top = 7.41997
+offset_right = 46.2018
+offset_bottom = 48.0866
+scale = Vector2(10.5271, 8.70664)
+theme_override_fonts/font = ExtResource("4_g2rta")
+text = "i"
+label_settings = SubResource("LabelSettings_g2rta")
+horizontal_alignment = 1
+
+[node name="Label4" type="Label" parent="bg_detail4"]
+layout_mode = 0
+offset_left = 225.334
+offset_top = -40.8101
+offset_right = 265.334
+offset_bottom = -0.143425
+scale = Vector2(2.5737, 12.0776)
+theme_override_fonts/font = ExtResource("4_g2rta")
+text = "L"
+label_settings = SubResource("LabelSettings_g2rta")
+horizontal_alignment = 1
+
+[node name="Label5" type="Label" parent="bg_detail4"]
+layout_mode = 0
+offset_left = 244.973
+offset_top = -786.521
+offset_right = 284.973
+offset_bottom = -745.854
+scale = Vector2(4.06551, 38.1346)
+theme_override_fonts/font = ExtResource("4_g2rta")
+text = "e"
+label_settings = SubResource("LabelSettings_g2rta")
+horizontal_alignment = 1
+
+[node name="Label6" type="Label" parent="bg_detail4"]
+layout_mode = 0
+offset_left = 281.151
+offset_top = 157.675
+offset_right = 321.151
+offset_bottom = 198.342
+scale = Vector2(6.73778, 3.70346)
+theme_override_fonts/font = ExtResource("4_g2rta")
+text = "t"
+label_settings = SubResource("LabelSettings_g2rta")
+horizontal_alignment = 1
+
+[node name="Label7" type="Label" parent="bg_detail4"]
+layout_mode = 0
+offset_left = 404.154
+offset_top = 33.39
+offset_right = 444.154
+offset_bottom = 74.0566
+scale = Vector2(3.84719, 7.35329)
+theme_override_fonts/font = ExtResource("4_g2rta")
+text = "t"
+label_settings = SubResource("LabelSettings_g2rta")
+horizontal_alignment = 1
+
+[node name="Label8" type="Label" parent="bg_detail4"]
+layout_mode = 0
+offset_left = 394.851
+offset_top = -166.95
+offset_right = 434.851
+offset_bottom = -126.284
+scale = Vector2(11.0827, 11.6895)
+theme_override_fonts/font = ExtResource("4_g2rta")
+text = "o"
+label_settings = SubResource("LabelSettings_g2rta")
+horizontal_alignment = 1
+
+[node name="bg_detail5" type="Control" parent="."]
+modulate = Color(1, 1, 1, 0.099)
+anchors_preset = 0
+offset_left = 290.0
+offset_top = 172.0
+offset_right = 330.0
+offset_bottom = 212.0
+scale = Vector2(0.967453, 0.539083)
+
+[node name="Label" type="Label" parent="bg_detail5"]
+layout_mode = 0
+offset_left = -394.851
+offset_top = 1.8549
+offset_right = -354.851
+offset_bottom = 42.5216
+scale = Vector2(15.9253, 12.7827)
+theme_override_fonts/font = ExtResource("4_g2rta")
+text = "S"
+label_settings = SubResource("LabelSettings_g2rta")
+horizontal_alignment = 1
+
+[node name="Label2" type="Label" parent="bg_detail5"]
+layout_mode = 0
+offset_left = -134.0
+offset_top = 145.0
+offset_right = -94.0
+offset_bottom = 185.667
+scale = Vector2(12.3289, 5.31552)
+theme_override_fonts/font = ExtResource("4_g2rta")
+text = "t"
+label_settings = SubResource("LabelSettings_g2rta")
+horizontal_alignment = 1
+
+[node name="Label3" type="Label" parent="bg_detail5"]
+layout_mode = 0
+offset_left = 6.20181
+offset_top = 7.41997
+offset_right = 46.2018
+offset_bottom = 48.0866
+scale = Vector2(10.5271, 8.70664)
+theme_override_fonts/font = ExtResource("4_g2rta")
+text = "i"
+label_settings = SubResource("LabelSettings_g2rta")
+horizontal_alignment = 1
+
+[node name="Label4" type="Label" parent="bg_detail5"]
+layout_mode = 0
+offset_left = 225.334
+offset_top = -40.8101
+offset_right = 265.334
+offset_bottom = -0.143425
+scale = Vector2(2.5737, 12.0776)
+theme_override_fonts/font = ExtResource("4_g2rta")
+text = "L"
+label_settings = SubResource("LabelSettings_g2rta")
+horizontal_alignment = 1
+
+[node name="Label5" type="Label" parent="bg_detail5"]
+layout_mode = 0
+offset_left = 244.973
+offset_top = -786.521
+offset_right = 284.973
+offset_bottom = -745.854
+scale = Vector2(4.06551, 38.1346)
+theme_override_fonts/font = ExtResource("4_g2rta")
+text = "e"
+label_settings = SubResource("LabelSettings_g2rta")
+horizontal_alignment = 1
+
+[node name="Label6" type="Label" parent="bg_detail5"]
+layout_mode = 0
+offset_left = 281.151
+offset_top = 157.675
+offset_right = 321.151
+offset_bottom = 198.342
+scale = Vector2(6.73778, 3.70346)
+theme_override_fonts/font = ExtResource("4_g2rta")
+text = "t"
+label_settings = SubResource("LabelSettings_g2rta")
+horizontal_alignment = 1
+
+[node name="Label7" type="Label" parent="bg_detail5"]
+layout_mode = 0
+offset_left = 404.154
+offset_top = 33.39
+offset_right = 444.154
+offset_bottom = 74.0566
+scale = Vector2(3.84719, 7.35329)
+theme_override_fonts/font = ExtResource("4_g2rta")
+text = "t"
+label_settings = SubResource("LabelSettings_g2rta")
+horizontal_alignment = 1
+
+[node name="Label8" type="Label" parent="bg_detail5"]
+layout_mode = 0
+offset_left = 394.851
+offset_top = -166.95
+offset_right = 434.851
+offset_bottom = -126.284
+scale = Vector2(11.0827, 11.6895)
+theme_override_fonts/font = ExtResource("4_g2rta")
+text = "o"
+label_settings = SubResource("LabelSettings_g2rta")
+horizontal_alignment = 1
+
+[node name="bg_detail6" type="Control" parent="."]
+modulate = Color(1, 1, 1, 0.099)
+anchors_preset = 0
+offset_left = 381.0
+offset_top = 557.0
+offset_right = 421.0
+offset_bottom = 597.0
+scale = Vector2(0.967453, 0.539083)
+
+[node name="Label" type="Label" parent="bg_detail6"]
+layout_mode = 0
+offset_left = -394.851
+offset_top = 1.8549
+offset_right = -354.851
+offset_bottom = 42.5216
+scale = Vector2(15.9253, 12.7827)
+theme_override_fonts/font = ExtResource("4_g2rta")
+text = "S"
+label_settings = SubResource("LabelSettings_g2rta")
+horizontal_alignment = 1
+
+[node name="Label2" type="Label" parent="bg_detail6"]
+layout_mode = 0
+offset_left = -134.0
+offset_top = 145.0
+offset_right = -94.0
+offset_bottom = 185.667
+scale = Vector2(12.3289, 5.31552)
+theme_override_fonts/font = ExtResource("4_g2rta")
+text = "t"
+label_settings = SubResource("LabelSettings_g2rta")
+horizontal_alignment = 1
+
+[node name="Label3" type="Label" parent="bg_detail6"]
+layout_mode = 0
+offset_left = 6.20181
+offset_top = 7.41997
+offset_right = 46.2018
+offset_bottom = 48.0866
+scale = Vector2(10.5271, 8.70664)
+theme_override_fonts/font = ExtResource("4_g2rta")
+text = "i"
+label_settings = SubResource("LabelSettings_g2rta")
+horizontal_alignment = 1
+
+[node name="Label4" type="Label" parent="bg_detail6"]
+layout_mode = 0
+offset_left = 225.334
+offset_top = -40.8101
+offset_right = 265.334
+offset_bottom = -0.143425
+scale = Vector2(2.5737, 12.0776)
+theme_override_fonts/font = ExtResource("4_g2rta")
+text = "L"
+label_settings = SubResource("LabelSettings_g2rta")
+horizontal_alignment = 1
+
+[node name="Label5" type="Label" parent="bg_detail6"]
+layout_mode = 0
+offset_left = 244.973
+offset_top = -786.521
+offset_right = 284.973
+offset_bottom = -745.854
+scale = Vector2(4.06551, 38.1346)
+theme_override_fonts/font = ExtResource("4_g2rta")
+text = "e"
+label_settings = SubResource("LabelSettings_g2rta")
+horizontal_alignment = 1
+
+[node name="Label6" type="Label" parent="bg_detail6"]
+layout_mode = 0
+offset_left = 281.151
+offset_top = 157.675
+offset_right = 321.151
+offset_bottom = 198.342
+scale = Vector2(6.73778, 3.70346)
+theme_override_fonts/font = ExtResource("4_g2rta")
+text = "t"
+label_settings = SubResource("LabelSettings_g2rta")
+horizontal_alignment = 1
+
+[node name="Label7" type="Label" parent="bg_detail6"]
+layout_mode = 0
+offset_left = 404.154
+offset_top = 33.39
+offset_right = 444.154
+offset_bottom = 74.0566
+scale = Vector2(3.84719, 7.35329)
+theme_override_fonts/font = ExtResource("4_g2rta")
+text = "t"
+label_settings = SubResource("LabelSettings_g2rta")
+horizontal_alignment = 1
+
+[node name="Label8" type="Label" parent="bg_detail6"]
+layout_mode = 0
+offset_left = 394.851
+offset_top = -166.95
+offset_right = 434.851
+offset_bottom = -126.284
+scale = Vector2(11.0827, 11.6895)
+theme_override_fonts/font = ExtResource("4_g2rta")
+text = "o"
+label_settings = SubResource("LabelSettings_g2rta")
+horizontal_alignment = 1
+
+[node name="Panel" type="Panel" parent="." groups=["gui_panel"]]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxEmpty_5iptm")
+
+[node name="TextureRect" type="TextureRect" parent="Panel"]
+modulate = Color(1, 1, 1, 0.497)
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -634.205
+offset_top = -627.0
+offset_right = 161.795
+offset_bottom = 627.0
+grow_horizontal = 0
+grow_vertical = 2
+rotation = 0.261799
+scale = Vector2(1.08271, 1.08271)
+texture = ExtResource("2_liwin")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel"]
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = -114.0
+offset_top = -134.0
+offset_right = 154.0
+offset_bottom = 66.0
+grow_vertical = 2
+scale = Vector2(2.38037, 2.38037)
+theme_override_constants/separation = 20
+
+[node name="IntroButton" type="Button" parent="Panel/VBoxContainer"]
+layout_mode = 2
+theme = ExtResource("4_5iptm")
+theme_type_variation = &"FlatButton"
+theme_override_fonts/font = ExtResource("3_fysu8")
+text = "Start Demo"
+
+[node name="TextureRect" type="TextureRect" parent="Panel/VBoxContainer/IntroButton"]
+show_behind_parent = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -70.9974
+offset_top = -16.0
+offset_right = 61.0026
+offset_bottom = 17.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = SubResource("GradientTexture2D_g2rta")
+
+[node name="LobbyButton" type="Button" parent="Panel/VBoxContainer"]
+visible = false
+layout_mode = 2
+text = "obby00"
+
+[node name="SandboxButton" type="Button" parent="Panel/VBoxContainer"]
+visible = false
+layout_mode = 2
+text = "Sandbox_night"
+
+[node name="OptionsButton" type="Button" parent="Panel/VBoxContainer"]
+visible = false
+layout_mode = 2
+theme = ExtResource("4_5iptm")
+theme_override_colors/font_outline_color = Color(0.347656, 0.347656, 0.347656, 1)
+theme_override_constants/outline_size = 8
+text = "options"
+flat = true
+
+[node name="VBoxContainerSub" type="VBoxContainer" parent="Panel"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.027
+anchor_top = 0.495
+anchor_right = 0.044
+anchor_bottom = 0.5
+offset_left = 72.72
+offset_top = -13.6
+offset_right = 156.84
+offset_bottom = 118.0
+grow_vertical = 2
+scale = Vector2(1.37, 1.37)
+theme_override_constants/separation = 6
+alignment = 1
+
+[node name="TowerButton" type="Button" parent="Panel/VBoxContainerSub"]
+layout_mode = 2
+size_flags_horizontal = 0
+theme = ExtResource("4_5iptm")
+theme_override_colors/font_outline_color = Color(0.347656, 0.347656, 0.347656, 1)
+theme_override_constants/outline_size = 8
+text = "The Belltower"
+flat = true
+
+[node name="ObbyButton" type="Button" parent="Panel/VBoxContainerSub"]
+layout_mode = 2
+size_flags_horizontal = 0
+theme = ExtResource("4_5iptm")
+theme_override_colors/font_outline_color = Color(0.347656, 0.347656, 0.347656, 1)
+theme_override_constants/outline_size = 8
+text = "Obby Map"
+flat = true
+
+[node name="MapsButton" type="Button" parent="Panel/VBoxContainerSub"]
+layout_mode = 2
+size_flags_horizontal = 0
+theme = ExtResource("4_5iptm")
+theme_override_colors/font_outline_color = Color(0.347656, 0.347656, 0.347656, 1)
+theme_override_constants/outline_size = 8
+text = "Map Browser
+"
+flat = true
+
+[node name="OptionsButton" type="Button" parent="Panel/VBoxContainerSub"]
+layout_mode = 2
+size_flags_horizontal = 0
+theme = ExtResource("4_5iptm")
+theme_override_colors/font_outline_color = Color(0.347656, 0.347656, 0.347656, 1)
+theme_override_constants/outline_size = 8
+text = "options"
+flat = true
+
+[node name="Label" type="RichTextLabel" parent="Panel"]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 32.135
+offset_top = -74.46
+offset_right = 329.135
+offset_bottom = -36.46
+grow_vertical = 0
+theme_override_colors/default_color = Color(0.242188, 0.242188, 0.242188, 0.514)
+theme_override_fonts/normal_font = SubResource("FontVariation_4bcuv")
+theme_override_fonts/bold_font = SubResource("FontVariation_2o8h8")
+theme_override_font_sizes/normal_font_size = 26
+theme_override_font_sizes/bold_font_size = 26
+bbcode_enabled = true
+text = "[b]stiletto[/b]swift_proto"
+fit_content = true
+scroll_active = false
+
+[node name="MapListGenerator" type="Node" parent="."]
+script = ExtResource("7_abcde")

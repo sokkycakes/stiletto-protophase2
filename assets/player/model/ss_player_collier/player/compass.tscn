@@ -1,0 +1,17 @@
+[gd_scene load_steps=4 format=3 uid="uid://fhq4dg77kclt"]
+
+[ext_resource type="Material" uid="uid://b118c7ni4rn3l" path="res://assets/player/wireframe2.tres" id="1_toale"]
+[ext_resource type="Script" uid="uid://cpd4ux5t63uqi" path="res://assets/player/player/compass.gd" id="2_compass_script"]
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_xdh2g"]
+material = ExtResource("1_toale")
+top_radius = 0.0
+bottom_radius = 0.05
+height = 0.33
+radial_segments = 4
+rings = 1
+
+[node name="Node3D" type="MeshInstance3D"]
+cast_shadow = 0
+mesh = SubResource("CylinderMesh_xdh2g")
+script = ExtResource("2_compass_script")

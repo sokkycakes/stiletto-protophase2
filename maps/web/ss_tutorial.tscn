@@ -1,0 +1,282 @@
+[gd_scene load_steps=25 format=3 uid="uid://dx6vmwio7skdh"]
+
+[ext_resource type="AudioStream" uid="uid://da4yrjk2hwqp8" path="res://assets/snd/ambient/sound_ambient_ambience_urban_rooftop_ambloop02.wav" id="1_5gdh2"]
+[ext_resource type="PackedScene" uid="uid://cmtvhl44mc78y" path="res://scenes/skyboxdetail.tscn" id="2_u6fkj"]
+[ext_resource type="PackedScene" uid="uid://tt2sjt4ypwn7" path="res://resource/entities/player/player_spawner.tscn" id="3_alpy2"]
+[ext_resource type="PackedScene" uid="uid://bu66d5ff4qrd" path="res://resource/entities/player/ss_player_multiplayer.tscn" id="4_b2c2w"]
+[ext_resource type="Texture2D" uid="uid://bjcq8axgqat8g" path="res://materials/dev/texture_08.vtf" id="5_kkin0"]
+[ext_resource type="FontFile" uid="uid://dlo8tyh0vtt2f" path="res://assets/ui/IosevkaStiletto-ExtendedMedium.ttf" id="6_oygcb"]
+[ext_resource type="FontFile" uid="uid://bbfeoo2kuf30n" path="res://addons/icons-fonts/icons_fonts/MaterialIcons/material_design_icons.ttf" id="7_u8ql7"]
+[ext_resource type="FontFile" uid="uid://dhj8nspajgm8t" path="res://assets/ui/Helvetica Black Regular.otf" id="8_br8hw"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_xy2ht"]
+albedo_color = Color(0.589844, 0.589844, 0.589844, 1)
+
+[sub_resource type="Gradient" id="Gradient_rcoch"]
+offsets = PackedFloat32Array(0, 0.00411523, 1)
+colors = PackedColorArray(0, 0, 0, 1, 0.131687, 0.131687, 0.131687, 1, 1, 1, 1, 1)
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_oiwga"]
+noise_type = 0
+frequency = 0.0046
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_4b02c"]
+in_3d_space = true
+seamless = true
+seamless_blend_skirt = 0.415
+color_ramp = SubResource("Gradient_rcoch")
+noise = SubResource("FastNoiseLite_oiwga")
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_vwi5b"]
+sky_top_color = Color(0.361649, 0.434206, 0.535156, 1)
+sky_energy_multiplier = 0.55
+sky_cover = SubResource("NoiseTexture2D_4b02c")
+sky_cover_modulate = Color(0.890625, 0.890625, 0.890625, 1)
+ground_bottom_color = Color(0.090251, 0.11034, 0.125, 1)
+
+[sub_resource type="Sky" id="Sky_1togm"]
+sky_material = SubResource("ProceduralSkyMaterial_vwi5b")
+
+[sub_resource type="Environment" id="Environment_2386f"]
+background_mode = 2
+background_color = Color(0.212054, 0.256575, 0.289063, 1)
+sky = SubResource("Sky_1togm")
+volumetric_fog_enabled = true
+volumetric_fog_density = 0.0044
+volumetric_fog_emission = Color(0.590515, 0.635644, 0.671875, 1)
+volumetric_fog_ambient_inject = 0.85
+volumetric_fog_sky_affect = 0.607
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_77otk"]
+shading_mode = 2
+diffuse_mode = 1
+specular_mode = 1
+albedo_texture = ExtResource("5_kkin0")
+uv1_scale = Vector3(5.49, 5.49, 5.49)
+
+[sub_resource type="Theme" id="Theme_aby8p"]
+default_font = ExtResource("6_oygcb")
+
+[sub_resource type="Theme" id="Theme_3hy4u"]
+default_font = ExtResource("6_oygcb")
+
+[sub_resource type="Theme" id="Theme_ryxa1"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_3hy4u"]
+font = ExtResource("6_oygcb")
+font_size = 12
+outline_size = 2
+outline_color = Color(0.238281, 0.238281, 0.238281, 1)
+
+[sub_resource type="FontVariation" id="FontVariation_08xcy"]
+base_font = ExtResource("8_br8hw")
+variation_transform = Transform2D(1, 0.225, 0, 1, 0, 0)
+
+[sub_resource type="LabelSettings" id="LabelSettings_rwkss"]
+font = SubResource("FontVariation_08xcy")
+font_size = 51
+font_color = Color(1, 0.464844, 0.640442, 1)
+
+[sub_resource type="LabelSettings" id="LabelSettings_k34x2"]
+font = ExtResource("6_oygcb")
+outline_size = 8
+outline_color = Color(0.144531, 0.144531, 0.144531, 1)
+
+[sub_resource type="LabelSettings" id="LabelSettings_ljnm8"]
+font = SubResource("FontVariation_08xcy")
+font_size = 25
+outline_size = 7
+outline_color = Color(0.191406, 0.191406, 0.191406, 1)
+
+[node name="Node3D" type="Node3D"]
+
+[node name="env" type="Node" parent="."]
+
+[node name="bgm" type="AudioStreamPlayer" parent="env"]
+volume_db = -8.117
+autoplay = true
+bus = &"bgm"
+
+[node name="env_ambience" type="AudioStreamPlayer" parent="env"]
+stream = ExtResource("1_5gdh2")
+volume_db = -9.705
+autoplay = true
+max_polyphony = 5
+
+[node name="skyboxdetail" parent="env" instance=ExtResource("2_u6fkj")]
+transform = Transform3D(14.5069, 0, 0, 0, 14.5069, 0, 0, 0, 14.5069, -304.998, 5.39606, -611.832)
+visible = false
+material_override = SubResource("StandardMaterial3D_xy2ht")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="env"]
+environment = SubResource("Environment_2386f")
+
+[node name="PlayerSpawner" parent="." instance=ExtResource("3_alpy2")]
+player_scene = ExtResource("4_b2c2w")
+
+[node name="world" type="Node3D" parent="."]
+
+[node name="VoxelGI" type="VoxelGI" parent="world"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.82196, 42.8414, -0.44281)
+visible = false
+subdiv = 0
+size = Vector3(186.51, 137.413, 186.114)
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="world"]
+transform = Transform3D(0.809714, 0.586825, 0, 0.42621, -0.588094, 0.687379, 0.403371, -0.556581, -0.726299, 0, 0, 0)
+light_color = Color(0.737255, 0.74902, 0.772549, 1)
+light_bake_mode = 1
+shadow_enabled = true
+directional_shadow_mode = 0
+sky_mode = 1
+
+[node name="LightmapGI" type="LightmapGI" parent="world"]
+environment_mode = 0
+
+[node name="CSGBox3D" type="CSGBox3D" parent="world"]
+transform = Transform3D(178.255, 0, 0, 0, 178.255, 0, 0, 0, 178.255, 0, -128.976, 0)
+use_collision = true
+size = Vector3(1, 0.0285645, 1)
+material = SubResource("StandardMaterial3D_77otk")
+
+[node name="CSGBox3D2" type="CSGBox3D" parent="world"]
+transform = Transform3D(178.255, 0, 0, 0, 178.255, 0, 0, 0, 178.255, 0, -28.8076, 0)
+use_collision = true
+size = Vector3(1, 0.261841, 1)
+material = SubResource("StandardMaterial3D_77otk")
+
+[node name="CSGBox3D3" type="CSGBox3D" parent="world/CSGBox3D2"]
+transform = Transform3D(0.868958, 0, 0, 0, 0.868958, 0, 0, 0, 0.868958, 0, 0.0378591, 0)
+operation = 2
+use_collision = true
+size = Vector3(1, 0.293518, 1)
+material = SubResource("StandardMaterial3D_77otk")
+
+[node name="gamemaster" type="Node" parent="."]
+
+[node name="gamemaster_gui" type="Node" parent="."]
+
+[node name="reaperOverlay" type="ColorRect" parent="gamemaster_gui"]
+visible = false
+modulate = Color(1, 1, 1, 0)
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="clock" type="RichTextLabel" parent="gamemaster_gui"]
+visible = false
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -32.0
+offset_top = 55.21
+offset_right = 32.0
+offset_bottom = 78.21
+grow_horizontal = 2
+theme = SubResource("Theme_aby8p")
+theme_override_constants/outline_size = 6
+bbcode_enabled = true
+text = "00:00."
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="clock2" type="Label" parent="gamemaster_gui"]
+visible = false
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = 15.0
+offset_top = 59.0
+offset_right = 66.0
+offset_bottom = 82.0
+grow_horizontal = 2
+scale = Vector2(0.795, 0.795)
+theme = SubResource("Theme_3hy4u")
+theme_override_constants/outline_size = 7
+text = "00"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="time label" type="RichTextLabel" parent="gamemaster_gui"]
+visible = false
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -55.0
+offset_top = 56.0
+offset_right = -31.0
+offset_bottom = 77.0
+grow_horizontal = 2
+mouse_filter = 2
+theme = SubResource("Theme_ryxa1")
+theme_override_fonts/normal_font = ExtResource("7_u8ql7")
+text = "🕒"
+fit_content = true
+autowrap_mode = 0
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ProgressBar" type="ProgressBar" parent="gamemaster_gui"]
+visible = false
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -54.0
+offset_top = 94.0
+offset_right = 55.95
+offset_bottom = 111.975
+grow_horizontal = 2
+size_flags_vertical = 4
+show_percentage = false
+
+[node name="Label" type="Label" parent="gamemaster_gui/ProgressBar"]
+visible = false
+layout_mode = 0
+offset_left = -16.0
+offset_top = -9.0
+offset_right = 71.0
+offset_bottom = 14.0
+text = "OVERWHELM"
+label_settings = SubResource("LabelSettings_3hy4u")
+
+[node name="doom" type="Label" parent="gamemaster_gui/ProgressBar"]
+visible = false
+layout_mode = 1
+offset_left = 86.0
+offset_top = -24.0
+offset_right = 121.0
+offset_bottom = 40.8125
+pivot_offset = Vector2(21.01, 34.195)
+label_settings = SubResource("LabelSettings_rwkss")
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="killCounter" type="Control" parent="gamemaster_gui"]
+visible = false
+layout_mode = 3
+anchors_preset = 0
+offset_left = 30.0
+offset_top = 34.0
+offset_right = 70.0
+offset_bottom = 74.0
+
+[node name="killLabel" type="Label" parent="gamemaster_gui/killCounter"]
+visible = false
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 23.0
+text = "kills"
+label_settings = SubResource("LabelSettings_k34x2")
+
+[node name="killLabelCount" type="Label" parent="gamemaster_gui/killCounter"]
+visible = false
+layout_mode = 0
+offset_left = 22.0
+offset_top = 8.0
+offset_right = 73.0
+offset_bottom = 39.7708
+text = "0"
+label_settings = SubResource("LabelSettings_ljnm8")

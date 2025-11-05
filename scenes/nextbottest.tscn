@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://xvohjrm1pik4"]
+
+[ext_resource type="Script" uid="uid://baeb2gpt8drxe" path="res://scripts/simple_nextbot_test.gd" id="1_75e6d"]
+
+[node name="Node3D" type="Node3D"]
+script = ExtResource("1_75e6d")

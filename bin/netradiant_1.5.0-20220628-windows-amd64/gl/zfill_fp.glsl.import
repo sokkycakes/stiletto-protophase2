@@ -1,0 +1,14 @@
+[remap]
+
+importer="glsl"
+type="RDShaderFile"
+uid="uid://brrgx8t28i7dp"
+path="res://.godot/imported/zfill_fp.glsl-c581fa5a90b371381798959ec9e9b4ba.res"
+
+[deps]
+
+source_file="res://bin/netradiant_1.5.0-20220628-windows-amd64/netradiant_1.5.0-20220628-windows-amd64/gl/zfill_fp.glsl"
+dest_files=["res://.godot/imported/zfill_fp.glsl-c581fa5a90b371381798959ec9e9b4ba.res"]
+
+[params]
+

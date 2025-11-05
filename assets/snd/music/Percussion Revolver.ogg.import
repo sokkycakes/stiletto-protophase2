@@ -1,0 +1,19 @@
+[remap]
+
+importer="oggvorbisstr"
+type="AudioStreamOggVorbis"
+uid="uid://cnda3gdva7x8t"
+path="res://.godot/imported/Percussion Revolver.ogg-0a021fb193fd7d6819ba48c1ab236365.oggvorbisstr"
+
+[deps]
+
+source_file="res://assets/snd/music/Percussion Revolver.ogg"
+dest_files=["res://.godot/imported/Percussion Revolver.ogg-0a021fb193fd7d6819ba48c1ab236365.oggvorbisstr"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

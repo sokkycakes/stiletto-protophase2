@@ -1,0 +1,12 @@
+[gd_resource type="StandardMaterial3D" load_steps=2 format=3 uid="uid://dgjiw8udooecr"]
+
+[ext_resource type="Texture2D" uid="uid://gh0otyh4xcj5" path="res://addons/prototype_mini_bundle/prototype_light.png" id="1_17sa8"]
+
+[resource]
+shading_mode = 0
+diffuse_mode = 2
+specular_mode = 1
+disable_ambient_light = true
+albedo_color = Color(0.191162, 0.198353, 0.226563, 1)
+albedo_texture = ExtResource("1_17sa8")
+uv1_scale = Vector3(6.99, 2.675, 2.48)

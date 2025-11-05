@@ -1,0 +1,24 @@
+[gd_scene load_steps=4 format=3 uid="uid://dgo0wly7c6t0v"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_ge0lp"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_rfa2x"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_n3el4"]
+emission_enabled = true
+emission = Color(0.77475, 1, 0.527344, 1)
+emission_on_uv2 = true
+
+[node name="MeshInstance3D" type="MeshInstance3D"]
+transform = Transform3D(4.42788, 0, 0, 0, 0.548387, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("BoxMesh_ge0lp")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.948381, 0, 0, 0, 0.948382, 0, 0, 0, 0.948382, 0, -0.608438, 0)
+mesh = SubResource("BoxMesh_rfa2x")
+surface_material_override/0 = SubResource("StandardMaterial3D_n3el4")
+
+[node name="SpotLight3D" type="SpotLight3D" parent="MeshInstance3D"]
+transform = Transform3D(0.238134, 0, 0, 0, -8.40474e-08, 1.92278, 0, -1.05443, -4.60905e-08, 0, 0, 0)
+light_color = Color(0.77475, 1, 0.527344, 1)
+spot_range = 6.05565

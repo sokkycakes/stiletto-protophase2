@@ -1,0 +1,17 @@
+[gd_scene load_steps=3 format=3 uid="uid://cr8ikk5w4ivjo"]
+
+[ext_resource type="TextMesh" uid="uid://bbmyskg4tvck3" path="res://assets/effect/particles/aware_particlemesh.tres" id="1_gqiky"]
+
+[sub_resource type="Curve" id="Curve_ti5nb"]
+_limits = [0.0, 200.0, 0.0, 1.0]
+_data = [Vector2(0, 1), 0.0, 0.0, 0, 0, Vector2(0.0990415, 200), 0.0, 0.0, 0, 0, Vector2(0.504792, 200), 0.0, 0.0, 0, 0, Vector2(0.881789, 200), 0.0, 0.0, 0, 0, Vector2(1, 1), 0.0, 0.0, 0, 0]
+point_count = 5
+
+[node name="Particle" type="CPUParticles3D"]
+emitting = false
+lifetime = 1.81
+one_shot = true
+speed_scale = 2.05
+mesh = ExtResource("1_gqiky")
+gravity = Vector3(0, 0, 0)
+anim_speed_curve = SubResource("Curve_ti5nb")

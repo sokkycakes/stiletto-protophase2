@@ -1,0 +1,19 @@
+[remap]
+
+importer="oggvorbisstr"
+type="AudioStreamOggVorbis"
+uid="uid://2l5kkopchld2"
+path="res://.godot/imported/Yokushitsu -Bathroom-.ogg-bf521e24c91a60f83ce223b488c0484f.oggvorbisstr"
+
+[deps]
+
+source_file="res://assets/snd/music/Yokushitsu -Bathroom-.ogg"
+dest_files=["res://.godot/imported/Yokushitsu -Bathroom-.ogg-bf521e24c91a60f83ce223b488c0484f.oggvorbisstr"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

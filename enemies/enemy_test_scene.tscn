@@ -1,0 +1,24 @@
+[gd_scene load_steps=5 format=3 uid="uid://ex8m7tuik8xo"]
+
+[ext_resource type="PackedScene" uid="uid://bx8m7tuik8xo" path="res://enemies/melee_enemy.tscn" id="1_melee"]
+[ext_resource type="PackedScene" uid="uid://cx8m7tuik8xo" path="res://enemies/charger_enemy.tscn" id="2_charger"]
+[ext_resource type="PackedScene" uid="uid://dx8m7tuik8xo" path="res://enemies/ranged_enemy.tscn" id="3_ranged"]
+[ext_resource type="PackedScene" uid="uid://bqvgxdkf2w5yk" path="res://demo/agents/player/player.tscn" id="4_player"]
+
+[node name="EnemyTestScene" type="Node2D"]
+
+[node name="Player" parent="." instance=ExtResource("4_player")]
+position = Vector2(400, 300)
+
+[node name="MeleeEnemy" parent="." instance=ExtResource("1_melee")]
+position = Vector2(200, 300)
+
+[node name="ChargerEnemy" parent="." instance=ExtResource("2_charger")]
+position = Vector2(600, 300)
+
+[node name="RangedEnemy" parent="." instance=ExtResource("3_ranged")]
+position = Vector2(400, 150)
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(400, 300)
+zoom = Vector2(2, 2)

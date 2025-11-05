@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="MusicSet" load_steps=5 format=3 uid="uid://dt3jirt57o51j"]
+
+[ext_resource type="AudioStream" uid="uid://cwaw0ie8upmon" path="res://assets/snd/music/iletu_doomloop.ogg" id="1_medjj"]
+[ext_resource type="AudioStream" uid="uid://dncpktsnildfu" path="res://assets/snd/music/BGM_00000006.mp3" id="2_medjj"]
+[ext_resource type="AudioStream" uid="uid://cs0dg4sh0dlip" path="res://assets/snd/music/BGM_00000005.mp3" id="3_cog03"]
+[ext_resource type="Script" path="res://resource/scripts/music_set.gd" id="4_1vcr4"]
+
+[resource]
+script = ExtResource("4_1vcr4")
+set_name = "Multi Level Parking Tower"
+pre_game_track = ExtResource("3_cog03")
+normal_game_track = ExtResource("2_medjj")
+doom_track = ExtResource("1_medjj")
+description = ""
+tags = Array[String]([])

@@ -1,0 +1,152 @@
+/*QUAKED func_group (0 0 0) ?
+Used to group brushes together.
+*/
+
+/*QUAKED func_door (0 .5 .8) ? START_OPEN nofunc CRUSHER nofunc nofunc TOGGLE
+TOGGLE                  Wait in both open and closed states to be triggered.
+START_OPEN              Door starts open and operates in reverse. Should be targeted, do not set health.
+
+"angle"                 Opening direction.
+"targetname"            A remote button or trigger activates the door.
+"speed"                 Movement speed (100 default).
+"wait"                  Wait before returning to previous state (3 default, -1 = never return).
+"lip"                   Lip remaining at end of move (8 default).
+"dmg"                   Damage to inflict when blocked (2 default).
+"message"               Display this when the door is touched if it is targeted and hasn't been triggered.
+"health"                Amount of damage before door will open.
+"sounds"                0 : Audible 1 : Silent.
+"team"			Use this to group different parts of a door.
+*/
+
+/*QUAKED func_door_rotating (0 .5 .8) ? START_OPEN REVERSE CRUSHER nofunc nofunc TOGGLE X_AXIS Y_AXIS
+TOGGLE                  Wait in both open and closed states to be triggered.
+START_OPEN              Door starts open and operates in reverse. Should be targeted, do not set health.
+REVERSE                 Will cause the door to rotate in the opposite direction.
+
+You need to have an origin brush as part of this entity.  The center of that brush will be
+the point around which it is rotated. It will rotate around the Z axis by default.  You can
+check either the X_AXIS or Y_AXIS box to change that.
+
+"distance"              Set how many degrees the door will be rotated.
+"speed"                 Movement speed (100 default).
+"message"               Display this when the door is touched if it is targeted and hasn't been triggered.
+"angle"                 Opening direction.
+"targetname"            A remote button or trigger activates the door.
+"health"                Amount of damage before door will open.
+"speed"                 Movement speed (100 default).
+"wait"                  Wait before returning to previous state (3 default, -1 = never return).
+"dmg"                   Damage to inflict when blocked. (2 default).
+"sounds"                0 : Audible 1 : Silent.
+*/
+
+
+/*QUAKED func_door_secret (0 .5 .8) ? always_shoot 1st_left 1st_down
+A secret door.  Slides back and then angle.
+
+always_shoot            Door is shootable even if targeted.
+1st_left                1st move is left of arrow.
+1st_down                1st move is down from arrow.
+
+"targetname"            A remote button or trigger activates the door.
+"angle"                 Opening direction.
+"dmg"                   Damage to inflict when blocked (2 default).
+"wait"                  Wait before returning to previous state (5 default, -1 = never return).
+*/
+
+
+/*QUAKED func_plat (0 .5 .8) ? PLAT_LOW_TRIGGER
+Plats are always drawn in the extended position so they will light correctly.
+
+"targetname"            A remote button or trigger activates the door.
+"lip"                   Lip remaining at end of move (8 default).
+"height"                Total height of movement, defaults to model height.
+"speed"                 Movement speed (100 default).
+"accel"                 Acceleration.
+"dmg"                   Damage to inflict when blocked (2 default).
+*/
+
+
+/*QUAKED func_button (0 .5 .8) ?
+When a button is touched, it moves some distance in the direction of it's angle, triggers all of it's targets, waits some time, then returns to it's original position where it can be triggered again.
+
+"angle"                 Opening direction.
+"target"                Name of remote target to trigger.
+"speed"		        Movement speed (100 default).
+"wait"                  Wait before returning to previous state. (3 default, -1 = never return).
+"lip"                   Lip remaining at end of move (8 default).
+"health"                Amount of damage before door will open.
+"delay"                 Delay amount before target is triggered.
+*/
+
+
+/*QUAKED func_train (0 .5 .8) ? START_ON TOGGLE BLOCK_STOPS nofunc nofunc nofunc PURPLE_STROBE
+A train is a mover that moves between path_corner target points.
+Trains MUST HAVE AN ORIGIN BRUSH.
+The train spawns at the first target it is pointing at.
+
+"speed"		        Movement speed (100 default).
+"dmg"                   Damage to inflict when blocked (2 default).
+"noise"                 Sound to play when the train is in motion.
+"target"                Name of next path corner.
+"model"                 Define a model as a train.
+*/
+
+
+/*QUAKED func_wall (0 .5 .8) ? TRIGGER_SPAWN TOGGLE START_ON
+This is just a solid wall if not targeted.
+
+TRIGGER_SPAWN   	The wall will not be present until triggered. Anything in its way will be killed.
+TOGGLE                  Valid for TRIGGER_SPAWN walls only, turns the wall on and off.
+START_ON                Valid for TRIGGER_SPAWN walls only, determines whether the wall will initially be present
+*/
+
+
+/*QUAKED func_rotating (0 .5 .8) ? START_ON REVERSE X_AXIS Y_AXIS TOUCH_PAIN BLOCK_STOPS ANIMATED ANIMATED_FAST
+You need to have an origin brush as part of this entity.  The center of that brush will be
+the point around which it is rotated. It will rotate around the Z axis by default.  You can
+check either the X_AXIS or Y_AXIS box to change that.
+
+"speed"		        Movement speed (100 default).
+"dmg"                   Damage to inflict when blocked (2 default).
+"model"                 Define a model to rotate.
+*/
+
+
+/*QUAKED func_timer (0.3 0.1 0.6) (-8 -8 -8) (8 8 8) START_ON
+Toggled to repeatedly trigger its targets.
+
+"wait"                  Delay amount before target is triggered.
+"random"                Wait variance.
+*/
+
+
+/*QUAKED func_explosive (0 .5 .8) ?
+Any brush that you want to explode or break apart.
+
+"health"                Amount of damage before door will open.
+"targetname"            A remote button or trigger activates the explosion.
+"mass"                  This determines how much debris is emitted (default 75, max 800).
+"dmg"                   Damage inflicted by explosion
+*/
+
+
+/*QUAKED func_water (0 .5 .8) ? START_OPEN 
+A moveable water brush. Must be targeted to operate. 
+
+START_OPEN              Water starts open and operates in reverse. Should be targeted, do not set health.
+
+
+"angle"                 Opening direction (up or down only).
+"speed"                 Movement speed (25 default).
+"wait"                  Wait before returning to previous state (-1 default, -1 = toggle).
+"lip"                   Lip remaining at end of move (0 default).
+"sounds"                0) No sound 1) Water 2) Lava
+*/
+
+
+/*QUAKED func_areaportal (0 0 0) ?
+This is a non-visible object that divides the world into
+areas that are seperated when this portal is not activated.
+Usually enclosed in the middle of a door.
+*/
+

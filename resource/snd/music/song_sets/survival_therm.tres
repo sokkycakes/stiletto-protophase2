@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="MusicSet" load_steps=4 format=3 uid="uid://dvt3him44vqc1"]
+
+[ext_resource type="AudioStream" uid="uid://01ep7f8x4hf5" path="res://assets/snd/music/melaleuca_doomloop.ogg" id="1_fmx60"]
+[ext_resource type="AudioStream" uid="uid://d18ks233irq7h" path="res://assets/player/sound/ThermosterLoop.ogg" id="2_iagim"]
+[ext_resource type="Script" path="res://resource/scripts/music_set.gd" id="3_q8hhx"]
+
+[resource]
+script = ExtResource("3_q8hhx")
+set_name = "Thermoster"
+normal_game_track = ExtResource("2_iagim")
+doom_track = ExtResource("1_fmx60")
+description = ""
+tags = Array[String]([])

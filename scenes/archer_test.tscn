@@ -1,0 +1,62 @@
+[gd_scene load_steps=10 format=3 uid="uid://bvn8x7y2qr8ks"]
+
+[ext_resource type="PackedScene" uid="uid://b12oujvp5ujyr" path="res://scenes/enemies/ArcherEnemy.tscn" id="1_archer"]
+[ext_resource type="Script" path="res://scripts/test_player.gd" id="2_test_player"]
+[ext_resource type="Script" path="res://scripts/archer_test_controller.gd" id="3_controller"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_1"]
+sky_curve = 0.00937503
+ground_bottom_color = Color(0.0849149, 0.0677518, 0.0478126, 1)
+ground_horizon_color = Color(0.523702, 0.534088, 0.550484, 1)
+ground_curve = 0.0263902
+
+[sub_resource type="Sky" id="Sky_1"]
+sky_material = SubResource("ProceduralSkyMaterial_1")
+
+[sub_resource type="Environment" id="Environment_1"]
+background_mode = 2
+sky = SubResource("Sky_1")
+tonemap_mode = 3
+
+[sub_resource type="BoxMesh" id="BoxMesh_1"]
+size = Vector3(20, 1, 20)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_1"]
+points = PackedVector3Array(-10, -0.5, -10, -10, 0.5, -10, 10, -0.5, -10, -10, -0.5, 10, -10, 0.5, 10, 10, 0.5, -10, 10, -0.5, 10, 10, 0.5, 10)
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_1"]
+radius = 0.4
+height = 1.8
+
+[node name="ArcherTest" type="Node3D"]
+script = ExtResource("3_controller")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(-0.930366, -0.317512, 0.183316, 2.78059e-08, 0.5, 0.866025, -0.366631, 0.805721, -0.465183, 0, 0, 0)
+shadow_enabled = true
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_1")
+
+[node name="Ground" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+mesh = SubResource("BoxMesh_1")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="Ground"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Ground/StaticBody3D"]
+shape = SubResource("ConvexPolygonShape3D_1")
+
+[node name="ArcherEnemy" parent="." instance=ExtResource("1_archer")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -5)
+debug_enabled = true
+
+[node name="TestPlayer" type="CharacterBody3D" parent="." groups=["player"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 5)
+script = ExtResource("2_test_player")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="TestPlayer"]
+mesh = SubResource("BoxMesh_1")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="TestPlayer"]
+shape = SubResource("CapsuleShape3D_1")

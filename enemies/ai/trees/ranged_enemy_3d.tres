@@ -1,0 +1,66 @@
+[gd_resource type="BehaviorTree" load_steps=17 format=3 uid="uid://cdrrl0g5mydt1"]
+
+[ext_resource type="Script" uid="uid://dkpcg6r6qbq50" path="res://enemies/ai/tasks/get_first_in_group_3d.gd" id="1_ranged"]
+[ext_resource type="Script" uid="uid://rg6uvnf0u8uj" path="res://enemies/ai/tasks/face_target_3d.gd" id="2_face"]
+[ext_resource type="Script" uid="uid://qx2uw1484w8g" path="res://enemies/ai/tasks/in_range_3d.gd" id="3_range"]
+[ext_resource type="Script" uid="uid://dyg2x3tgh1won" path="res://enemies/ai/tasks/shoot_projectile_3d.gd" id="4_shoot"]
+[ext_resource type="Script" uid="uid://ecndq5eovtyj" path="res://enemies/ai/tasks/pursue_3d.gd" id="5_pursue"]
+
+[sub_resource type="BlackboardPlan" id="BlackboardPlan_ranged"]
+var/speed/name = &"speed"
+var/speed/type = 3
+var/speed/value = 4.0
+var/speed/hint = 1
+var/speed/hint_string = "1,20,0.5"
+
+[sub_resource type="BTAction" id="BTAction_get_target"]
+script = ExtResource("1_ranged")
+group_name = &"player"
+output_var = &"target"
+
+[sub_resource type="BTCondition" id="BTCondition_in_range"]
+script = ExtResource("3_range")
+target_var = &"target"
+range = 12.0
+
+[sub_resource type="BTAction" id="BTAction_face_target"]
+script = ExtResource("2_face")
+target_var = &"target"
+turn_speed = 5.0
+angle_tolerance = 0.1
+
+[sub_resource type="BTAction" id="BTAction_shoot"]
+script = ExtResource("4_shoot")
+target_var = &"target"
+projectile_speed = 15.0
+spawn_offset = Vector3(0, 1.5, 0)
+
+[sub_resource type="BTWait" id="BTWait_cooldown"]
+duration = 1.5
+
+[sub_resource type="BTSequence" id="BTSequence_ranged_attack"]
+custom_name = "Ranged attack sequence"
+children = [SubResource("BTAction_face_target"), SubResource("BTAction_shoot"), SubResource("BTWait_cooldown")]
+
+[sub_resource type="BTAction" id="BTAction_approach"]
+script = ExtResource("5_pursue")
+target_var = &"target"
+speed_var = &"speed"
+approach_distance = 8.0
+
+[sub_resource type="BTSequence" id="BTSequence_get_in_range"]
+custom_name = "Get in range"
+children = [SubResource("BTAction_approach")]
+
+[sub_resource type="BTSelector" id="BTSelector_combat"]
+custom_name = "Combat behavior"
+children = [SubResource("BTSequence_ranged_attack"), SubResource("BTSequence_get_in_range")]
+
+[sub_resource type="BTSequence" id="BTSequence_main"]
+custom_name = "Main behavior"
+children = [SubResource("BTAction_get_target"), SubResource("BTCondition_in_range"), SubResource("BTSelector_combat")]
+
+[resource]
+description = "3D Ranged Enemy - Ranged combat AI that maintains distance and shoots projectiles at the player."
+blackboard_plan = SubResource("BlackboardPlan_ranged")
+root_task = SubResource("BTSequence_main")

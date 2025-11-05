@@ -1,0 +1,313 @@
+[gd_scene load_steps=19 format=4 uid="uid://bfeo3ogd0783p"]
+
+[ext_resource type="Script" uid="uid://ckcg4im8r7b72" path="res://killbox.gd" id="1_1wfhl"]
+[ext_resource type="AudioStream" uid="uid://c0rqyetgcgp61" path="res://assets/snd/music/likeastaratdawnloop.ogg" id="1_q2k8o"]
+[ext_resource type="AudioStream" uid="uid://da4yrjk2hwqp8" path="res://assets/snd/ambient/sound_ambient_ambience_urban_rooftop_ambloop02.wav" id="2_1wfhl"]
+[ext_resource type="Environment" uid="uid://dxnpcxg144rdl" path="res://assets/env/sandbox_night.tres" id="3_mlrre"]
+[ext_resource type="Script" uid="uid://cw71vo1m4dwjr" path="res://resource/scripts/respawn.gd" id="4_uw73y"]
+[ext_resource type="Material" uid="uid://7to3kb1tisdd" path="res://addons/prototype_mini_bundle/M_prototype_orange.tres" id="5_tqxyt"]
+[ext_resource type="PackedScene" uid="uid://dgo0wly7c6t0v" path="res://assets/world/light_flourescenttube.tscn" id="6_kqu3w"]
+[ext_resource type="AudioStream" uid="uid://b8ey7tn8nevm1" path="res://assets/snd/ambient/sound_ambient_italianradio.wav" id="7_y5yci"]
+[ext_resource type="PackedScene" uid="uid://b4hopyks1f1c1" path="res://entities/player/ss_player.tscn" id="8_4ag4y"]
+[ext_resource type="LightmapGIData" uid="uid://c35n1ymqfaugu" path="res://materials/lightmap/sandbox_night.lmbake" id="9_2afed"]
+[ext_resource type="Material" uid="uid://dyx4l6ea0am6f" path="res://addons/prototype_mini_bundle/M_prototype_green.tres" id="10_dgapv"]
+
+[sub_resource type="WorldBoundaryShape3D" id="WorldBoundaryShape3D_boack"]
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_5t1im"]
+lightmap_size_hint = Vector2i(1542, 1490)
+_surfaces = [{
+"aabb": AABB(-13.7764, -5.50755, -13.7617, 27.5528, 11.0151, 27.5233),
+"attribute_data": PackedByteArray("AAAAAAAAAACduFw/vw1YPwAAAAAAAIA/nbhcP04V8j4AAIA/AACAP/gHOD9OFfI+AAAAAAAAAAD5sTg/Tm7nPgAAAAAAAIA/nWJdP05u5z4AAIA/AACAP51iXT95oKU9AACAPwAAAAD4Bzg/vw1YPwAAgD8AAAAAeDI4P0+xnDz8cW8/IHCEPZxCMj8UpzA9AACAPwAAgD85x7g+T7GcPAAAAAAAAAAAceQwPzo/SD8AAAAAAACAP3HkMD/JRiI/AACAPwAAgD8qK6o+yUYiPwAAAAAAAAAAOMi3Pisyvj4AAAAAAACAP6oAqjkrMr4+AACAPwAAgD+qAKo5gu+vOQAAgD8AAIA/doo1PwezHz8AAIA/AAAAADN3sz4Hsx8/AAAAAAAAAAAzd7M+LXXzPgAAAAAAAIA/Oce4PkTRxz4hcIQ9/HFvP/GmxD53h7s+AAAAAAAAAAB4Mjg/RNHHPgAAgD8AAAAAKiuqPjo/SD/8cW8//HFvP/GmxD4UpzA9AAAAAAAAgD92ijU/LXXzPiFwhD0gcIQ9nEIyP3eHuz4AAIA/AAAAAPmxOD95oKU9AACAPwAAAAA4yLc+gu+vOQAAAAAUSEI/deA0P68Lbj8AAAAAAAAAAHXgND8NI0o/AACAPwAAAABKC8o+DSNKPwAAgD8AAIA/taC0O2ABXD+x33Y+AACAP7WgtDsC6n8/sd92PgAAAAAjiKI+Aup/PwAAgD+x33Y+wOp/P0OOUj8AAAAAAACAPx04XT8E1P8+AAAAALHfdj7A6n8/BNT/PgAAgD8AAAAAI4iiPmABXD8AAIA/AACAP79APztKQTI/AAAAAAAAgD8hNKE+SkEyPwAAAAAAAAAAITShPhM6vz4AAIA/AACAPyjYpz5sfVs/sd92PgAAgD8o2Kc+ypQ3P7Hfdj4AAAAAgiiCPMqUNz8AAIA/FEhCP0oLyj6vC24/AACAPwAAgD8dOF0/Q45SPwAAgD8AAAAAv0A/OxM6vz4AAIA/AAAAAIIogjxsfVs/"),
+"format": 34359742519,
+"index_count": 84,
+"index_data": PackedByteArray("AAABAAIAAwAEAAUABgAAAAIABwAIAAkACgALAAwADQAOAA8AEAARABIAEwAUABUAFgAKAAwAFAATABcAEgAYABAAFwAJAAgACAAHABkAFwATAAkAAwAFABoAGQAVABQADQAPABsAGQAHABUAHAAdAB4AHwAgACEAIgAjACQAIQAlAB8AJgAnACgAKQAqACsAHAAeACwAIgAtACMALgAmACgAKwAvACkA"),
+"material": ExtResource("5_tqxyt"),
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 48,
+"vertex_data": PackedByteArray("ImxcQdk9sEC4L1xBImxcQdk9sEC4L1zBImxcQdk9sMC4L1zBImxcQdk9sMC4L1zBImxcQdk9sEC4L1zBImxcwdk9sEC4L1zBImxcQdk9sMC4L1xBImxcQdk9sEC4L1zBD+o/Qdk9sEB1tT/BImxcwdk9sEC4L1zBImxcQdk9sEC4L1xBImxcQdk9sMC4L1xBImxcwdk9sMC4L1xBImxcwdk9sMC4L1xBImxcQdk9sMC4L1xBImxcQdk9sMC4L1zBImxcwdk9sMC4L1xBImxcwdk9sMC4L1zBImxcwdk9sEC4L1zBImxcwdk9sEC4L1xBD+o/wdk9sEB1tT9BImxcQdk9sEC4L1xBImxcwdk9sEC4L1xBD+o/wdk9sEB1tT/BImxcwdk9sEC4L1xBD+o/Qdk9sEB1tT9BImxcwdk9sMC4L1zBImxcwdk9sMC4L1zBD+o/Qdk9sEB1tT/BD+o/QXpLncB1tT/BD+o/wXpLncB1tT/BD+o/QXpLncB1tT/BD+o/Qdk9sEB1tT/BD+o/Qdk9sEB1tT9BD+o/wdk9sEB1tT9BD+o/QXpLncB1tT9BD+o/Qdk9sEB1tT9BD+o/QXpLncB1tT9BD+o/QXpLncB1tT/BD+o/QXpLncB1tT9BD+o/wXpLncB1tT9BD+o/wXpLncB1tT9BD+o/wdk9sEB1tT9BD+o/wdk9sEB1tT/BD+o/wdk9sEB1tT/BD+o/wXpLncB1tT9BD+o/wXpLncB1tT/BD+o/wXpLncB1tT/B//8AgP9//n///wCA/3/+f///AID/f/5//////wAA/z//////AAD/P/////8AAP8///8AgP9//n8AgP////8AAACA/////wAAAID/////AAD/f/9/AAD/P/9//38AAP8//3//fwAA/z8AgAAA//8AAACAAAD//wAAAIAAAP//AAAAAACA/3/+fwAAAID/f/5/AAAAgP9//n8AgP////8AAACA/////wAAAID/////AAD/f/9/AAD/PwCA/////wAAAAAAgP9//n8AgP////8AAP////8AAP8/AIAAAP//AAD/f/9/AAD/v/9//38AAP+//3//fwAA/78AAACA/38AgAAAAID/fwCAAAAAgP9/AID/////AAD/v/////8AAP+//////wAA/78AAACA/38AgACA////////AID///////8AgP//////////AID/fwCA//8AgP9/AID//wCA/38AgP9//38AAP+//////wAA/78AgP//////////AID/fwCA")
+}]
+
+[sub_resource type="ConcavePolygonShape3D" id="ConcavePolygonShape3D_2xfpa"]
+data = PackedVector3Array(13.7764, 5.5075, 13.7617, 13.7764, 5.5075, -13.7617, 13.7764, -5.5075, -13.7617, 13.7764, -5.5075, -13.7617, 13.7764, 5.5075, -13.7617, -13.7764, 5.5075, -13.7617, 13.7764, -5.5075, 13.7617, 13.7764, 5.5075, 13.7617, 13.7764, -5.5075, -13.7617, 13.7764, 5.5075, -13.7617, 11.9946, 5.5075, -11.9818, -13.7764, 5.5075, -13.7617, 13.7764, 5.5075, 13.7617, 13.7764, -5.5075, 13.7617, -13.7764, -5.5075, 13.7617, -13.7764, -5.5075, 13.7617, 13.7764, -5.5075, 13.7617, 13.7764, -5.5075, -13.7617, -13.7764, -5.5075, 13.7617, -13.7764, -5.5075, -13.7617, -13.7764, 5.5075, -13.7617, -13.7764, 5.5075, 13.7617, -11.9946, 5.5075, 11.9818, 13.7764, 5.5075, 13.7617, -13.7764, 5.5075, 13.7617, 13.7764, 5.5075, 13.7617, -13.7764, -5.5075, 13.7617, -11.9946, 5.5075, 11.9818, -13.7764, 5.5075, 13.7617, -11.9946, 5.5075, -11.9818, -13.7764, 5.5075, -13.7617, -13.7764, 5.5075, 13.7617, -13.7764, -5.5075, 13.7617, -11.9946, 5.5075, -11.9818, -13.7764, 5.5075, -13.7617, 11.9946, 5.5075, -11.9818, 11.9946, 5.5075, -11.9818, 13.7764, 5.5075, -13.7617, 11.9946, 5.5075, 11.9818, -11.9946, 5.5075, -11.9818, -13.7764, 5.5075, 13.7617, -13.7764, 5.5075, -13.7617, 13.7764, -5.5075, -13.7617, -13.7764, 5.5075, -13.7617, -13.7764, -5.5075, -13.7617, 11.9946, 5.5075, 11.9818, 13.7764, 5.5075, 13.7617, -11.9946, 5.5075, 11.9818, -13.7764, -5.5075, 13.7617, 13.7764, -5.5075, -13.7617, -13.7764, -5.5075, -13.7617, 11.9946, 5.5075, 11.9818, 13.7764, 5.5075, -13.7617, 13.7764, 5.5075, 13.7617, 11.9946, 5.5075, -11.9818, 11.9946, -4.9155, -11.9818, -11.9946, -4.9155, -11.9818, 11.9946, -4.9155, -11.9818, 11.9946, 5.5075, -11.9818, 11.9946, 5.5075, 11.9818, -11.9946, 5.5075, 11.9818, 11.9946, -4.9155, 11.9818, 11.9946, 5.5075, 11.9818, 11.9946, 5.5075, 11.9818, 11.9946, -4.9155, 11.9818, 11.9946, -4.9155, -11.9818, 11.9946, -4.9155, -11.9818, 11.9946, -4.9155, 11.9818, -11.9946, -4.9155, 11.9818, -11.9946, -4.9155, 11.9818, -11.9946, 5.5075, 11.9818, -11.9946, 5.5075, -11.9818, 11.9946, 5.5075, -11.9818, -11.9946, -4.9155, -11.9818, -11.9946, 5.5075, -11.9818, -11.9946, 5.5075, 11.9818, -11.9946, -4.9155, 11.9818, 11.9946, -4.9155, 11.9818, -11.9946, -4.9155, -11.9818, 11.9946, -4.9155, -11.9818, -11.9946, -4.9155, 11.9818, -11.9946, 5.5075, -11.9818, -11.9946, -4.9155, -11.9818, -11.9946, -4.9155, 11.9818)
+
+[sub_resource type="BoxMesh" id="BoxMesh_5t1im"]
+material = ExtResource("10_dgapv")
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_boack"]
+points = PackedVector3Array(0.5, 0.5, 0.5, 0.5, 0.5, -0.5, -0.5, 0.5, 0.5, 0.5, -0.5, 0.5, 0.5, -0.5, -0.5, -0.5, 0.5, -0.5, -0.5, -0.5, 0.5, -0.5, -0.5, -0.5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_rvmsc"]
+size = Vector3(1, 0.533203, 0.241798)
+
+[sub_resource type="BoxMesh" id="BoxMesh_rjrbw"]
+
+[node name="Node3D" type="Node3D"]
+
+[node name="killbox" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -19.8689, -4.33191)
+collision_layer = 0
+script = ExtResource("1_1wfhl")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="killbox"]
+shape = SubResource("WorldBoundaryShape3D_boack")
+
+[node name="env" type="Node" parent="."]
+
+[node name="lights" type="Node" parent="env"]
+
+[node name="OmniLight3D" type="OmniLight3D" parent="env/lights"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.80458, 5.16291, 3.53103)
+light_color = Color(0.77475, 1, 0.527344, 1)
+light_bake_mode = 1
+omni_range = 8.065
+
+[node name="OmniLight3D2" type="OmniLight3D" parent="env/lights"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.80458, 5.16291, -12.6489)
+light_color = Color(0.77475, 1, 0.527344, 1)
+light_bake_mode = 1
+omni_range = 8.065
+
+[node name="OmniLight3D3" type="OmniLight3D" parent="env/lights"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13.2847, 5.16291, 3.53103)
+light_color = Color(0.77475, 1, 0.527344, 1)
+light_bake_mode = 1
+omni_range = 8.065
+
+[node name="OmniLight3D4" type="OmniLight3D" parent="env/lights"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13.2847, 5.16291, -12.6489)
+light_color = Color(0.77475, 1, 0.527344, 1)
+light_bake_mode = 1
+omni_range = 8.065
+
+[node name="bgm" type="AudioStreamPlayer" parent="env"]
+stream = ExtResource("1_q2k8o")
+volume_db = -11.36
+mix_target = 2
+bus = &"bgm"
+parameters/looping = true
+
+[node name="env_ambience" type="AudioStreamPlayer" parent="env"]
+stream = ExtResource("2_1wfhl")
+volume_db = -9.705
+autoplay = true
+max_polyphony = 5
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="env"]
+environment = ExtResource("3_mlrre")
+
+[node name="respawn" type="Node" parent="env"]
+script = ExtResource("4_uw73y")
+
+[node name="world" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.7626, 0.934444, -4.31793)
+mesh = SubResource("ArrayMesh_5t1im")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="world"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="world/StaticBody3D"]
+shape = SubResource("ConcavePolygonShape3D_2xfpa")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="world"]
+transform = Transform3D(5.66717, 0, 0, 0, 1, 0, 0, 0, 5.4786, 0.81677, 11.0679, -0.65356)
+mesh = SubResource("BoxMesh_5t1im")
+skeleton = NodePath("../..")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="world/MeshInstance3D"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="world/MeshInstance3D/StaticBody3D"]
+shape = SubResource("ConvexPolygonShape3D_boack")
+
+[node name="MeshInstance3D4" type="MeshInstance3D" parent="world"]
+transform = Transform3D(5.66717, 0, 0, 0, 14.3603, 0, 0, 0, 5.4786, 0.81754, 29.2936, -0.64894)
+mesh = SubResource("BoxMesh_5t1im")
+skeleton = NodePath("../..")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="world/MeshInstance3D4"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="world/MeshInstance3D4/StaticBody3D"]
+shape = SubResource("ConvexPolygonShape3D_boack")
+
+[node name="MeshInstance3D5" type="MeshInstance3D" parent="world"]
+transform = Transform3D(5.66717, 0, 0, 0, 14.3603, 0, 0, 0, 5.4786, 0.81754, 37.559, -17.9297)
+mesh = SubResource("BoxMesh_5t1im")
+skeleton = NodePath("../..")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="world/MeshInstance3D5"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="world/MeshInstance3D5/StaticBody3D"]
+shape = SubResource("ConvexPolygonShape3D_boack")
+
+[node name="MeshInstance3D2" type="MeshInstance3D" parent="world"]
+transform = Transform3D(5.66717, 0, 0, 0, 1, 0, 0, 0, 5.4786, 10.7153, 17.3084, -0.65356)
+mesh = SubResource("BoxMesh_5t1im")
+skeleton = NodePath("../..")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="world/MeshInstance3D2"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="world/MeshInstance3D2/StaticBody3D"]
+shape = SubResource("ConvexPolygonShape3D_boack")
+
+[node name="MeshInstance3D6" type="MeshInstance3D" parent="world"]
+transform = Transform3D(5.66717, 0, 0, 0, 1, 0, 0, 0, 19.8601, 10.7153, 46.7632, -8.88697)
+mesh = SubResource("BoxMesh_5t1im")
+skeleton = NodePath("../..")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="world/MeshInstance3D6"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="world/MeshInstance3D6/StaticBody3D"]
+shape = SubResource("ConvexPolygonShape3D_boack")
+
+[node name="MeshInstance3D7" type="MeshInstance3D" parent="world"]
+transform = Transform3D(5.66717, 0, 0, 0, 1, 0, 0, 0, 19.8601, -13.3175, 70.4018, -8.88697)
+mesh = SubResource("BoxMesh_5t1im")
+skeleton = NodePath("../..")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="world/MeshInstance3D7"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="world/MeshInstance3D7/StaticBody3D"]
+shape = SubResource("ConvexPolygonShape3D_boack")
+
+[node name="MeshInstance3D8" type="MeshInstance3D" parent="world"]
+transform = Transform3D(5.66717, 0, 0, 0, 1, 0, 0, 0, 19.8601, 1.14795, 70.4018, -8.88697)
+mesh = SubResource("BoxMesh_5t1im")
+skeleton = NodePath("../..")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="world/MeshInstance3D8"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="world/MeshInstance3D8/StaticBody3D"]
+shape = SubResource("ConvexPolygonShape3D_boack")
+
+[node name="MeshInstance3D9" type="MeshInstance3D" parent="world"]
+transform = Transform3D(-2.4772e-07, 0, 19.8601, 0, 1, 0, -5.66717, 0, -8.68113e-07, -5.85102, 70.4018, -16.2567)
+mesh = SubResource("BoxMesh_5t1im")
+skeleton = NodePath("../..")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="world/MeshInstance3D9"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="world/MeshInstance3D9/StaticBody3D"]
+shape = SubResource("ConvexPolygonShape3D_boack")
+
+[node name="MeshInstance3D10" type="MeshInstance3D" parent="world"]
+transform = Transform3D(-2.4772e-07, 0, 19.8601, 0, 1, 0, -5.66717, 0, -8.68113e-07, -5.85102, 70.4018, -1.66973)
+mesh = SubResource("BoxMesh_5t1im")
+skeleton = NodePath("../..")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="world/MeshInstance3D10"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="world/MeshInstance3D10/StaticBody3D"]
+shape = SubResource("ConvexPolygonShape3D_boack")
+
+[node name="MeshInstance3D11" type="MeshInstance3D" parent="world"]
+transform = Transform3D(5.66717, 0, 0, 0, 1, 0, 0, 0, 19.8601, -13.3175, 82.995, -8.88697)
+mesh = SubResource("BoxMesh_5t1im")
+skeleton = NodePath("../..")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="world/MeshInstance3D11"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="world/MeshInstance3D11/StaticBody3D"]
+shape = SubResource("ConvexPolygonShape3D_boack")
+
+[node name="MeshInstance3D12" type="MeshInstance3D" parent="world"]
+transform = Transform3D(5.66717, 0, 0, 0, 1, 0, 0, 0, 19.8601, 1.14795, 82.995, -8.88697)
+mesh = SubResource("BoxMesh_5t1im")
+skeleton = NodePath("../..")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="world/MeshInstance3D12"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="world/MeshInstance3D12/StaticBody3D"]
+shape = SubResource("ConvexPolygonShape3D_boack")
+
+[node name="MeshInstance3D13" type="MeshInstance3D" parent="world"]
+transform = Transform3D(-2.4772e-07, 0, 19.8601, 0, 1, 0, -5.66717, 0, -8.68113e-07, -5.85102, 82.995, -16.2567)
+mesh = SubResource("BoxMesh_5t1im")
+skeleton = NodePath("../..")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="world/MeshInstance3D13"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="world/MeshInstance3D13/StaticBody3D"]
+shape = SubResource("ConvexPolygonShape3D_boack")
+
+[node name="MeshInstance3D14" type="MeshInstance3D" parent="world"]
+transform = Transform3D(-2.4772e-07, 0, 19.8601, 0, 1, 0, -5.66717, 0, -8.68113e-07, -5.85102, 82.995, -1.66973)
+mesh = SubResource("BoxMesh_5t1im")
+skeleton = NodePath("../..")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="world/MeshInstance3D14"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="world/MeshInstance3D14/StaticBody3D"]
+shape = SubResource("ConvexPolygonShape3D_boack")
+
+[node name="MeshInstance3D3" type="MeshInstance3D" parent="world"]
+transform = Transform3D(5.66717, 0, 0, 0, 1, 0, 0, 0, 5.4786, -10.7164, 17.3084, -0.65356)
+mesh = SubResource("BoxMesh_5t1im")
+skeleton = NodePath("../..")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="world/MeshInstance3D3"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="world/MeshInstance3D3/StaticBody3D"]
+shape = SubResource("ConvexPolygonShape3D_boack")
+
+[node name="world_props" type="Node3D" parent="."]
+
+[node name="light1" parent="world_props" instance=ExtResource("6_kqu3w")]
+transform = Transform3D(-1.93549e-07, 0, -1, 0, 0.548387, 0, 4.42788, 0, -4.37114e-08, 8.73629, 6.16737, 3.55459)
+
+[node name="SpotLight3D" parent="world_props/light1/MeshInstance3D" index="0"]
+transform = Transform3D(0.238134, -8.88178e-16, -5.29396e-23, 0, -8.40474e-08, 1.92278, -3.55271e-15, -1.05443, -4.60905e-08, 0, -0.741811, 0)
+light_size = 0.367
+spot_angle = 26.4671
+
+[node name="MeshInstance3D2" parent="world_props" instance=ExtResource("6_kqu3w")]
+transform = Transform3D(-1.93549e-07, 0, -1, 0, 0.548387, 0, 4.42788, 0, -4.37114e-08, 8.73629, 6.16737, -12.7094)
+
+[node name="MeshInstance3D3" parent="world_props" instance=ExtResource("6_kqu3w")]
+transform = Transform3D(-1.93549e-07, 0, -1, 0, 0.548387, 0, 4.42788, 0, -4.37114e-08, -14.2892, 6.16737, 3.55459)
+
+[node name="MeshInstance3D4" parent="world_props" instance=ExtResource("6_kqu3w")]
+transform = Transform3D(-1.93549e-07, 0, -1, 0, 0.548387, 0, 4.42788, 0, -4.37114e-08, -14.2892, 6.16737, -12.7094)
+
+[node name="radio" type="RigidBody3D" parent="world_props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.10619, -2.68321, -12.9041)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="world_props/radio"]
+transform = Transform3D(0.712086, 0, 0, 0, 0.712086, 0, 0, 0, 0.712086, 0, -0.000695229, 0.00102615)
+shape = SubResource("BoxShape3D_rvmsc")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="world_props/radio"]
+transform = Transform3D(0.704337, 0, 0, 0, 0.369359, 0, 0, 0, 0.170488, 0, 0, 0)
+mesh = SubResource("BoxMesh_rjrbw")
+skeleton = NodePath("../CollisionShape3D")
+
+[node name="AudioStreamPlayer3D" type="AudioStreamPlayer3D" parent="world_props/radio"]
+transform = Transform3D(-1, 0, -8.9407e-08, 0, 1, 0, 8.9407e-08, 0, -1, 0, 0, 0)
+stream = ExtResource("7_y5yci")
+attenuation_model = 2
+unit_size = 18.98
+max_db = -0.237
+max_distance = 18.95
+bus = &"sfx_ambient_radio"
+emission_angle_degrees = 71.0
+doppler_tracking = 2
+
+[node name="ss_player" parent="." instance=ExtResource("8_4ag4y")]
+
+[node name="LightmapGI" type="LightmapGI" parent="."]
+visible = false
+light_data = ExtResource("9_2afed")
+
+[node name="Control" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 256.0
+offset_bottom = 40.0
+
+[node name="Label" type="Label" parent="Control"]
+modulate = Color(1, 1, 1, 0.519)
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 23.0
+text = "Press Q to respawn."
+
+[editable path="world_props/light1"]

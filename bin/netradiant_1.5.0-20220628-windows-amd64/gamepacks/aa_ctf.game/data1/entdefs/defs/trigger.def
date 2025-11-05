@@ -1,0 +1,52 @@
+/*QUAKED trigger_always (.5 .5 .5) (-8 -8 -8) (8 8 8)
+This trigger will always fire.  It is activated by the world.
+"target"                Name of the target to trigger.
+*/
+
+
+/*QUAKED trigger_relay (.5 .5 .5) (-8 -8 -8) (8 8 8)
+This fixed size trigger cannot be touched, it can only be fired by other events.
+
+"target"                Name of the target to trigger.
+"targetname"            Name of this target.
+*/
+
+/*QUAKED trigger_multiple (.5 .5 .5) ?
+Variable sized repeatable trigger.
+
+"wait"                  Time between triggerings (0.5 default, -1 = Only trigger once).
+"target"                Name of the target to trigger.
+"delay"                 Delay amount before target is triggered.
+"sounds"                0) Beep 1) Secret 2) F1 Prompt 3) Silent
+*/
+
+
+/*QUAKED trigger_push (.5 .5 .5) ?
+"speed"		        Push speed.
+"angle"                 Direction of push.
+"angles"                Sets Pitch/Yaw/Roll.
+*/
+
+
+/*QUAKED trigger_monsterjump (.5 .5 .5) ?
+"speed"                 Speed forward.
+"height"                Speed upward.
+"angle"                 Direction of jump.
+*/
+
+
+/*QUAKED trigger_hurt (.5 .5 .5) ? START_OFF TOGGLE SILENT NO_PROTECTION SLOW
+Any entity that touches this will be hurt. Targeting the trigger will toggle it on/off.
+
+SILENT			Supresses noise.
+SLOW			Changes the damage rate to once per second.
+NO_PROTECTION	        Nothing will stop the damage.
+
+"dmg"                   Damage to inflict. (5 default).
+*/
+
+
+/*QUAKED trigger_once (.5 .5 .5) ?
+
+"target"                Name of entity to trigger.
+*/

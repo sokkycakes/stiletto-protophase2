@@ -1,0 +1,29 @@
+[gd_scene load_steps=7 format=3 uid="uid://c7x5r8qp2n3vm"]
+
+[ext_resource type="Script" uid="uid://2uty5wj0hllu" path="res://resource/scripts/weapons/throwable_knife_projectile.gd" id="1_throwable"]
+[ext_resource type="PackedScene" uid="uid://p262qaitjp3" path="res://scenes/effects/bullet_impact.tscn" id="2_fhhnn"]
+[ext_resource type="PackedScene" uid="uid://bq8x7y21aw3m4" path="res://scenes/effects/bullet_trail.tscn" id="3_k3o28"]
+[ext_resource type="AudioStream" uid="uid://l4qidvunw3ts" path="res://assets/snd/weapon/knife-wallhit.ogg" id="4_fhhnn"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_knife"]
+size = Vector3(0.05, 0.01, 0.3)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_knife"]
+size = Vector3(0.05, 0.01, 0.3)
+
+[node name="ThrowableKnife" type="RigidBody3D"]
+collision_layer = 2
+mass = 0.1
+continuous_cd = true
+contact_monitor = true
+max_contacts_reported = 4
+script = ExtResource("1_throwable")
+impact_effect_scene = ExtResource("2_fhhnn")
+trail_effect_scene = ExtResource("3_k3o28")
+impact_sound = ExtResource("4_fhhnn")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_knife")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("BoxShape3D_knife")

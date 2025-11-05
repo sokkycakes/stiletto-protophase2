@@ -1,0 +1,94 @@
+[gd_scene load_steps=10 format=3 uid="uid://cpbqkpirolw0r"]
+
+[ext_resource type="PackedScene" uid="uid://dqgktuwbqijjk" path="res://enemies/melee_enemy_3d.tscn" id="1_melee"]
+[ext_resource type="PackedScene" path="res://enemies/charger_enemy_3d.tscn" id="2_charger"]
+[ext_resource type="PackedScene" path="res://enemies/ranged_enemy_3d.tscn" id="3_ranged"]
+[ext_resource type="PackedScene" uid="uid://b4hopyks1f1c1" path="res://resource/entities/player/ss_player.tscn" id="4_hln5d"]
+
+[sub_resource type="Environment" id="Environment_1"]
+background_mode = 1
+background_color = Color(0.2, 0.2, 0.3, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.8, 0.8, 1, 1)
+ambient_light_energy = 0.3
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_1"]
+size = Vector2(50, 50)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ground"]
+albedo_color = Color(0.3, 0.5, 0.3, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_ground"]
+size = Vector3(50, 0.1, 50)
+
+[sub_resource type="NavigationMesh" id="NavigationMesh_1"]
+vertices = PackedVector3Array(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+polygons = [PackedInt32Array(3, 2, 0), PackedInt32Array(0, 2, 1)]
+
+[node name="EnemyTest3D" type="Node3D"]
+
+[node name="Environment" type="Node3D" parent="."]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="Environment"]
+environment = SubResource("Environment_1")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="Environment"]
+transform = Transform3D(0.707107, -0.5, 0.5, 0, 0.707107, 0.707107, -0.707107, -0.5, 0.5, 0, 10, 0)
+light_energy = 0.8
+shadow_enabled = true
+
+[node name="Ground" type="StaticBody3D" parent="Environment"]
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Environment/Ground"]
+mesh = SubResource("PlaneMesh_1")
+surface_material_override/0 = SubResource("StandardMaterial3D_ground")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Environment/Ground"]
+shape = SubResource("BoxShape3D_ground")
+
+[node name="NavigationRegion3D" type="NavigationRegion3D" parent="Environment"]
+navigation_mesh = SubResource("NavigationMesh_1")
+
+[node name="Enemies" type="Node3D" parent="."]
+
+[node name="MeleeEnemy" parent="Enemies" instance=ExtResource("1_melee")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 0, 0)
+
+[node name="ChargerEnemy" parent="Enemies" instance=ExtResource("2_charger")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, 0)
+
+[node name="RangedEnemy" parent="Enemies" instance=ExtResource("3_ranged")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -12)
+
+[node name="UI" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Instructions" type="Label" parent="UI"]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = -120.0
+offset_right = 400.0
+offset_bottom = -20.0
+grow_vertical = 0
+text = "3D LimboAI Enemy Test Scene
+
+WASD - Move
+Mouse - Look around
+Space - Jump
+ESC - Toggle mouse capture
+
+Red Enemy - Melee (chases and attacks up close)
+Green Enemy - Charger (flanks then charges)
+Blue Enemy - Ranged (shoots projectiles)"
+
+[node name="ss_player" parent="." instance=ExtResource("4_hln5d")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.32477, 0)

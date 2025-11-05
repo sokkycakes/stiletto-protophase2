@@ -1,0 +1,14 @@
+[remap]
+
+importer="glsl"
+type="RDShaderFile"
+uid="uid://dxd888fpshdu0"
+path="res://.godot/imported/lighting_DBS_omni_fp.glsl-eb86908a9f3e0cf096fc25dfcf76c544.res"
+
+[deps]
+
+source_file="res://bin/netradiant_1.5.0-20220628-windows-amd64/netradiant_1.5.0-20220628-windows-amd64/gl/lighting_DBS_omni_fp.glsl"
+dest_files=["res://.godot/imported/lighting_DBS_omni_fp.glsl-eb86908a9f3e0cf096fc25dfcf76c544.res"]
+
+[params]
+

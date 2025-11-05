@@ -1,0 +1,30 @@
+/*QUAKED info_player_red (1 0 0) (-16 -16 -16) (16 16 32)
+Spawn point. Used for team games.
+*/
+
+
+/*QUAKED info_player_blue (0 0 1) (-16 -16 -16) (16 16 32)
+Spawn point. Used for team games.
+*/
+
+
+/*QUAKED info_player_intermission (1 0 1) (-16 -16 -24) (16 16 32)
+Podium position at the end of the round.
+
+"angle"                 Sets the direction the podium will face.
+"angles"                Sets Pitch/Yaw/Roll.
+
+-------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
+model="models/objects/dmspot/tris.iqm"
+*/
+
+
+/*QUAKED info_null (0 0.5 0) (-4 -4 -4) (4 4 4)
+Primarily used as a directional target for spotlights. 
+*/
+
+
+/*QUAKED info_notnull (0 0.5 0) (-4 -4 -4) (4 4 4)
+This is similar to info_null, some entities require it.
+*/
+

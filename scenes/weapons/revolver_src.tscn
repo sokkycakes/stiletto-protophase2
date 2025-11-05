@@ -1,0 +1,20 @@
+[gd_scene load_steps=6 format=3 uid="uid://y16mdft5mt7a"]
+
+[ext_resource type="Script" uid="uid://c2ai6ebsr705b" path="res://resource/scripts/weapons/pistol.gd" id="1_fq8rt"]
+[ext_resource type="PackedScene" uid="uid://bb1ki6ldu1bfx" path="res://scenes/effects/muzzle_flash.tscn" id="2_xtsr3"]
+[ext_resource type="PackedScene" uid="uid://p262qaitjp3" path="res://scenes/effects/bullet_impact.tscn" id="3_x5vfq"]
+[ext_resource type="PackedScene" uid="uid://bq8x7y21aw3m4" path="res://scenes/effects/bullet_trail.tscn" id="4_kxuxt"]
+[ext_resource type="AudioStream" uid="uid://crxopfijtfjd0" path="res://assets/player/sound/gunshotv3.ogg" id="5_qurbl"]
+
+[node name="revolver" type="Node3D"]
+script = ExtResource("1_fq8rt")
+pistol_spread = 1.0
+pistol_muzzle_flash_scene = ExtResource("2_xtsr3")
+pistol_impact_effect_scene = ExtResource("3_x5vfq")
+pistol_bullet_trail_scene = ExtResource("4_kxuxt")
+pistol_muzzle_path = NodePath("muzzle")
+pistol_fire_sound = ExtResource("5_qurbl")
+pistol_auto_reload_on_empty = true
+
+[node name="muzzle" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0139066, 0)

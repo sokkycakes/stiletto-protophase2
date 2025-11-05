@@ -1,0 +1,89 @@
+/*QUAKED item_armor_shard (.3 .3 1) (-16 -16 -16) (16 16 16)
+2 points of armour.
+-------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
+model="models/items/armor/shard/tris.iqm"
+*/
+
+
+/*QUAKED item_armor_jacket (.3 .3 1) (-16 -16 -16) (16 16 16)
+25 points of armour.
+-------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
+model="models/items/armor/jacket/tris.iqm"
+*/
+
+
+/*QUAKED item_armor_combat (.3 .3 1) (-16 -16 -16) (16 16 16)
+50 points of armour.
+-------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
+model="models/items/armor/combat/tris.iqm"  
+*/
+
+
+/*QUAKED item_armor_body (.3 .3 1) (-16 -16 -16) (16 16 16)
+100 points of armour.
+-------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
+model="models/items/armor/body/tris.iqm"
+*/
+
+
+/*QUAKED item_health_small (.3 .3 1) (-16 -16 -16) (16 16 16)
+5 points of health.
+-------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
+model="models/items/healing/small/tris.iqm"  
+*/
+
+
+/*QUAKED item_health (.3 .3 1) (-16 -16 -16) (16 16 16) 
+10 points of health.
+-------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
+model="models/items/healing/medium/tris.iqm"
+*/
+
+
+/*QUAKED item_health_large (.3 .3 1) (-16 -16 -16) (16 16 16) 
+25 points of health.
+-------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
+model="models/items/healing/large/tris.iqm"
+*/
+
+
+/*QUAKED item_health_mega (.3 .3 1) (-16 -16 -16) (16 16 16) 
+100 points of health.
+-------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
+model="models/items/mega_h/tris.iqm"
+*/
+
+
+/*QUAKED item_quad (.3 .3 1) (-16 -16 -16) (16 16 16) 
+Quad Damage.
+-------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
+model="models/items/quaddama/tris.iqm"
+*/
+
+
+/*QUAKED item_invulnerability (.3 .3 1) (-16 -16 -16) (16 16 16) 
+Alien Force. 
+-------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
+model="models/items/invulner/tris.iqm"
+*/
+
+
+/*QUAKED item_haste (.3 .3 1) (-16 -16 -16) (16 16 16) 
+Haste.
+-------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
+model="models/items/haste/tris.iqm"
+*/
+
+
+/*QUAKED item_adrenaline (.3 .3 1) (-16 -16 -16) (16 16 16) 
+Adrenaline.
+-------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
+model="models/items/adrenaline/tris.iqm"
+*/
+
+
+/*QUAKED item_sproing (.3 .3 1) (-16 -16 -16) (16 16 16) 
+Sproing.
+-------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
+model="models/items/sproing/tris.iqm"
+*/

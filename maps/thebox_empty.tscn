@@ -1,0 +1,86 @@
+[gd_scene load_steps=10 format=4 uid="uid://d4enchjyk84ch"]
+
+[ext_resource type="AudioStream" uid="uid://dan8mha5pc8s8" path="res://assets/snd/ambient/sound_ambient_ambience_mall_amb_loop.wav" id="1_x20fy"]
+[ext_resource type="Environment" uid="uid://c216uw67ybw0p" path="res://assets/env/sandbox.tres" id="2_cns0f"]
+[ext_resource type="Script" uid="uid://cw71vo1m4dwjr" path="res://resource/scripts/respawn.gd" id="3_ctved"]
+[ext_resource type="LightmapGIData" uid="uid://dmep4lj5lpug7" path="res://maps/thebox.lmbake" id="4_vd0il"]
+[ext_resource type="Texture2D" uid="uid://bjcq8axgqat8g" path="res://materials/dev/texture_08.vtf" id="5_vikxh"]
+[ext_resource type="PackedScene" uid="uid://ceh84ae048v4y" path="res://resource/entities/player/ss_player.tscn" id="7_a3iua"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_67aua"]
+albedo_texture = ExtResource("5_vikxh")
+uv1_scale = Vector3(3, 3, 3)
+metadata/details = {
+"$basetexture": "dev/texture_08"
+}
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_4rql1"]
+lightmap_size_hint = Vector2i(442, 670)
+_surfaces = [{
+"aabb": AABB(-0.5, -0.5, -0.5, 1, 1, 1),
+"attribute_data": PackedByteArray("AACAPwAAgD/dtX8/GM9/PwAAAAAAAAAA8wYCP0HlLD8AAIA/AAAAAPMGAj8Yz38/AACAPwAAgD/zBgI/8auxPgAAAAAAAAAA3bV/P8+/Kz8AAIA/AAAAAN21fz/xq7E+AACAPwAAgD8jSgA/UDl7PwAAAAAAAAAAMc4mPHpPKD8AAIA/AAAAADHOJjxQOXs/AAAAAAAAgD/dtX8/QeUsPwAAgD8AAIA/umv/Pj6hQzoAAAAAAAAAAMdkfT9+NaY+AACAPwAAAAC6a/8+fjWmPgAAAAAAAAAAGfL7Pn41pj4AAIA/AACAP4FFlDo+oUM6AAAAAAAAgD8Z8vs+PqFDOgAAAAAAAIA/8wYCP8+/Kz8AAAAAAACAP8dkfT8+oUM6AACAPwAAgD8xziY8YoCoPgAAAAAAAAAAI0oAPwgqJz8AAIA/AAAAADHOJjwIKic/AAAAAAAAgD8jSgA/ek8oPwAAgD8AAAAAgUWUOn41pj4AAAAAAACAPyNKAD9igKg+"),
+"format": 34359742519,
+"index_count": 36,
+"index_data": PackedByteArray("AAABAAIAAwAEAAUABgAHAAgAAQAAAAkACgALAAwADQAOAA8ABAADABAACwAKABEAEgATABQABwAGABUADgANABYAEwASABcA"),
+"material": SubResource("StandardMaterial3D_67aua"),
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 24,
+"vertex_data": PackedByteArray("AAAAvwAAAL8AAAA/AAAAvwAAAD8AAAC/AAAAvwAAAL8AAAC/AAAAPwAAAL8AAAC/AAAAvwAAAL8AAAA/AAAAvwAAAL8AAAC/AAAAvwAAAD8AAAC/AAAAPwAAAL8AAAC/AAAAvwAAAL8AAAC/AAAAvwAAAD8AAAA/AAAAvwAAAL8AAAA/AAAAPwAAAD8AAAA/AAAAvwAAAD8AAAA/AAAAPwAAAD8AAAA/AAAAvwAAAD8AAAC/AAAAvwAAAD8AAAA/AAAAPwAAAL8AAAA/AAAAPwAAAL8AAAA/AAAAPwAAAL8AAAC/AAAAPwAAAD8AAAA/AAAAPwAAAL8AAAA/AAAAPwAAAD8AAAC/AAAAPwAAAD8AAAC/AAAAPwAAAD8AAAC///8AgP9/AID//wCA/38AgP//AID/fwCAAID///////8AgP///////wCA/////////3//fwAA/7//f/9/AAD/v/9//38AAP+///8AgP9/AID/////AAD/v/////8AAP+//////wAA/78AgAAA/////wCAAAD/////AIAAAP////8AgP////////////8AAP+/AAAAgP9/AIAAAACA/38AgAAAAID/fwCA/3//fwAA/78AgAAA/////wAAAID/fwCA")
+}]
+
+[sub_resource type="ConcavePolygonShape3D" id="ConcavePolygonShape3D_heke8"]
+data = PackedVector3Array(-0.5, -0.5, 0.5, -0.5, 0.5, -0.5, -0.5, -0.5, -0.5, 0.5, -0.5, -0.5, -0.5, -0.5, 0.5, -0.5, -0.5, -0.5, -0.5, 0.5, -0.5, 0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, 0.5, -0.5, -0.5, -0.5, 0.5, -0.5, 0.5, 0.5, -0.5, -0.5, 0.5, 0.5, 0.5, 0.5, -0.5, 0.5, 0.5, 0.5, 0.5, 0.5, -0.5, 0.5, -0.5, -0.5, 0.5, 0.5, -0.5, -0.5, 0.5, 0.5, -0.5, -0.5, 0.5, -0.5, 0.5, 0.5, 0.5, 0.5, -0.5, -0.5, 0.5, 0.5, -0.5, 0.5, 0.5, -0.5, -0.5, 0.5, 0.5, 0.5, 0.5, -0.5, 0.5, 0.5, -0.5, -0.5, -0.5, 0.5, -0.5, 0.5, 0.5, -0.5, -0.5, 0.5, -0.5, 0.5, 0.5, 0.5, 0.5, 0.5, -0.5, 0.5, 0.5, 0.5, 0.5, -0.5, -0.5, 0.5, 0.5, -0.5)
+
+[node name="Node3D" type="Node3D"]
+
+[node name="env" type="Node" parent="."]
+
+[node name="ambience" type="AudioStreamPlayer" parent="env"]
+stream = ExtResource("1_x20fy")
+autoplay = true
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="env"]
+environment = ExtResource("2_cns0f")
+
+[node name="respawn" type="Node" parent="env"]
+script = ExtResource("3_ctved")
+
+[node name="world" type="Node3D" parent="."]
+transform = Transform3D(3.33843, 0, 0, 0, 3.33843, 0, 0, 0, 3.33843, 0, 0, 0)
+
+[node name="LightmapGI" type="LightmapGI" parent="world"]
+transform = Transform3D(1.4741, 0, 0, 0, 1.4741, 0, 0, 0, 1.4741, 0, 0, 0)
+interior = true
+light_data = ExtResource("4_vd0il")
+
+[node name="CSGBox3D" type="CSGBox3D" parent="world"]
+transform = Transform3D(10.7769, 0, 0, 0, 10.7769, 0, 0, 0, 10.7769, 0, 0, 0)
+visible = false
+flip_faces = true
+material = SubResource("StandardMaterial3D_67aua")
+
+[node name="CSGBox3D2" type="CSGBox3D" parent="world"]
+transform = Transform3D(13.3622, 0, 0, 0, 13.3622, 0, 0, 0, 13.3622, 0, 0, 0)
+visible = false
+material = SubResource("StandardMaterial3D_67aua")
+
+[node name="CSGBakedMeshInstance3D" type="MeshInstance3D" parent="world"]
+transform = Transform3D(24.7524, 0, 0, 0, 6.09189, 0, 0, 0, 27.203, 0, -3.25336, 0)
+mesh = SubResource("ArrayMesh_4rql1")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="world/CSGBakedMeshInstance3D"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="world/CSGBakedMeshInstance3D/StaticBody3D"]
+shape = SubResource("ConcavePolygonShape3D_heke8")
+
+[node name="OmniLight3D" type="OmniLight3D" parent="world"]
+transform = Transform3D(0.299542, 0, 0, 0, 0.299542, 0, 0, 0, 0.299542, 0, -3.56444, 0)
+visible = false
+light_color = Color(0.820313, 0.949463, 1, 1)
+light_bake_mode = 1
+omni_range = 312.323
+omni_attenuation = 0.118
+
+[node name="ss_player" parent="." groups=["players"] instance=ExtResource("7_a3iua")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -11.455, -18.7214)

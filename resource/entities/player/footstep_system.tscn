@@ -1,0 +1,218 @@
+[gd_scene load_steps=7 format=3 uid="uid://dnlslixtvjgl5"]
+
+[ext_resource type="AudioStream" uid="uid://c8yekvljs7cgh" path="res://assets/player/sound/footsteps/tile.wav" id="1_5866i"]
+[ext_resource type="AudioStream" uid="uid://bopal3juox4tu" path="res://assets/player/sound/footsteps/tile2.wav" id="2_3pj0i"]
+[ext_resource type="AudioStream" uid="uid://cch0rs35rpb5v" path="res://assets/player/sound/footsteps/tile3.wav" id="3_qdhng"]
+[ext_resource type="AudioStream" uid="uid://c1hdmw6o1ynb2" path="res://assets/player/sound/footsteps/tile4.wav" id="4_hme3b"]
+
+[sub_resource type="GDScript" id="GDScript_vmwws"]
+script/source = "extends Node
+
+# Material types (similar to Half-Life 1)
+enum MaterialType {
+	CONCRETE,
+	METAL,
+	DIRT,
+	VENT,
+	GRATE,
+	TILE,
+	SLOSH,
+	WOOD,
+	COMPUTER,
+	GLASS,
+	FLESH,
+	SNOW
+}
+
+# Sound arrays for different materials
+@export var concrete_sounds: Array[AudioStream] = []
+@export var metal_sounds: Array[AudioStream] = []
+@export var dirt_sounds: Array[AudioStream] = []
+@export var vent_sounds: Array[AudioStream] = []
+@export var grate_sounds: Array[AudioStream] = []
+@export var tile_sounds: Array[AudioStream] = []
+@export var slosh_sounds: Array[AudioStream] = []
+@export var wood_sounds: Array[AudioStream] = []
+@export var computer_sounds: Array[AudioStream] = []
+@export var glass_sounds: Array[AudioStream] = []
+@export var flesh_sounds: Array[AudioStream] = []
+@export var snow_sounds: Array[AudioStream] = []
+@export var water_sounds: Array[AudioStream] = []
+@export var generic_sounds: Array[AudioStream] = []  # Generic fallback sounds
+
+# Timing and speed parameters
+@export var min_time_between_steps: float = 0.25  # Minimum time between steps
+@export var max_time_between_steps: float = 0.6   # Maximum time between steps
+@export var speed_threshold: float = 0.1          # Minimum speed to trigger footsteps
+@export var run_speed: float = 270.0              # Speed considered as \"running\" (for volume calculation)
+
+# Audio player
+@onready var audio_player: AudioStreamPlayer3D = $AudioStreamPlayer3D
+
+# Internal variables
+var last_step_time: float = 0.0
+var goldgdt_body: CharacterBody3D
+var current_material: MaterialType = MaterialType.CONCRETE
+var is_in_water: bool = false
+var water_level: int = 0
+var step_counter: int = 0
+var just_entered_water: bool = false
+var last_water_level: int = 0
+
+func _ready():
+	# Find the GoldGdt body component
+	goldgdt_body = get_node(\"../Body\")
+	if not goldgdt_body:
+		push_error(\"FootstepSystem: Could not find GoldGdt body component\")
+		return
+		
+	# Instead of reparenting, we'll use a RemoteTransform3D node to sync position
+	# This is a more reliable approach than using global_transform
+	setup_remote_transform()
+
+func setup_remote_transform():
+	# Create a RemoteTransform3D node if it doesn't exist
+	var remote_transform = $RemoteTransform3D
+	if not remote_transform:
+		remote_transform = RemoteTransform3D.new()
+		remote_transform.name = \"RemoteTransform3D\"
+		add_child(remote_transform)
+	
+	# Set the remote path to the player's body
+	remote_transform.remote_path = goldgdt_body.get_path()
+	
+	# Make the AudioStreamPlayer3D a child of the RemoteTransform3D
+	# This ensures it follows the player's position
+	if audio_player and audio_player.get_parent() != remote_transform:
+		var parent = audio_player.get_parent()
+		if parent:
+			parent.remove_child(audio_player)
+		remote_transform.add_child(audio_player)
+
+func _physics_process(delta):
+	if not goldgdt_body:
+		return
+		
+	# Check water level
+	check_water_level()
+	
+	# Check if we're moving and on the ground
+	var is_moving = goldgdt_body.velocity.length() > speed_threshold
+	var is_on_ground = goldgdt_body.is_on_floor()
+	
+	# Handle water entry sound
+	if just_entered_water and water_sounds.size() > 0:
+		play_sound(water_sounds[0], 1.0)
+		just_entered_water = false
+	
+	# Handle footsteps
+	if is_moving and (is_on_ground or (is_in_water and water_level > 1)):
+		var current_time = Time.get_ticks_msec() / 1000.0
+		
+		# Calculate step interval based on speed (similar to HL1)
+		var speed = goldgdt_body.velocity.length()
+		var step_interval = 300.0 / speed
+		step_interval = clamp(step_interval, min_time_between_steps, max_time_between_steps)
+		
+		if current_time - last_step_time >= step_interval:
+			play_footstep(speed)
+			last_step_time = current_time
+
+func check_water_level():
+	# This is a simplified water detection
+	# In a real implementation, you would use raycasts or area detection
+	# to determine if the player is in water and at what level
+	
+	# For now, we'll use a simple check based on position
+	# You should replace this with proper water detection for your game
+	var water_height = 0.0  # Replace with actual water height in your game
+	
+	last_water_level = water_level
+	
+	if goldgdt_body.global_position.y < water_height:
+		water_level = 3  # Fully submerged
+	elif goldgdt_body.global_position.y < water_height + 1.0:
+		water_level = 2  # Waist deep
+	elif goldgdt_body.global_position.y < water_height + 0.5:
+		water_level = 1  # Ankle deep
+	else:
+		water_level = 0  # Not in water
+	
+	is_in_water = water_level > 0
+	just_entered_water = water_level > 0 and last_water_level == 0
+
+func play_footstep(speed: float):
+	# Determine volume based on speed (similar to HL1)
+	var volume = speed / run_speed
+	volume = clamp(volume, 0.2, 1.0)
+	
+	# Reduce volume in water
+	if is_in_water:
+		volume *= 0.5
+	
+	# Select appropriate sound based on material and water state
+	var sound_array: Array[AudioStream]
+	
+	if is_in_water and water_level > 1:
+		sound_array = water_sounds
+	elif current_material == MaterialType.CONCRETE:
+		sound_array = concrete_sounds
+	elif current_material == MaterialType.METAL:
+		sound_array = metal_sounds
+	elif current_material == MaterialType.DIRT:
+		sound_array = dirt_sounds
+	elif current_material == MaterialType.VENT:
+		sound_array = vent_sounds
+	elif current_material == MaterialType.GRATE:
+		sound_array = grate_sounds
+	elif current_material == MaterialType.TILE:
+		sound_array = tile_sounds
+	elif current_material == MaterialType.SLOSH:
+		sound_array = slosh_sounds
+	elif current_material == MaterialType.WOOD:
+		sound_array = wood_sounds
+	elif current_material == MaterialType.COMPUTER:
+		sound_array = computer_sounds
+	elif current_material == MaterialType.GLASS:
+		sound_array = glass_sounds
+	elif current_material == MaterialType.FLESH:
+		sound_array = flesh_sounds
+	elif current_material == MaterialType.SNOW:
+		sound_array = snow_sounds
+	else:
+		sound_array = concrete_sounds  # Default to concrete
+	
+	# If the selected sound array is empty, use generic sounds as fallback
+	if sound_array.is_empty():
+		sound_array = generic_sounds
+	
+	# Play the sound if we have any
+	if sound_array.size() > 0:
+		play_sound(sound_array[step_counter % sound_array.size()], volume)
+		step_counter += 1
+	else:
+		# If we still don't have any sounds, print a warning
+		push_warning(\"FootstepSystem: No sounds available for the current material type\")
+
+func play_sound(sound: AudioStream, volume: float):
+	audio_player.stream = sound
+	audio_player.volume_db = linear_to_db(volume)
+	audio_player.play()
+
+# Function to set the current material type (call this from your game logic)
+func set_material_type(material: MaterialType):
+	current_material = material 
+"
+
+[sub_resource type="BoxMesh" id="BoxMesh_1c88h"]
+
+[node name="FootstepSystem" type="Node"]
+script = SubResource("GDScript_vmwws")
+generic_sounds = Array[AudioStream]([ExtResource("1_5866i"), ExtResource("2_3pj0i"), ExtResource("3_qdhng"), ExtResource("4_hme3b")])
+
+[node name="AudioStreamPlayer3D" type="AudioStreamPlayer3D" parent="."]
+unit_size = 1.0
+max_distance = 20.0
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="AudioStreamPlayer3D"]
+mesh = SubResource("BoxMesh_1c88h")

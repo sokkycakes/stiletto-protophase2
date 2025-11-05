@@ -1,0 +1,8 @@
+[gd_resource type="TextMesh" load_steps=2 format=3 uid="uid://bbmyskg4tvck3"]
+
+[ext_resource type="Material" uid="uid://ce5tio610gd5o" path="res://assets/effect/particles/aware_material.tres" id="1_gdixq"]
+
+[resource]
+material = ExtResource("1_gdixq")
+text = "!"
+font_size = 111

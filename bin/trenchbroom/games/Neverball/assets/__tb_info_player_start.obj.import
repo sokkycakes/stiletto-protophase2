@@ -1,0 +1,25 @@
+[remap]
+
+importer="wavefront_obj"
+importer_version=1
+type="Mesh"
+uid="uid://dnv560243g8qh"
+path="res://.godot/imported/__tb_info_player_start.obj-052f224574600e4d2048a353f959e654.mesh"
+
+[deps]
+
+files=["res://.godot/imported/__tb_info_player_start.obj-052f224574600e4d2048a353f959e654.mesh"]
+
+source_file="res://bin/trenchbroom/games/Neverball/assets/__tb_info_player_start.obj"
+dest_files=["res://.godot/imported/__tb_info_player_start.obj-052f224574600e4d2048a353f959e654.mesh", "res://.godot/imported/__tb_info_player_start.obj-052f224574600e4d2048a353f959e654.mesh"]
+
+[params]
+
+generate_tangents=true
+generate_lods=true
+generate_shadow_mesh=true
+generate_lightmap_uv2=false
+generate_lightmap_uv2_texel_size=0.2
+scale_mesh=Vector3(1, 1, 1)
+offset_mesh=Vector3(0, 0, 0)
+force_disable_mesh_compression=false

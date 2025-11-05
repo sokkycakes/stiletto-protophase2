@@ -1,0 +1,54 @@
+[
+	{
+		"name": "belltower",
+		"path": "res://maps/belltower.tscn"
+	},
+	{
+		"name": "deadcenter01",
+		"path": "res://maps/deadcenter01.tscn"
+	},
+	{
+		"name": "example",
+		"path": "res://maps/example.tscn"
+	},
+	{
+		"name": "intro00",
+		"path": "res://maps/intro00.tscn"
+	},
+	{
+		"name": "level_1",
+		"path": "res://maps/level_1/level.tscn"
+	},
+	{
+		"name": "level_2",
+		"path": "res://maps/level_2/level.tscn"
+	},
+	{
+		"name": "level_3",
+		"path": "res://maps/level_3/level.tscn"
+	},
+	{
+		"name": "residence",
+		"path": "res://maps/residence.tscn"
+	},
+	{
+		"name": "sandbox-night",
+		"path": "res://maps/sandbox-night.tscn"
+	},
+	{
+		"name": "sandbox",
+		"path": "res://maps/sandbox.tscn"
+	},
+	{
+		"name": "thebox",
+		"path": "res://maps/thebox.tscn"
+	},
+	{
+		"name": "thebox_alt",
+		"path": "res://maps/thebox_alt.tscn"
+	},
+	{
+		"name": "tutorial_standards",
+		"path": "res://maps/tutorial_standards.tscn"
+	}
+]

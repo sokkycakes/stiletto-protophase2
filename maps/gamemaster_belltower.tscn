@@ -1,0 +1,26 @@
+[gd_scene load_steps=7 format=3 uid="uid://df5oum086ly3t"]
+
+[ext_resource type="Script" uid="uid://1wu5ac73yf0" path="res://resource/scripts/gamemaster.gd" id="1_uh4ll"]
+[ext_resource type="AudioStream" uid="uid://xeyp4tf4k468" path="res://assets/player/sound/doom_counter.ogg" id="2_q0imx"]
+[ext_resource type="AudioStream" uid="uid://dxj2a2my04rnk" path="res://assets/player/sound/doom_zero.ogg" id="3_kpm31"]
+[ext_resource type="AudioStream" uid="uid://cgouv2yapd1i2" path="res://assets/player/sound/ReflectionLoop.ogg" id="4_ng7up"]
+[ext_resource type="AudioStream" uid="uid://n0jvhknchut0" path="res://assets/player/sound/doom_reaper.ogg" id="5_f45bl"]
+[ext_resource type="AudioStream" uid="uid://01ep7f8x4hf5" path="res://assets/snd/music/melaleuca_doomloop.ogg" id="6_h6qfd"]
+
+[node name="gamemaster" type="Node"]
+script = ExtResource("1_uh4ll")
+bell_path = NodePath("../world/belltower/bellnode")
+player_path = NodePath("../ss_player")
+ui_timer_label = NodePath("../gamemaster_gui/clock")
+ui_ms_label = NodePath("../gamemaster_gui/clock2")
+ui_kills_label = NodePath("../gamemaster_gui/killCounter/killLabelCount")
+ui_doom_label = NodePath("../gamemaster_gui/ProgressBar/doom")
+enemy_spawn_zones_path = NodePath("../world/enemyzone")
+bgm_node_path = NodePath("../env/bgm")
+ui_overwhelm_meter = NodePath("../gamemaster_gui/ProgressBar")
+doom_tick_sound = ExtResource("2_q0imx")
+doom_zero_sound = ExtResource("3_kpm31")
+in_game_bgm_stream = ExtResource("4_ng7up")
+ui_reaper_overlay = NodePath("../gamemaster_gui/reaperOverlay")
+reaper_sound = ExtResource("5_f45bl")
+overwhelm_bgm_stream = ExtResource("6_h6qfd")

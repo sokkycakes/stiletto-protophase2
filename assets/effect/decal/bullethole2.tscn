@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://cn8nx1ktyrp0e"]
+
+[ext_resource type="Texture2D" uid="uid://x248i3vehcka" path="res://assets/effect/bullethole.png" id="1_uyify"]
+
+[node name="Node3D" type="Sprite3D"]
+transform = Transform3D(0.352901, 0, 0, 0, 0.352901, 0, 0, 0, 0.352901, 0, 0, 0)
+texture = ExtResource("1_uyify")

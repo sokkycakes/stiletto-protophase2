@@ -1,0 +1,163 @@
+[gd_scene load_steps=6 format=3 uid="uid://dht30mn7psvj1"]
+
+[ext_resource type="Script" uid="uid://haj4tn8jxbh7" path="res://resource/scripts/ammo_indicator.gd" id="1_j3lw0"]
+[ext_resource type="Texture2D" uid="uid://dnx2lsiobb1hn" path="res://addons/grappling_hook_3d/example/hook_not_availible.png" id="2_l3rpl"]
+[ext_resource type="Texture2D" uid="uid://cwuhb41hltnum" path="res://assets/ui/ammomask.png" id="2_plpcj"]
+
+[sub_resource type="Gradient" id="Gradient_ywjtl"]
+offsets = PackedFloat32Array(0, 0.706371)
+colors = PackedColorArray(1, 1, 1, 1, 1, 1, 1, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_us6fj"]
+gradient = SubResource("Gradient_ywjtl")
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+
+[node name="AmmoIndicator" type="Control"]
+layout_mode = 3
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -90.0
+offset_top = -20.0
+offset_right = 90.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_j3lw0")
+ammo_pip_paths = Array[NodePath]([NodePath("Charge1"), NodePath("Charge2"), NodePath("Charge3"), NodePath("Charge4"), NodePath("Charge5"), NodePath("Charge6")])
+
+[node name="transparentmask" type="TextureRect" parent="."]
+clip_children = 1
+layout_mode = 0
+offset_left = -26.0
+offset_top = -45.0
+offset_right = 14.0
+offset_bottom = -5.0
+rotation = 0.132678
+scale = Vector2(1.82194, 1.82194)
+texture = ExtResource("2_plpcj")
+expand_mode = 4
+
+[node name="emptyglow" type="TextureRect" parent="transparentmask"]
+modulate = Color(0.718, 0.53, 1, 0)
+show_behind_parent = true
+layout_mode = 0
+offset_left = 14.0
+offset_top = 15.0
+offset_right = 88.0
+offset_bottom = 88.0
+scale = Vector2(0.305029, 0.298724)
+mouse_filter = 2
+texture = SubResource("GradientTexture2D_us6fj")
+
+[node name="Charge1" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -84.0
+offset_top = -30.0
+offset_right = -52.0
+offset_bottom = 2.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+texture = ExtResource("2_l3rpl")
+
+[node name="Charge2" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -77.0
+offset_top = -27.0
+offset_right = -45.0
+offset_bottom = 5.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+texture = ExtResource("2_l3rpl")
+
+[node name="Charge3" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -83.0
+offset_top = -23.0
+offset_right = -51.0
+offset_bottom = 9.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+texture = ExtResource("2_l3rpl")
+
+[node name="Charge4" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -79.7541
+offset_top = -25.0
+offset_right = -47.7541
+offset_bottom = 7.0
+grow_horizontal = 2
+grow_vertical = 2
+rotation = 0.532496
+size_flags_horizontal = 3
+texture = ExtResource("2_l3rpl")
+
+[node name="Charge5" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -73.7541
+offset_top = -21.0
+offset_right = -41.7541
+offset_bottom = 11.0
+grow_horizontal = 2
+grow_vertical = 2
+rotation = 0.532496
+size_flags_horizontal = 3
+texture = ExtResource("2_l3rpl")
+
+[node name="Charge6" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -79.7541
+offset_top = -18.0
+offset_right = -47.7541
+offset_bottom = 14.0
+grow_horizontal = 2
+grow_vertical = 2
+rotation = 0.532496
+size_flags_horizontal = 3
+texture = ExtResource("2_l3rpl")
+
+[node name="PanelContainer" type="PanelContainer" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = -137.0
+grow_horizontal = 2
+grow_vertical = 2
