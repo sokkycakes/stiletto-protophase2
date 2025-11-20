@@ -61,6 +61,7 @@ signal state_changed(old_state: String, new_state: String)
 signal hit_taken(current_hits: int, max_hits: int)
 signal player_died
 signal stunned_state_changed(is_stunned: bool)
+signal respawn_requested  # Emitted when player requests respawn (for multiplayer)
 
 func _ready() -> void:
 	# Get the player node and cast it to CharacterBody3D
@@ -259,13 +260,15 @@ func _play_death_sound() -> void:
 		print("PlayerState: No death sound configured or audio player missing")
 
 func _start_death_timescale() -> void:
-	"""Start the death timescale effect"""
-	if death_timescale_duration > 0.0 and death_timescale != 1.0:
-		Engine.time_scale = death_timescale
-		death_timescale_timer = death_timescale_duration
-		is_death_timescale_active = true
-		is_returning_to_normal_time = false
-		print("PlayerState: Death timescale started - scale: ", death_timescale, " duration: ", death_timescale_duration)
+	"""Start the death timescale effect - DISABLED for multiplayer"""
+	# Timescale effect disabled for multiplayer compatibility
+	# if death_timescale_duration > 0.0 and death_timescale != 1.0:
+	# 	Engine.time_scale = death_timescale
+	# 	death_timescale_timer = death_timescale_duration
+	# 	is_death_timescale_active = true
+	# 	is_returning_to_normal_time = false
+	# 	print("PlayerState: Death timescale started - scale: ", death_timescale, " duration: ", death_timescale_duration)
+	pass
 
 func _setup_pain_audio() -> void:
 	"""Setup the audio player for pain sounds"""
@@ -291,8 +294,8 @@ func _process(delta: float) -> void:
 		die()
 		return
 	
-	# Handle death timescale effect
-	_update_death_timescale(delta)
+	# Handle death timescale effect - DISABLED for multiplayer
+	# _update_death_timescale(delta)
 	
 	if current_state == PlayerState.STUNNED:
 		stun_timer -= delta
@@ -302,30 +305,35 @@ func _process(delta: float) -> void:
 	# Handle respawn input when dead
 	if current_state == PlayerState.DEAD:
 		if Input.is_action_just_pressed("ui_accept") or Input.is_action_just_pressed("pm_jump") or Input.is_action_just_pressed("fire"):
+			# Emit signal first (for multiplayer to handle)
+			emit_signal("respawn_requested")
+			# Then call local respawn (for single-player fallback)
 			respawn()
 
 func _update_death_timescale(delta: float) -> void:
-	"""Update the death timescale effect"""
-	if is_death_timescale_active:
-		# Use unscaled delta for real time tracking
-		var real_delta = delta / Engine.time_scale
-		death_timescale_timer -= real_delta
-		
-		if death_timescale_timer <= 0.0:
-			# Start returning to normal time
-			is_death_timescale_active = false
-			is_returning_to_normal_time = true
-			print("PlayerState: Death timescale hold period ended, returning to normal")
-	
-	if is_returning_to_normal_time:
-		# Gradually return to normal timescale
-		var real_delta = delta / Engine.time_scale
-		Engine.time_scale = move_toward(Engine.time_scale, 1.0, death_timescale_return_speed * real_delta)
-		
-		if Engine.time_scale >= 1.0:
-			Engine.time_scale = 1.0
-			is_returning_to_normal_time = false
-			print("PlayerState: Timescale returned to normal")
+	"""Update the death timescale effect - DISABLED for multiplayer"""
+	# Timescale effect disabled for multiplayer compatibility
+	# if is_death_timescale_active:
+	# 	# Use unscaled delta for real time tracking
+	# 	var real_delta = delta / Engine.time_scale
+	# 	death_timescale_timer -= real_delta
+	# 	
+	# 	if death_timescale_timer <= 0.0:
+	# 		# Start returning to normal time
+	# 		is_death_timescale_active = false
+	# 		is_returning_to_normal_time = true
+	# 		print("PlayerState: Death timescale hold period ended, returning to normal")
+	# 
+	# if is_returning_to_normal_time:
+	# 	# Gradually return to normal timescale
+	# 	var real_delta = delta / Engine.time_scale
+	# 	Engine.time_scale = move_toward(Engine.time_scale, 1.0, death_timescale_return_speed * real_delta)
+	# 	
+	# 	if Engine.time_scale >= 1.0:
+	# 		Engine.time_scale = 1.0
+	# 		is_returning_to_normal_time = false
+	# 		print("PlayerState: Timescale returned to normal")
+	pass
 
 func _collect_player_scripts() -> void:
 	"""Collect all player scripts that should be disabled when dead"""
@@ -477,12 +485,18 @@ func die() -> void:
 	emit_signal("player_died")
 
 func respawn() -> void:
-	"""Restart the current scene to respawn the player"""
+	"""Restart the current scene to respawn the player (single-player only)"""
 	print("PlayerState: Respawning player...")
 	# Reset timescale before respawning
 	_reset_death_effects()
 	
-	# Use BaseGameMaster respawn if available
+	# In multiplayer, NetworkedPlayer handles respawn via respawn_requested signal
+	# Don't do single-player respawn logic
+	if multiplayer and multiplayer.has_multiplayer_peer():
+		print("PlayerState: Multiplayer detected - NetworkedPlayer will handle respawn")
+		return
+	
+	# Single-player: Use BaseGameMaster respawn if available
 	if Engine.has_singleton("BaseGameMaster"):
 		var base_gamemaster = get_node("/root/BaseGameMaster")
 		if base_gamemaster:
@@ -496,7 +510,8 @@ func respawn() -> void:
 
 func _reset_death_effects() -> void:
 	"""Reset all death effects to normal state"""
-	Engine.time_scale = 1.0
+	# Timescale reset disabled for multiplayer compatibility
+	# Engine.time_scale = 1.0
 	is_death_timescale_active = false
 	is_returning_to_normal_time = false
 	death_timescale_timer = 0.0

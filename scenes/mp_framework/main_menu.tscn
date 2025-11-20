@@ -1,0 +1,203 @@
+[gd_scene load_steps=3 format=3 uid="uid://btx3vykbkmujv"]
+
+[ext_resource type="Script" uid="uid://n78vjmq8xl3q" path="res://scripts/ui/MainMenu.gd" id="1_8k2jh"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_1"]
+font_size = 32
+
+[node name="MainMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_8k2jh")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.1, 0.1, 0.15, 1)
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -150.0
+offset_top = -200.0
+offset_right = 150.0
+offset_bottom = 200.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Title" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+text = "FPS Multiplayer Template"
+label_settings = SubResource("LabelSettings_1")
+horizontal_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="PlayerName" type="LineEdit" parent="VBoxContainer"]
+layout_mode = 2
+text = "Player"
+placeholder_text = "Enter your name..."
+
+[node name="HSeparator2" type="HSeparator" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="HostGame" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+text = "Host Game"
+
+[node name="JoinGame" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+text = "Join Game"
+
+[node name="Settings" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+text = "Settings"
+
+[node name="HSeparator3" type="HSeparator" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="Quit" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+text = "Quit"
+
+[node name="JoinDialog" type="AcceptDialog" parent="."]
+title = "Join Game"
+initial_position = 2
+size = Vector2i(500, 400)
+
+[node name="VBoxContainer" type="VBoxContainer" parent="JoinDialog"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = 8.0
+offset_right = -8.0
+offset_bottom = -36.0
+
+[node name="Label" type="Label" parent="JoinDialog/VBoxContainer"]
+layout_mode = 2
+text = "Local Servers:"
+
+[node name="ServerBrowser" type="ItemList" parent="JoinDialog/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="HBoxContainer" type="HBoxContainer" parent="JoinDialog/VBoxContainer"]
+layout_mode = 2
+
+[node name="RefreshButton" type="Button" parent="JoinDialog/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+text = "Refresh"
+
+[node name="DirectConnectButton" type="Button" parent="JoinDialog/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+text = "Direct Connect"
+
+[node name="HSeparator" type="HSeparator" parent="JoinDialog/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label2" type="Label" parent="JoinDialog/VBoxContainer"]
+layout_mode = 2
+text = "Direct Connection:"
+
+[node name="AddressInput" type="LineEdit" parent="JoinDialog/VBoxContainer"]
+visible = false
+layout_mode = 2
+text = "127.0.0.1"
+placeholder_text = "127.0.0.1"
+
+[node name="PortInput" type="LineEdit" parent="JoinDialog/VBoxContainer"]
+visible = false
+layout_mode = 2
+text = "7000"
+placeholder_text = "7000"
+
+[node name="SettingsDialog" type="AcceptDialog" parent="."]
+title = "Settings"
+initial_position = 2
+size = Vector2i(400, 300)
+
+[node name="VBoxContainer" type="VBoxContainer" parent="SettingsDialog"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = 8.0
+offset_right = -8.0
+offset_bottom = -36.0
+
+[node name="Label" type="Label" parent="SettingsDialog/VBoxContainer"]
+layout_mode = 2
+text = "Network Settings"
+
+[node name="HSeparator" type="HSeparator" parent="SettingsDialog/VBoxContainer"]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="SettingsDialog/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label2" type="Label" parent="SettingsDialog/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+text = "Default Port:"
+
+[node name="DefaultPortInput" type="LineEdit" parent="SettingsDialog/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "7000"
+placeholder_text = "7000"
+
+[node name="HBoxContainer2" type="HBoxContainer" parent="SettingsDialog/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label3" type="Label" parent="SettingsDialog/VBoxContainer/HBoxContainer2"]
+layout_mode = 2
+text = "Max Players:"
+
+[node name="MaxPlayersInput" type="SpinBox" parent="SettingsDialog/VBoxContainer/HBoxContainer2"]
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 2.0
+max_value = 16.0
+value = 8.0
+
+[node name="StatusPanel" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_top = -80.0
+offset_right = 400.0
+grow_vertical = 0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="StatusPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = 10.0
+offset_right = -10.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="StatusLabel" type="Label" parent="StatusPanel/VBoxContainer"]
+layout_mode = 2
+text = "Ready to connect"
+
+[node name="CancelButton" type="Button" parent="StatusPanel/VBoxContainer"]
+layout_mode = 2
+text = "Cancel"

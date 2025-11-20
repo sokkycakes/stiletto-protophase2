@@ -14,11 +14,16 @@ signal player_spawned(player: Node)
 # Available characters - configured in editor
 @export var available_characters: Array = []
 
+# Multiplayer wrapper support
+@export var use_multiplayer_player_wrapper: bool = true
+@export var multiplayer_player_wrapper_scene: PackedScene = preload("res://scenes/mp_framework/NetworkedPlayer.tscn")
+
 var active_player: Node = null
 var selected_character = null
 var spawn_position: Vector3 = Vector3.ZERO
 var spawn_rotation: Vector3 = Vector3.ZERO
 var last_character_id: String = ""  # Track last selected character for respawning
+var last_processed_scene_path: String = ""  # Track which scene we last processed
 
 func _ready():
 	add_to_group("gamemaster")
@@ -30,37 +35,47 @@ func _ready():
 			_create_character_def("base", "Base", "res://resource/entities/player/ss_player_base.tscn"),
 		]
 	
+	# Connect to scene change detection
+	get_tree().node_added.connect(_on_node_added_to_tree)
+	
 	# Check for scene on first frame (this runs after scene is loaded)
 	call_deferred("check_current_scene")
+
+func _on_node_added_to_tree(node: Node):
+	# Check if the root scene changed (indicates a scene load)
+	if node == get_tree().current_scene:
+		# New scene was loaded, check it after it's fully set up
+		call_deferred("check_current_scene")
 
 func check_current_scene():
 	# Only activate for scenes in the maps folder
 	var current_scene_path = get_tree().current_scene.scene_file_path
 	if not current_scene_path.begins_with("res://maps/"):
 		print("[BaseGameMaster] Skipping - not a map scene: ", current_scene_path)
+		last_processed_scene_path = ""  # Reset when not in a map
 		return
+	
+	# Check if this is actually a new scene load (not just a duplicate call)
+	# If the active_player is invalid, it means the scene was reloaded
+	if current_scene_path == last_processed_scene_path and has_active_player():
+		# Same scene and player still exists, don't process again
+		print("[BaseGameMaster] Scene already processed with active player: ", current_scene_path)
+		return
+	
+	# New scene load or reload detected
+	print("[BaseGameMaster] Map scene loaded: ", current_scene_path)
+	last_processed_scene_path = current_scene_path
+	active_player = null  # Clear player reference for fresh load
 	
 	# Check if the current scene has a custom GameMaster or player
 	if not _scene_has_custom_gamemaster():
-		# If we already have a remembered selection, spawn immediately on fresh loads
-		if not last_character_id.is_empty():
-			# Restore selected character by id
-			for char_def in available_characters:
-				if char_def.id == last_character_id and char_def.is_valid():
-					selected_character = char_def
-					break
-			# Spawn if we restored a selection and there's no existing player
-			if selected_character and not _scene_has_player():
-				print("[BaseGameMaster] Restoring previously selected character on scene load: ", selected_character.display_name)
-				call_deferred("_spawn_player")
-				return
-
 		# Check if scene already has a player spawned
 		if _scene_has_player():
 			print("[BaseGameMaster] Scene already has a player, skipping character selection")
 			return
 		
 		print("[BaseGameMaster] No custom GameMaster found in scene, activating fallback mode")
+		# Show character selection for every map load/reload
 		# Delay slightly to let scene fully load
 		call_deferred("_start_character_selection")
 
@@ -177,12 +192,17 @@ func _spawn_player():
 		return
 	
 	# Load and instantiate the player
-	var player_scene = load(selected_character.scene_path)
-	if not player_scene:
+	var character_scene = load(selected_character.scene_path)
+	if not character_scene:
 		push_error("[BaseGameMaster] ERROR: Could not load character scene: ", selected_character.scene_path)
 		return
 	
-	active_player = player_scene.instantiate()
+	var use_wrapper = _should_use_multiplayer_wrapper()
+	
+	if use_wrapper:
+		active_player = multiplayer_player_wrapper_scene.instantiate()
+	else:
+		active_player = character_scene.instantiate()
 	
 	# Position the player
 	if active_player is Node3D:
@@ -194,10 +214,33 @@ func _spawn_player():
 	
 	# Activate player camera
 	await get_tree().process_frame  # Wait a frame for player to be added
+	
+	if use_wrapper:
+		_attach_character_to_wrapper(active_player, character_scene)
+	
 	_activate_player_camera()
 	
 	emit_signal("player_spawned", active_player)
 	print("[BaseGameMaster] Player spawned: ", selected_character.display_name)
+
+func _should_use_multiplayer_wrapper() -> bool:
+	if not use_multiplayer_player_wrapper:
+		return false
+	if not multiplayer_player_wrapper_scene:
+		return false
+	if MultiplayerManager and MultiplayerManager.is_connected:
+		return true
+	return false
+
+func _attach_character_to_wrapper(wrapper: Node, character_scene: PackedScene) -> void:
+	if not wrapper or not character_scene:
+		return
+	if wrapper.has_method("load_character_scene"):
+		wrapper.load_character_scene(character_scene)
+	else:
+		var character_instance = character_scene.instantiate()
+		character_instance.name = "Character"
+		wrapper.add_child(character_instance)
 
 func _activate_player_camera():
 	if not active_player:
@@ -257,12 +300,13 @@ func respawn_player(new_spawn_position: Vector3 = Vector3.ZERO):
 		print("[BaseGameMaster] Respawning player as: ", selected_character.display_name)
 		_spawn_player()
 	else:
-		# Fallback to character selection if no valid character found
-		call_deferred("_start_character_selection")
+		# Fallback: use default character without showing character select UI again
+		print("[BaseGameMaster] No valid character for respawn, using default character (no character select UI).")
+		_spawn_default_character()
 
 # Helper to create character definition
 func _create_character_def(id: String, display_name: String, scene_path: String) -> Resource:
-	var CharacterDefClass = load("res://resource/scripts/character_definition.gd")
+	var CharacterDefClass = load("res://resource/scripts/gamemode/base/character_definition.gd")
 	var def = CharacterDefClass.new()
 	def.id = id
 	def.display_name = display_name

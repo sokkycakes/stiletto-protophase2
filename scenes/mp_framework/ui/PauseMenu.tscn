@@ -1,0 +1,47 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Theme" uid="uid://d9qj8sd6n2s1a" path="res://themes/main_theme.tres" id="1_yrg9s"]
+[ext_resource type="Script" uid="uid://d2crmbq4qyv2c" path="res://scripts/ui/PauseMenu.gd" id="2_sgx8t"]
+
+[node name="PauseMenu" type="CanvasLayer"]
+process_mode = 3  # PROCESS_MODE_ALWAYS
+script = ExtResource("2_sgx8t")
+
+[node name="Panel" type="Panel" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme = ExtResource("1_yrg9s")
+mouse_filter = 0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+alignment = 1
+
+[node name="Title" type="Label" parent="VBoxContainer"]
+text = "Game Paused"
+horizontal_alignment = 1
+size_flags_vertical = 4
+custom_minimum_size = Vector2(0, 80)
+
+[node name="ResumeButton" type="Button" parent="Panel/VBoxContainer"]
+text = "Resume"
+flat = true
+size_flags_vertical = 4
+custom_minimum_size = Vector2(0, 50)
+
+[node name="ReturnButton" type="Button" parent="Panel/VBoxContainer"]
+text = "Return to Lobby"
+flat = true
+size_flags_vertical = 4
+custom_minimum_size = Vector2(0, 50)
+
+[node name="DisconnectButton" type="Button" parent="Panel/VBoxContainer"]
+text = "Disconnect"
+flat = true
+size_flags_vertical = 4
+custom_minimum_size = Vector2(0, 50)
+
+[connection signal="pressed" from="Panel/VBoxContainer/ResumeButton" to="." method="_on_resume_pressed"]
+[connection signal="pressed" from="Panel/VBoxContainer/ReturnButton" to="." method="_on_return_pressed"]
+[connection signal="pressed" from="Panel/VBoxContainer/DisconnectButton" to="." method="_on_disconnect_pressed"]

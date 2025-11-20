@@ -1,6 +1,9 @@
 extends RigidBody3D
 class_name ThrowableKnifeProjectile
 
+## Inherits ownership tracking from NetworkedProjectile
+## Note: This class uses composition pattern with ownership utilities
+
 signal stuck(location: Transform3D, normal: Vector3)
 
 ## Throwable knife projectile component
@@ -36,6 +39,7 @@ var _velocity: Vector3 = Vector3.ZERO
 var _has_hit: bool = false
 var _lifetime_timer: Timer
 var _thrower: Node3D = null  # Reference to who threw the knife
+var _thrower_peer_id: int = -1  # Network peer ID of thrower (for multiplayer collision checks)
 var _initial_position: Vector3 = Vector3.ZERO
 var _trail: Node3D = null
 var _throw_loop_player: AudioStreamPlayer3D = null
@@ -76,10 +80,24 @@ func _physics_process(delta: float) -> void:
 	_update_throw_loop_audio(delta)
 
 ## Initialize the projectile with velocity and thrower reference
-func throw(velocity: Vector3, thrower: Node3D = null) -> void:
+func throw(velocity: Vector3, thrower: Node3D = null, thrower_peer_id: int = -1) -> void:
 	_velocity = velocity
 	_thrower = thrower
+	_thrower_peer_id = thrower_peer_id
+	
+	# If thrower_peer_id is provided but thrower is null, find the NetworkedPlayer by peer_id
+	if _thrower == null and _thrower_peer_id >= 0:
+		_thrower = _find_networked_player_by_peer_id(_thrower_peer_id)
+	
 	linear_velocity = velocity
+	
+	# Prevent immediate self-collision by adding collision exceptions with the thrower and any PhysicsBody children.
+	if _thrower:
+		if _thrower is PhysicsBody3D:
+			add_collision_exception_with(_thrower)
+		# Also add exceptions for all descendant PhysicsBody3D nodes (e.g. ragdoll bodies, hitboxes)
+		for descendant in _thrower.get_children():
+			_add_physics_body_exceptions_recursive(descendant)
 	
 	_start_throw_loop_audio()
 
@@ -87,31 +105,56 @@ func _on_body_entered(body: Node) -> void:
 	if _has_hit:
 		return
 	
-	# Don't collide with thrower
-	if body == _thrower:
+	# Don't collide with thrower - check both object reference and NetworkedPlayer peer_id
+	if _is_thrower(body):
 		return
 	
 	_has_hit = true
 	_stop_throw_loop_audio()
 	
-	# Check for backstab/damage
-	var is_backstab = false
-	if body.has_method("take_damage"):
-		is_backstab = _can_backstab(body)
-		var final_damage = damage
-		
+	# Check for backstab/damage against a resolved damage receiver (e.g., NetworkedPlayer)
+	var receiver := _find_damage_receiver(body)
+	
+	# Double-check: don't damage the thrower's NetworkedPlayer (even if collision exception failed)
+	if receiver:
+		var receiver_np := receiver as NetworkedPlayer
+		if receiver_np and receiver_np.peer_id == _thrower_peer_id and _thrower_peer_id >= 0:
+			# This is the thrower - don't apply damage, just stick to surface
+			if stick_to_surfaces:
+				_stick_to_surface(body)
+			else:
+				queue_free()
+			return
+	
+	var is_backstab := false
+	var final_damage := damage
+
+	if receiver:
+		is_backstab = _can_backstab(receiver)
 		if is_backstab:
-			if body.has_method("take_backstab"):
-				body.take_backstab()
+			if receiver.has_method("take_backstab"):
+				receiver.take_backstab()
 			else:
 				# Fallback: multiply damage
-				if body.has_method("get_health"):
-					var health = int(body.get_health())
+				if receiver.has_method("get_health"):
+					var health = int(receiver.get_health())
 					final_damage = int(max(float(health) * backstab_damage_multiplier, float(damage)))
 				else:
 					final_damage = damage * 10
 		
-		body.take_damage(final_damage)
+		var attacker_peer_id := -1
+		var attacker_np := _get_networked_player_for(_thrower)
+		if attacker_np:
+			attacker_peer_id = attacker_np.peer_id
+		
+		if receiver is NetworkedPlayer:
+			# Route damage via RPC so it is applied on the authoritative instance.
+			# Pass receiver's peer_id for validation to prevent wrong player from taking damage
+			var receiver_np := receiver as NetworkedPlayer
+			var target_peer_id := receiver_np.peer_id if receiver_np else -1
+			receiver.apply_damage.rpc(final_damage, attacker_peer_id, target_peer_id)
+		elif receiver.has_method("take_damage"):
+			receiver.take_damage(final_damage)
 	
 	# Spawn impact effect
 	if impact_effect_scene:
@@ -164,6 +207,60 @@ func _can_backstab(target: Object) -> bool:
 	var no_facestab := target_fwd.dot(thrower_fwd) > -0.3
 	
 	return behind and facing and no_facestab
+
+func _find_damage_receiver(target: Object) -> Object:
+	# Walk up the hierarchy from the collider to find a node that can receive damage.
+	# When walking up from a collision body, if we find a NetworkedPlayer, that NetworkedPlayer
+	# must own the body (since the body is a descendant). This ensures correct ownership identification.
+	var node := target as Node
+	while node:
+		if node is NetworkedPlayer:
+			# Found a NetworkedPlayer - since we walked UP to reach it, target must be below it
+			# This means this NetworkedPlayer owns the collision body
+			return node
+		elif node.has_method("take_damage"):
+			return node
+		node = node.get_parent()
+	return null
+
+func _get_networked_player_for(node: Node) -> NetworkedPlayer:
+	var n := node
+	while n:
+		if n is NetworkedPlayer:
+			return n
+		n = n.get_parent()
+	return null
+
+func _is_thrower(body: Node) -> bool:
+	"""Check if the body belongs to the thrower (using universal ownership utilities)"""
+	if not body:
+		return false
+	
+	# Use universal ownership checking (same logic as NetworkedProjectile)
+	# Direct object reference match
+	if body == _thrower:
+		return true
+	
+	# Check if body is part of thrower's hierarchy
+	if _thrower:
+		var node := body
+		while node:
+			if node == _thrower:
+				return true
+			node = node.get_parent()
+	
+	# Check by NetworkedPlayer peer_id (works across network)
+	if _thrower_peer_id >= 0:
+		var body_np := _get_networked_player_for(body)
+		if body_np and body_np.peer_id == _thrower_peer_id:
+			return true
+	
+	return false
+
+func _find_networked_player_by_peer_id(peer_id: int) -> Node3D:
+	"""Find a NetworkedPlayer node by peer_id in the scene (using universal utilities)"""
+	var scene_root = get_tree().current_scene if get_tree() else null
+	return NetworkedProjectileOwnership.get_pawn_by_peer_id(scene_root, peer_id)
 
 func _stick_to_surface(surface: Node) -> Transform3D:
 	# Disable physics
@@ -235,6 +332,11 @@ func _stop_throw_loop_audio() -> void:
 func _update_throw_loop_audio(delta: float) -> void:
 	if _throw_loop_player == null:
 		return
+	
+	# Try to find thrower by peer_id if we don't have a direct reference
+	if _thrower == null and _thrower_peer_id >= 0:
+		_thrower = _find_networked_player_by_peer_id(_thrower_peer_id)
+	
 	var target_pitch: float = 1.0
 	if _thrower:
 		var current_distance: float = global_position.distance_to(_thrower.global_transform.origin)
@@ -264,3 +366,9 @@ func _force_stream_loop(stream: AudioStream) -> void:
 	elif stream is AudioStreamMP3:
 		var mp3 := stream as AudioStreamMP3
 		mp3.loop = true
+
+func _add_physics_body_exceptions_recursive(node: Node) -> void:
+	if node is PhysicsBody3D:
+		add_collision_exception_with(node)
+	for child in node.get_children():
+		_add_physics_body_exceptions_recursive(child)

@@ -34,12 +34,12 @@
 [ext_resource type="AudioStream" uid="uid://bu2krcgjnfmba" path="res://assets/player/sound/playerpain01.ogg" id="32_g5wll"]
 [ext_resource type="AudioStream" uid="uid://leehc33or3xb" path="res://assets/player/sound/playerpain02.ogg" id="33_p3hn2"]
 [ext_resource type="AudioStream" uid="uid://dn7yuv0pgv5hs" path="res://assets/player/sound/playerpain03.ogg" id="34_0t2tl"]
-[ext_resource type="Script" uid="uid://7s50gitcs8s0" path="res://assets/player/player/player_model_compass.gd" id="35_14k2u"]
+[ext_resource type="Script" uid="uid://7s50gitcs8s0" path="res://assets/player/model/ss_player_collier/player/player_model_compass.gd" id="35_14k2u"]
 [ext_resource type="Material" uid="uid://bb43ngplsfis2" path="res://addons/flexible_toon_shader/FlexibleToonMaterial.tres" id="36_pfhaa"]
-[ext_resource type="PackedScene" uid="uid://fhq4dg77kclt" path="res://assets/player/player/compass.tscn" id="37_ww0s7"]
+[ext_resource type="PackedScene" uid="uid://fhq4dg77kclt" path="res://assets/player/model/ss_player_collier/player/compass.tscn" id="37_ww0s7"]
 [ext_resource type="Script" uid="uid://drur6ejin23t2" path="res://addons/GoldGdt/src/GoldGdt_Camera.gd" id="38_o0n6r"]
 [ext_resource type="Script" uid="uid://dmy2w5b50d86e" path="res://resource/entities/player/viewmodel_lag.gd" id="39_d546i"]
-[ext_resource type="Script" uid="uid://k1c8boxjlyt7" path="res://resource/scripts/weapons/weapon_manager_src.gd" id="40_6f0r4"]
+[ext_resource type="Script" uid="uid://bg56ctm5mt6dw" path="res://scripts/weapons/NetworkedWeaponManager.gd" id="40_6f0r4"]
 [ext_resource type="PackedScene" uid="uid://y16mdft5mt7a" path="res://scenes/weapons/revolver_src.tscn" id="41_ny1kl"]
 [ext_resource type="PackedScene" uid="uid://cvnedpp1pj7o6" path="res://scenes/player/HookV2.tscn" id="42_lwq7o"]
 [ext_resource type="AudioStream" uid="uid://vi528wyc5ebr" path="res://assets/player/sound/clangv2.wav" id="43_o32e7"]
@@ -1453,6 +1453,7 @@ Body = NodePath("../Body")
 
 [node name="Body" type="CharacterBody3D" parent="." node_paths=PackedStringArray("View", "collision_hull", "duck_timer")]
 collision_layer = 2
+collision_mask = 5
 floor_constant_speed = true
 script = ExtResource("22_y6pn1")
 Parameters = ExtResource("19_inkrf")
@@ -1930,7 +1931,7 @@ editor_description = "
 
 [node name="Camera" type="Camera3D" parent="Interpolated Camera/Arm/Arm Anchor"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.000407696, -0.0071907, 0.0215712)
-cull_mask = 4294967293
+cull_mask = 4294967295
 near = 0.001
 script = ExtResource("39_d546i")
 

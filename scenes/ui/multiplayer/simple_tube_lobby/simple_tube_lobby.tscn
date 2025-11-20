@@ -1,0 +1,151 @@
+[gd_scene load_steps=5 format=3 uid="uid://dpmr5v0q7tlnf"]
+
+[ext_resource type="Script" uid="uid://djypvwuyup51u" path="res://scenes/ui/multiplayer/simple_tube_lobby/simple_tube_lobby.gd" id="1_7bg7l"]
+[ext_resource type="Resource" uid="uid://c3e5p0j0qu1j3" path="res://resource/system/network/simple_lobby_tube_context.tres" id="2_pdk1p"]
+[ext_resource type="Script" uid="uid://cy006uvidc4y" path="res://addons/tube/tube_client.gd" id="3_1rb5x"]
+[ext_resource type="PackedScene" uid="uid://dujkendqt6ls1" path="res://addons/tube/tube_inspector.tscn" id="4_onf1a"]
+
+[node name="SimpleTubeLobby" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = -268.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_7bg7l")
+mp_test_map_path = "res://scenes/multiplayer_game.tscn"
+mp_duelists_map_path = "res://maps/duelists_test.tscn"
+
+[node name="TubeClient" type="Node" parent="."]
+script = ExtResource("3_1rb5x")
+context = ExtResource("2_pdk1p")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 13
+anchor_left = 0.5
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -260.0
+offset_right = 260.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_type_variation = &"Panel"
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
+custom_minimum_size = Vector2(0, 380)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Title" type="Label" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Tube Lobby"
+horizontal_alignment = 1
+
+[node name="StatusLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Status: Idle"
+
+[node name="RoleLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Role: Not connected"
+
+[node name="SessionIdLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Current Session ID: -"
+
+[node name="HostRow" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+alignment = 1
+
+[node name="CreateButton" type="Button" parent="MarginContainer/VBoxContainer/HostRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Create Session"
+
+[node name="LeaveButton" type="Button" parent="MarginContainer/VBoxContainer/HostRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+disabled = true
+text = "Leave"
+
+[node name="JoinRow" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="JoinLabel" type="Label" parent="MarginContainer/VBoxContainer/JoinRow"]
+layout_mode = 2
+text = "Session ID"
+vertical_alignment = 1
+
+[node name="SessionIdInput" type="LineEdit" parent="MarginContainer/VBoxContainer/JoinRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "Enter session ID..."
+
+[node name="JoinButton" type="Button" parent="MarginContainer/VBoxContainer/JoinRow"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Join Session"
+
+[node name="CopySessionIdButton" type="Button" parent="MarginContainer/VBoxContainer/JoinRow"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Copy ID"
+
+[node name="PeersLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Connected Peers"
+
+[node name="PeerList" type="ItemList" parent="MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="LogLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Event Log"
+
+[node name="LogOutput" type="RichTextLabel" parent="MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 11
+anchor_left = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 66.0
+offset_right = 267.0
+grow_horizontal = 0
+grow_vertical = 2
+
+[node name="mpTestMap" type="Button" parent="VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "run multiplayer test map"
+
+[node name="mpDuelistsMap" type="Button" parent="VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Duelists: Test Map"
+
+[node name="Window" type="Window" parent="."]
+initial_position = 2
+visible = false
+
+[node name="TubeInspector" parent="Window" node_paths=PackedStringArray("client") instance=ExtResource("4_onf1a")]
+offset_left = 1.0
+offset_top = -3.0
+offset_right = 525.0
+offset_bottom = 618.0
+client = NodePath("../../TubeClient")

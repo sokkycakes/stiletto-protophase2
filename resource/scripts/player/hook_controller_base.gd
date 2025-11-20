@@ -23,6 +23,7 @@ var is_hook_launched: bool = false
 var _hook_model: Node3D = null
 var hook_target_normal: Vector3 = Vector3.ZERO
 var hook_target_node: Marker3D = null
+var _network_player: NetworkedPlayer
 
 signal hook_launched()
 signal hook_attached(body)
@@ -30,6 +31,8 @@ signal hook_detached()
 
 
 func _physics_process(delta: float) -> void:
+	if not _has_local_authority():
+		return
 	if Input.is_action_just_pressed(launch_action_name):
 		hook_launched.emit()
 		
@@ -87,3 +90,22 @@ func _handle_hook(delta: float) -> void:
 		false: source_position = player_body.global_position
 	
 	_hook_model.extend_from_to(source_position, hook_target_node.global_position, hook_target_normal)
+
+func _find_network_player() -> NetworkedPlayer:
+	var node: Node = self
+	while node:
+		if node is NetworkedPlayer:
+			return node
+		node = node.get_parent()
+	return null
+
+func _has_local_authority() -> bool:
+	if _network_player and is_instance_valid(_network_player):
+		return _network_player.is_multiplayer_authority()
+	if MultiplayerManager and MultiplayerManager.multiplayer.has_multiplayer_peer():
+		return MultiplayerManager.get_local_peer_id() == 1
+	return true
+
+func _notification(what):
+	if what == NOTIFICATION_READY:
+		_network_player = _find_network_player()

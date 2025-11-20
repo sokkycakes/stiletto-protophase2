@@ -3,7 +3,7 @@
 [ext_resource type="AudioStream" uid="uid://dan8mha5pc8s8" path="res://assets/snd/ambient/sound_ambient_ambience_mall_amb_loop.wav" id="1_o0dax"]
 [ext_resource type="AudioStream" uid="uid://c0rqyetgcgp61" path="res://assets/snd/music/likeastaratdawnloop.ogg" id="2_2ft4x"]
 [ext_resource type="Environment" uid="uid://c216uw67ybw0p" path="res://assets/env/sandbox.tres" id="2_y6phf"]
-[ext_resource type="Script" uid="uid://cw71vo1m4dwjr" path="res://resource/scripts/respawn.gd" id="3_2ft4x"]
+[ext_resource type="Script" uid="uid://cw71vo1m4dwjr" path="res://resource/scripts/generic/respawn.gd" id="3_2ft4x"]
 [ext_resource type="LightmapGIData" uid="uid://dmep4lj5lpug7" path="res://maps/thebox.lmbake" id="4_72rce"]
 [ext_resource type="Texture2D" uid="uid://bjcq8axgqat8g" path="res://materials/dev/texture_08.vtf" id="5_5w5xi"]
 [ext_resource type="PackedScene" uid="uid://c3owyv3c2oaku" path="res://resource/entities/enemy_spawner.tscn" id="7_y6phf"]

@@ -1,6 +1,6 @@
 [gd_scene load_steps=3 format=3 uid="uid://bpgs1omdsofev"]
 
-[ext_resource type="Script" uid="uid://6l3au6uxft7r" path="res://resource/resolution_settings.gd" id="1_2k4m3"]
+[ext_resource type="Script" uid="uid://6l3au6uxft7r" path="res://resource/system/config/resolution_settings.gd" id="1_2k4m3"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_88amq"]
 bg_color = Color(0.169245, 0.169245, 0.169245, 1)

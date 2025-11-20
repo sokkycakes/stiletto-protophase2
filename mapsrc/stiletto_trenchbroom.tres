@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="FuncGodotFGDFile" load_steps=3 format=3 uid="uid://gd75501e0guy"]
+
+[ext_resource type="Resource" uid="uid://crgpdahjaj" path="res://addons/func_godot/fgd/func_godot_fgd.tres" id="1_fl105"]
+[ext_resource type="Script" uid="uid://drlmgulwbjwqu" path="res://addons/func_godot/src/fgd/func_godot_fgd_file.gd" id="2_5mw3b"]
+
+[resource]
+script = ExtResource("2_5mw3b")
+target_map_editor = 1
+fgd_name = "stiletto"
+base_fgd_files = Array[Resource]([ExtResource("1_fl105")])
+entity_definitions = Array[Resource]([])

@@ -122,6 +122,11 @@ const SIGNALING_COLORS := {
 ## The amount is by item, meaning is max_messages_amount is set to 100. Client can store 100 messages, each trackers 100 messages, each peers 100 messages...
 @export var max_messages_amount: int = 100
 
+# Optional autoload hook-up for TubeClientServiceSingleton
+@export var tube_service_path: NodePath = NodePath("/root/TubeClientService")
+
+var _tube_service: TubeClientServiceSingleton
+
 var message_item_controls: Array[EditorTubeMessagesItemControl] = []
 var message_item_button_group := ButtonGroup.new()
 
@@ -148,6 +153,7 @@ var message_item_button_group := ButtonGroup.new()
 
 
 func _ready() -> void:
+	_attempt_assign_client_from_service()
 	messages_container.max_messages_amount = max_messages_amount
 	chat_control.max_messages_amount = max_messages_amount
 	local_signaling_control.max_messages_amount = max_messages_amount
@@ -157,6 +163,10 @@ func _ready() -> void:
 	switch_to_idle_config()
 	messages_container.display_messages([], self)
 	update()
+
+
+func _exit_tree() -> void:
+	_release_service_connections()
 
 
 func clear():
@@ -206,6 +216,7 @@ func switch_to_created_config():
 
 func update():
 	if not is_instance_valid(client):
+		_attempt_assign_client_from_service()
 		return
 	
 	if is_instance_valid(session_state_indicator):
@@ -435,3 +446,53 @@ func _on_client_peer_initiated(peer: TubePeer):
 		"peer_id": peer.id,
 	}))
 	update.call_deferred()
+
+
+func _attempt_assign_client_from_service() -> void:
+	if is_instance_valid(client):
+		return
+	
+	if tube_service_path.is_empty():
+		return
+	
+	var service := get_node_or_null(tube_service_path) as TubeClientServiceSingleton
+	if not is_instance_valid(service):
+		return
+	
+	_tube_service = service
+	_connect_service_signals()
+	
+	if is_instance_valid(_tube_service.tube_client):
+		client = _tube_service.tube_client
+
+
+func _connect_service_signals() -> void:
+	if not is_instance_valid(_tube_service):
+		return
+	
+	if not _tube_service.child_entered_tree.is_connected(_on_service_child_entered_tree):
+		_tube_service.child_entered_tree.connect(_on_service_child_entered_tree)
+	
+	if not _tube_service.child_exiting_tree.is_connected(_on_service_child_exiting_tree):
+		_tube_service.child_exiting_tree.connect(_on_service_child_exiting_tree)
+
+
+func _release_service_connections() -> void:
+	if not is_instance_valid(_tube_service):
+		return
+	
+	if _tube_service.child_entered_tree.is_connected(_on_service_child_entered_tree):
+		_tube_service.child_entered_tree.disconnect(_on_service_child_entered_tree)
+	
+	if _tube_service.child_exiting_tree.is_connected(_on_service_child_exiting_tree):
+		_tube_service.child_exiting_tree.disconnect(_on_service_child_exiting_tree)
+
+
+func _on_service_child_entered_tree(node: Node) -> void:
+	if node is TubeClient:
+		client = node
+
+
+func _on_service_child_exiting_tree(node: Node) -> void:
+	if node == client:
+		client = null

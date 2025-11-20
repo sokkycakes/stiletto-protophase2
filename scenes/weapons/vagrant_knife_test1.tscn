@@ -1,13 +1,13 @@
 [gd_scene load_steps=22 format=4 uid="uid://w4ctxvw65o4g"]
 
 [ext_resource type="Script" uid="uid://cqfev8l37lv4s" path="res://resource/scripts/weapons/vagrant_knife_test1.gd" id="1_o8asi"]
-[ext_resource type="Shader" uid="uid://b3ejot0nxeca6" path="res://materials/wireframe.gdshader" id="2_1mb0c"]
+[ext_resource type="Shader" path="res://resource/shaders/wireframe.gdshader" id="2_1mb0c"]
 [ext_resource type="PackedScene" uid="uid://c7x5r8qp2n3vm" path="res://scenes/weapons/throwable_knife_projectile.tscn" id="2_kfjci"]
 [ext_resource type="AudioStream" uid="uid://l4qidvunw3ts" path="res://assets/snd/weapon/knife-wallhit.ogg" id="3_6eid4"]
 [ext_resource type="Material" uid="uid://dpsb8b4ts8xg5" path="res://assets/player/ss_player_viewmodel.tres" id="3_44yvb"]
 [ext_resource type="AudioStream" uid="uid://ci1jdk6hn3mqv" path="res://assets/snd/weapon/knife-throwloop.ogg" id="3_asxq7"]
 [ext_resource type="AudioStream" uid="uid://dfbvdwfljlc1r" path="res://assets/snd/weapon/backstab-basev2.ogg" id="4_773h0"]
-[ext_resource type="Texture2D" uid="uid://x248i3vehcka" path="res://assets/effect/bullethole.png" id="4_kfjci"]
+[ext_resource type="Texture2D" uid="uid://x248i3vehcka" path="res://assets/effect/decal/bullethole.png" id="4_kfjci"]
 [ext_resource type="AudioStream" uid="uid://bh8kmvll8dm5n" path="res://assets/snd/weapon/crit.ogg" id="5_773h0"]
 [ext_resource type="AudioStream" uid="uid://bvxukce472ruv" path="res://assets/snd/weapon/knife_swing.wav" id="6_n77rf"]
 
@@ -157,7 +157,7 @@ impact_sound = ExtResource("3_6eid4")
 bullet_decal_texture = ExtResource("4_kfjci")
 
 [node name="MeshInstance3D2" type="MeshInstance3D" parent="."]
-transform = Transform3D(0.734038, -0.178923, -0.655114, 0.679108, 0.193397, 0.708103, 1.04308e-06, -0.964668, 0.263468, 0, 0, 0.0831105)
+transform = Transform3D(0.734038, -0.178923, -0.655114, 0.679108, 0.193397, 0.708103, 1.10269e-06, -0.964668, 0.263468, 0, 0, 0.0831105)
 mesh = SubResource("BoxMesh_ai34g")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="MeshInstance3D2"]

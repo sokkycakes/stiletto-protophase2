@@ -1,0 +1,11 @@
+[gd_scene load_steps=3 format=3 uid="uid://c4pq68wb5olak"]
+
+[ext_resource type="Script" uid="uid://c1w83wu22kq1j" path="res://resource/system/network/tube_client_service.gd" id="1_64rd0"]
+[ext_resource type="PackedScene" uid="uid://bqhoxvbrfh6ok" path="res://resource/system/network/tube_client.tscn" id="2_jnqfq"]
+
+[node name="TubeClientService" type="Node"]
+script = ExtResource("1_64rd0")
+
+[node name="TubeClient" parent="." instance=ExtResource("2_jnqfq")]
+peer_signaling_timeout = 10.0
+peer_signaling_max_attempts = 6

@@ -1,0 +1,9 @@
+<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+    <rect width="128" height="128" fill="#2d3748"/>
+    <circle cx="64" cy="64" r="50" fill="#4299e1" stroke="#2b6cb0" stroke-width="4"/>
+    <text x="64" y="74" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="24" font-weight="bold">FPS</text>
+    <circle cx="32" cy="40" r="4" fill="#f56565"/>
+    <circle cx="96" cy="40" r="4" fill="#48bb78"/>
+    <circle cx="32" cy="88" r="4" fill="#ed8936"/>
+    <circle cx="96" cy="88" r="4" fill="#9f7aea"/>
+</svg>

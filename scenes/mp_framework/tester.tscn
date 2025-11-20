@@ -1,0 +1,174 @@
+[gd_scene load_steps=4 format=3 uid="uid://tv1jshflh0lv"]
+
+[ext_resource type="Script" uid="uid://e2i2bsrkkqx5" path="res://scripts/core/GameWorld.gd" id="1_qt16s"]
+[ext_resource type="Material" uid="uid://brj2jayoo0l0d" path="res://addons/prototype_mini_bundle/M_prototype_blue.tres" id="2_m6jnb"]
+
+[sub_resource type="Environment" id="Environment_1"]
+background_mode = 1
+background_color = Color(0.3, 0.5, 0.8, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.7, 0.7, 0.9, 1)
+ambient_light_energy = 0.3
+
+[node name="GameWorld" type="Node3D"]
+script = ExtResource("1_qt16s")
+
+[node name="Environment" type="Node3D" parent="."]
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="Environment"]
+transform = Transform3D(0.707107, -0.5, 0.5, 0, 0.707107, 0.707107, -0.707107, -0.5, 0.5, 0, 10, 0)
+light_energy = 0.8
+shadow_enabled = true
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="Environment"]
+environment = SubResource("Environment_1")
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="GameHUD" type="Control" parent="UI"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="HealthBar" type="ProgressBar" parent="UI/GameHUD"]
+visible = false
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = -80.0
+offset_right = 220.0
+offset_bottom = -50.0
+grow_vertical = 0
+value = 100.0
+show_percentage = false
+
+[node name="HealthLabel" type="Label" parent="UI/GameHUD"]
+visible = false
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = -50.0
+offset_right = 120.0
+offset_bottom = -20.0
+grow_vertical = 0
+text = "Health: 100"
+
+[node name="AmmoLabel" type="Label" parent="UI/GameHUD"]
+visible = false
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -150.0
+offset_top = -50.0
+offset_right = -20.0
+offset_bottom = -20.0
+grow_horizontal = 0
+grow_vertical = 0
+text = "Ammo: 6/6"
+horizontal_alignment = 2
+
+[node name="ScoreLabel" type="Label" parent="UI/GameHUD"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -200.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = 50.0
+grow_horizontal = 0
+text = "Score: 0"
+horizontal_alignment = 2
+
+[node name="TimeLabel" type="Label" parent="UI/GameHUD"]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -50.0
+offset_top = 20.0
+offset_right = 50.0
+offset_bottom = 50.0
+grow_horizontal = 2
+text = "05:00"
+horizontal_alignment = 1
+
+[node name="Crosshair" type="Control" parent="UI/GameHUD"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -10.0
+offset_top = -10.0
+offset_right = 10.0
+offset_bottom = 10.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="CrosshairCenter" type="ColorRect" parent="UI/GameHUD/Crosshair"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -1.0
+offset_top = -1.0
+offset_right = 1.0
+offset_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(1, 1, 1, 0.8)
+
+[node name="ChatPanel" type="Panel" parent="UI/GameHUD"]
+visible = false
+modulate = Color(1, 1, 1, 0.8)
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = -250.0
+offset_right = 320.0
+offset_bottom = -100.0
+grow_vertical = 0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="UI/GameHUD/ChatPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 5.0
+offset_top = 5.0
+offset_right = -5.0
+offset_bottom = -5.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ChatDisplay" type="RichTextLabel" parent="UI/GameHUD/ChatPanel/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+bbcode_enabled = true
+scroll_following = true
+
+[node name="ChatInput" type="LineEdit" parent="UI/GameHUD/ChatPanel/VBoxContainer"]
+layout_mode = 2
+placeholder_text = "Press T to chat..."
+
+[node name="CSGBox3D" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24.4135, 0, -10.7494)
+use_collision = true
+size = Vector3(76.6189, 1, 43.9807)
+material = ExtResource("2_m6jnb")

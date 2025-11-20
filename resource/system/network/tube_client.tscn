@@ -1,0 +1,9 @@
+[gd_scene load_steps=3 format=3 uid="uid://bqhoxvbrfh6ok"]
+
+[ext_resource type="Script" uid="uid://cy006uvidc4y" path="res://addons/tube/tube_client.gd" id="1_hojh5"]
+[ext_resource type="Resource" uid="uid://bf01148w2vb4s" path="res://resource/system/network/tube_context_stiletto.tres" id="2_lqmgb"]
+
+[node name="TubeClient" type="Node"]
+script = ExtResource("1_hojh5")
+context = ExtResource("2_lqmgb")
+metadata/_custom_type_script = "uid://cy006uvidc4y"

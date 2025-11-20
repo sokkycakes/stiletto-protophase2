@@ -1,0 +1,222 @@
+[gd_scene load_steps=4 format=3 uid="uid://c3xwu5ybqmcjy"]
+
+[ext_resource type="Script" uid="uid://damr54qrmplve" path="res://scripts/ui/LobbyMenu.gd" id="1_6vjpm"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_1"]
+font_size = 24
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1"]
+bg_color = Color(0.15, 0.15, 0.2, 0.9)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.3, 0.3, 0.4, 1)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
+[node name="LobbyMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1_6vjpm")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.1, 0.1, 0.15, 1)
+
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = -20.0
+
+[node name="LeftPanel" type="VBoxContainer" parent="HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Title" type="Label" parent="HBoxContainer/LeftPanel"]
+layout_mode = 2
+text = "Multiplayer Lobby"
+label_settings = SubResource("LabelSettings_1")
+
+[node name="HSeparator" type="HSeparator" parent="HBoxContainer/LeftPanel"]
+layout_mode = 2
+
+[node name="PlayersPanel" type="Panel" parent="HBoxContainer/LeftPanel"]
+layout_mode = 2
+size_flags_vertical = 3
+custom_styles/panel = SubResource("StyleBoxFlat_1")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="HBoxContainer/LeftPanel/PlayersPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = 10.0
+offset_right = -10.0
+offset_bottom = -10.0
+
+[node name="PlayersLabel" type="Label" parent="HBoxContainer/LeftPanel/PlayersPanel/VBoxContainer"]
+layout_mode = 2
+text = "Players (0/8)"
+
+[node name="PlayersList" type="ItemList" parent="HBoxContainer/LeftPanel/PlayersPanel/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="HSeparator2" type="HSeparator" parent="HBoxContainer/LeftPanel"]
+layout_mode = 2
+
+[node name="ButtonsContainer" type="HBoxContainer" parent="HBoxContainer/LeftPanel"]
+layout_mode = 2
+
+[node name="StartGame" type="Button" parent="HBoxContainer/LeftPanel/ButtonsContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Start Game"
+
+[node name="LeaveGame" type="Button" parent="HBoxContainer/LeftPanel/ButtonsContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Leave"
+
+[node name="RightPanel" type="VBoxContainer" parent="HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="GameSettingsPanel" type="Panel" parent="HBoxContainer/RightPanel"]
+layout_mode = 2
+size_flags_vertical = 3
+custom_styles/panel = SubResource("StyleBoxFlat_1")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="HBoxContainer/RightPanel/GameSettingsPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = 10.0
+offset_right = -10.0
+offset_bottom = -10.0
+
+[node name="SettingsLabel" type="Label" parent="HBoxContainer/RightPanel/GameSettingsPanel/VBoxContainer"]
+layout_mode = 2
+text = "Game Settings"
+
+[node name="HSeparator" type="HSeparator" parent="HBoxContainer/RightPanel/GameSettingsPanel/VBoxContainer"]
+layout_mode = 2
+
+[node name="GameModeContainer" type="HBoxContainer" parent="HBoxContainer/RightPanel/GameSettingsPanel/VBoxContainer"]
+layout_mode = 2
+
+[node name="GameModeLabel" type="Label" parent="HBoxContainer/RightPanel/GameSettingsPanel/VBoxContainer/GameModeContainer"]
+layout_mode = 2
+text = "Game Mode:"
+
+[node name="GameModeOption" type="OptionButton" parent="HBoxContainer/RightPanel/GameSettingsPanel/VBoxContainer/GameModeContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+item_count = 4
+popup/item_0/text = "Deathmatch"
+popup/item_1/text = "Team Deathmatch"
+popup/item_2/text = "Cooperative"
+popup/item_3/text = "Duel"
+
+[node name="ScoreLimitContainer" type="HBoxContainer" parent="HBoxContainer/RightPanel/GameSettingsPanel/VBoxContainer"]
+layout_mode = 2
+
+[node name="ScoreLimitLabel" type="Label" parent="HBoxContainer/RightPanel/GameSettingsPanel/VBoxContainer/ScoreLimitContainer"]
+layout_mode = 2
+text = "Score Limit:"
+
+[node name="ScoreLimitSpinBox" type="SpinBox" parent="HBoxContainer/RightPanel/GameSettingsPanel/VBoxContainer/ScoreLimitContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 5.0
+max_value = 100.0
+value = 25.0
+
+[node name="TimeLimitContainer" type="HBoxContainer" parent="HBoxContainer/RightPanel/GameSettingsPanel/VBoxContainer"]
+layout_mode = 2
+
+[node name="TimeLimitLabel" type="Label" parent="HBoxContainer/RightPanel/GameSettingsPanel/VBoxContainer/TimeLimitContainer"]
+layout_mode = 2
+text = "Time Limit (min):"
+
+[node name="TimeLimitSpinBox" type="SpinBox" parent="HBoxContainer/RightPanel/GameSettingsPanel/VBoxContainer/TimeLimitContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 1.0
+max_value = 30.0
+value = 5.0
+
+[node name="HSeparator2" type="HSeparator" parent="HBoxContainer/RightPanel/GameSettingsPanel/VBoxContainer"]
+layout_mode = 2
+
+[node name="MapSelectionLabel" type="Label" parent="HBoxContainer/RightPanel/GameSettingsPanel/VBoxContainer"]
+layout_mode = 2
+text = "Map Selection:"
+
+[node name="MapOption" type="OptionButton" parent="HBoxContainer/RightPanel/GameSettingsPanel/VBoxContainer"]
+layout_mode = 2
+
+[node name="ChatPanel" type="Panel" parent="HBoxContainer/RightPanel"]
+layout_mode = 2
+size_flags_vertical = 3
+custom_styles/panel = SubResource("StyleBoxFlat_1")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="HBoxContainer/RightPanel/ChatPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = 10.0
+offset_right = -10.0
+offset_bottom = -10.0
+
+[node name="ChatLabel" type="Label" parent="HBoxContainer/RightPanel/ChatPanel/VBoxContainer"]
+layout_mode = 2
+text = "Chat"
+
+[node name="ChatDisplay" type="RichTextLabel" parent="HBoxContainer/RightPanel/ChatPanel/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+bbcode_enabled = true
+scroll_following = true
+
+[node name="ChatInput" type="LineEdit" parent="HBoxContainer/RightPanel/ChatPanel/VBoxContainer"]
+layout_mode = 2
+placeholder_text = "Type a message..."
+
+[node name="StatusBar" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_top = -30.0
+offset_right = 1152.0
+custom_styles/panel = SubResource("StyleBoxFlat_1")
+
+[node name="StatusLabel" type="Label" parent="StatusBar"]
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = 10.0
+offset_top = -11.5
+offset_right = 400.0
+offset_bottom = 11.5
+text = "Waiting for players..."

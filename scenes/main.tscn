@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3 uid="uid://vptnhe5q1cue"]
+[gd_scene load_steps=12 forCat=3 uid="uid://vptnhe5q1cue"]
 
 [ext_resource type="Material" path="res://addons/prototype_mini_bundle/M_prototype_dark.tres" id="1_ig7tw"]
 [ext_resource type="PackedScene" uid="uid://0vmntyr615js" path="res://addons/prototype_mini_bundle/prop_cube.tscn" id="2_7mycd"]

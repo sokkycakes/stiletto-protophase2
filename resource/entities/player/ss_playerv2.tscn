@@ -7,8 +7,8 @@
 [ext_resource type="Script" uid="uid://cnjcvbcitkf4q" path="res://resource/entities/player/speedometer.gd" id="3_ng7vk"]
 [ext_resource type="Texture2D" uid="uid://dnm1pv32eivk8" path="res://assets/ui/ammodeco-white.png" id="4_lgejl"]
 [ext_resource type="Texture2D" uid="uid://cskw882fffi36" path="res://addons/grappling_hook_3d/example/hook_availible.png" id="4_ttmbx"]
-[ext_resource type="Script" uid="uid://bjckdo3hpcpnp" path="res://resource/scripts/crosshair_accuracy.gd" id="5_6sj7j"]
-[ext_resource type="Script" uid="uid://bin6n1tblnjm4" path="res://resource/scripts/ammo_indicator_v2.gd" id="6_j45u4"]
+[ext_resource type="Script" uid="uid://bjckdo3hpcpnp" path="res://resource/scripts/player/crosshair_accuracy.gd" id="5_6sj7j"]
+[ext_resource type="Script" uid="uid://bin6n1tblnjm4" path="res://resource/scripts/player/ammo_indicator_v2.gd" id="6_j45u4"]
 [ext_resource type="Script" uid="uid://hdhqo1agrmi2" path="res://addons/grappling_hook_3d/src/charge_indicatorv2.gd" id="7_kchyn"]
 [ext_resource type="Script" uid="uid://dxe4j77d60noj" path="res://addons/controller_visualizer/controller_visualizer.gd" id="7_p87ms"]
 [ext_resource type="Script" uid="uid://deqk52egnd0bu" path="res://addons/GoldGdt/src/GoldGdt_DebugUI.gd" id="8_choqx"]
@@ -27,25 +27,25 @@
 [ext_resource type="AudioStream" uid="uid://bsggcctk3rvhk" path="res://assets/player/sound/footsteps/step3.wav" id="16_ma4s6"]
 [ext_resource type="AudioStream" uid="uid://cfhn162snc45k" path="res://assets/player/sound/footsteps/step4.wav" id="17_7qjye"]
 [ext_resource type="AudioStream" uid="uid://cyuxpbdv2dj8u" path="res://assets/player/sound/hardlanding.ogg" id="18_fj3jl"]
-[ext_resource type="Script" uid="uid://cv828fvg40vnc" path="res://resource/scripts/wall_movement.gd" id="19_fnbxf"]
+[ext_resource type="Script" uid="uid://cv828fvg40vnc" path="res://resource/scripts/player/wall_movement.gd" id="19_fnbxf"]
 [ext_resource type="Script" uid="uid://c77sg1frmiydi" path="res://resource/entities/player/player_state.gd" id="20_u7pwy"]
 [ext_resource type="AudioStream" uid="uid://e83b30q24do8" path="res://assets/player/sound/playerdeath.ogg" id="21_735q6"]
 [ext_resource type="AudioStream" uid="uid://dg1hppprd7ocq" path="res://assets/player/sound/playerpain00.ogg" id="22_kikgo"]
 [ext_resource type="AudioStream" uid="uid://bu2krcgjnfmba" path="res://assets/player/sound/playerpain01.ogg" id="23_ajclf"]
 [ext_resource type="AudioStream" uid="uid://leehc33or3xb" path="res://assets/player/sound/playerpain02.ogg" id="24_g4f4j"]
 [ext_resource type="AudioStream" uid="uid://dn7yuv0pgv5hs" path="res://assets/player/sound/playerpain03.ogg" id="25_6j7e7"]
-[ext_resource type="Script" uid="uid://7s50gitcs8s0" path="res://assets/player/player/player_model_compass.gd" id="26_fstuj"]
+[ext_resource type="Script" uid="uid://7s50gitcs8s0" path="res://assets/player/model/ss_player_collier/player/player_model_compass.gd" id="26_fstuj"]
 [ext_resource type="Material" uid="uid://bb43ngplsfis2" path="res://addons/flexible_toon_shader/FlexibleToonMaterial.tres" id="27_3furk"]
-[ext_resource type="PackedScene" uid="uid://fhq4dg77kclt" path="res://assets/player/player/compass.tscn" id="28_0lnfo"]
+[ext_resource type="PackedScene" uid="uid://fhq4dg77kclt" path="res://assets/player/model/ss_player_collier/player/compass.tscn" id="28_0lnfo"]
 [ext_resource type="Script" uid="uid://drur6ejin23t2" path="res://addons/GoldGdt/src/GoldGdt_Camera.gd" id="29_iimdc"]
 [ext_resource type="Script" uid="uid://dmy2w5b50d86e" path="res://resource/entities/player/viewmodel_lag.gd" id="30_n412n"]
 [ext_resource type="PackedScene" uid="uid://y16mdft5mt7a" path="res://scenes/weapons/revolver_src.tscn" id="31_5yrtq"]
-[ext_resource type="Script" uid="uid://k1c8boxjlyt7" path="res://resource/scripts/weapons/weapon_manager_src.gd" id="31_6sj7j"]
-[ext_resource type="PackedScene" uid="uid://cvnedpp1pj7o6" path="res://HookV2.tscn" id="35_ljgr2"]
+[ext_resource type="Script" path="res://scripts/weapons/NetworkedWeaponManager.gd" id="31_6sj7j"]
+[ext_resource type="PackedScene" uid="uid://cvnedpp1pj7o6" path="res://scenes/player/HookV2.tscn" id="35_ljgr2"]
 [ext_resource type="AudioStream" uid="uid://vi528wyc5ebr" path="res://assets/player/sound/clangv2.wav" id="39_ty5gj"]
-[ext_resource type="Script" uid="uid://c68yqrkkxup8g" path="res://resource/scripts/PlayerCharacter/knockback_module.gd" id="42_5i37u"]
+[ext_resource type="Script" uid="uid://c68yqrkkxup8g" path="res://resource/scripts/player/knockback_module.gd" id="42_5i37u"]
 [ext_resource type="Texture2D" uid="uid://chkr7u0ded1xn" path="res://assets/ui/dashring.svg" id="42_5yrtq"]
-[ext_resource type="Script" uid="uid://buho48oa1ii1x" path="res://resource/scripts/PlayerCharacter/kickback_module.gd" id="43_p1df7"]
+[ext_resource type="Script" uid="uid://buho48oa1ii1x" path="res://resource/scripts/player/kickback_module.gd" id="43_p1df7"]
 [ext_resource type="AudioStream" uid="uid://lkt1vkbk8ry8" path="res://assets/player/sound/airdodge.ogg" id="44_rniwy"]
 [ext_resource type="AudioStream" uid="uid://b8buayac52x1c" path="res://assets/player/sound/kickbackv3.ogg" id="45_pgxlf"]
 
@@ -1453,6 +1453,7 @@ Body = NodePath("../Body")
 
 [node name="Body" type="CharacterBody3D" parent="." node_paths=PackedStringArray("View", "collision_hull", "duck_timer")]
 collision_layer = 2
+collision_mask = 5
 floor_constant_speed = true
 script = ExtResource("13_f5xpv")
 Parameters = ExtResource("10_d3vik")
@@ -1930,7 +1931,7 @@ editor_description = "
 
 [node name="Camera" type="Camera3D" parent="Interpolated Camera/Arm/Arm Anchor"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.000407696, -0.0071907, 0.0215712)
-cull_mask = 4294967293
+cull_mask = 4294967295
 near = 0.001
 script = ExtResource("30_n412n")
 

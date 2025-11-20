@@ -12,13 +12,14 @@ var client: TubeClient:
 			client_label.text = client.name
 		
 		if is_instance_valid(context_label):
-			context_label.text = client.context.resource_name
+			context_label.text = client.context.resource_name if client.context else "No Context"
 		
 		if is_instance_valid(app_id_label):
-			app_id_label.text = client.context.app_id
+			app_id_label.text = client.context.app_id if client.context else "N/A"
 		
 		if is_instance_valid(root_node_label):
-			root_node_label.text = client.multiplayer_root_node.get_path()
+			var root_node := client.multiplayer_root_node
+			root_node_label.text = root_node.get_path() if is_instance_valid(root_node) else "Not assigned"
 
 
 @onready var client_label: Label = %ClientLabel

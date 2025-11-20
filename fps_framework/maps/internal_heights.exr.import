@@ -1,0 +1,27 @@
+[remap]
+
+importer="2d_array_texture"
+type="CompressedTexture2DArray"
+uid="uid://dgppa3e4a66de"
+path.bptc="res://.godot/imported/internal_heights.exr-ee4b8d04eeba5587e1efe7cb132c30b6.bptc.ctexarray"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
+
+[deps]
+
+source_file="res://maps/internal_heights.exr"
+dest_files=["res://.godot/imported/internal_heights.exr-ee4b8d04eeba5587e1efe7cb132c30b6.bptc.ctexarray"]
+
+[params]
+
+compress/mode=2
+compress/high_quality=false
+compress/lossy_quality=0.7
+compress/hdr_compression=1
+compress/channel_pack=1
+mipmaps/generate=false
+mipmaps/limit=-1
+slices/horizontal=1
+slices/vertical=1

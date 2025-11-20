@@ -1,0 +1,11 @@
+[gd_scene load_steps=2 format=3 uid="uid://ctm104iw36qi7"]
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_ehsmr"]
+
+[node name="Player" type="Node3D"]
+
+[node name="Pawn_WeaponManager#Pistol" type="Node3D" parent="."]
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.969127, 0)
+mesh = SubResource("CapsuleMesh_ehsmr")

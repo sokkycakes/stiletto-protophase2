@@ -55,6 +55,7 @@ var _latch_position: Vector3 = Vector3.ZERO
 var _hold_timer: float = 0.0
 var _fallback_point: Vector3 = Vector3.ZERO
 var _last_delta: float = 0.0
+var _network_player: NetworkedPlayer
 
 func _ready() -> void:
 	if not enabled:
@@ -62,6 +63,7 @@ func _ready() -> void:
 		return
 	_player = get_node_or_null(player_path) as CharacterBody3D
 	_camera = get_node_or_null(camera_path) as Camera3D
+	_network_player = _find_network_player()
 	if _player == null or _camera == null:
 		push_warning("WarpstrikeModule: missing player or camera reference.")
 		enabled = false
@@ -76,6 +78,8 @@ func _exit_tree() -> void:
 
 func _process(delta: float) -> void:
 	if not enabled:
+		return
+	if not _has_local_authority():
 		return
 	_last_delta = delta
 	match _state:
@@ -134,6 +138,7 @@ func _handle_latched() -> void:
 	transform.origin = _latch_position
 	_player.global_transform = transform
 	if _should_release():
+		_request_network_sync()
 		_end_latch()
 
 func _fire_anchor(hit: Dictionary) -> void:
@@ -142,6 +147,17 @@ func _fire_anchor(hit: Dictionary) -> void:
 		return
 	if is_instance_valid(_knife_instance):
 		return
+	
+	# Only authority can throw the knife
+	var networked_player = _get_networked_player()
+	if networked_player and not networked_player.is_multiplayer_authority():
+		return
+	
+	# Get thrower's peer_id for network sync (before spawning)
+	var thrower_peer_id: int = -1
+	if networked_player:
+		thrower_peer_id = networked_player.peer_id
+	
 	var projectile: Node3D = knife_projectile_scene.instantiate() as Node3D
 	if projectile == null:
 		return
@@ -151,7 +167,8 @@ func _fire_anchor(hit: Dictionary) -> void:
 		direction = Vector3.FORWARD
 	var velocity: Vector3 = direction * knife_speed
 	if projectile.has_method("throw"):
-		projectile.call("throw", velocity, _player)
+		# Pass both _player reference (local) and peer_id for proper ownership tracking
+		projectile.call("throw", velocity, _player, thrower_peer_id)
 	if projectile is RigidBody3D:
 		(projectile as RigidBody3D).gravity_scale = knife_gravity
 	projectile.connect("tree_exited", Callable(self, "_on_projectile_freed"))
@@ -161,6 +178,9 @@ func _fire_anchor(hit: Dictionary) -> void:
 	_knife_instance = projectile
 	_fallback_point = _camera.global_transform.origin + direction * aim_max_distance
 	_state = WarpState.THROWING
+	
+	# Broadcast the knife throw to all clients with thrower's peer_id
+	_broadcast_knife_throw.rpc(projectile.global_transform.origin, direction, knife_speed, thrower_peer_id)
 
 func knife_parent() -> Node:
 	return get_tree().current_scene
@@ -198,6 +218,7 @@ func _begin_warp(target: Vector3, normal: Vector3) -> void:
 	_player.global_transform = transform
 	_spawn_latch_vfx()
 	_state = WarpState.LATCHED
+	_request_network_sync()
 	emit_signal("warp_started", target, normal)
 
 func _end_latch() -> void:
@@ -349,3 +370,68 @@ func _clear_knife_instance() -> void:
 	if is_instance_valid(_knife_instance):
 		_knife_instance.queue_free()
 	_knife_instance = null
+
+func _get_networked_player() -> Node:
+	# Traverse up to find the NetworkedPlayer
+	var parent = get_parent()
+	while parent:
+		if parent.get_class() == "NetworkedPlayer" or parent.is_class("NetworkedPlayer"):
+			return parent
+		if parent.name == "NetworkedPlayer" or (parent.has_method("is_multiplayer_authority")):
+			# Check if this looks like a NetworkedPlayer by looking for key properties
+			if parent.has_method("get_pawn"):
+				return parent
+		parent = parent.get_parent()
+	return null
+
+@rpc("authority", "call_local", "reliable")
+func _broadcast_knife_throw(origin: Vector3, direction: Vector3, speed: float, thrower_peer_id: int = -1) -> void:
+	# Don't spawn for authority (they already did it)
+	if _get_networked_player() and _get_networked_player().is_multiplayer_authority():
+		return
+	
+	if not knife_projectile_scene:
+		return
+	
+	var projectile: Node3D = knife_projectile_scene.instantiate() as Node3D
+	if projectile == null:
+		return
+	
+	projectile.global_position = origin
+	var velocity: Vector3 = direction * speed
+	if projectile.has_method("throw"):
+		# Pass null for thrower reference on remote clients - let projectile find by peer_id
+		# This prevents ownership confusion when multiple players use the same class
+		projectile.call("throw", velocity, null, thrower_peer_id)
+	if projectile is RigidBody3D:
+		(projectile as RigidBody3D).gravity_scale = knife_gravity
+	projectile.connect("tree_exited", Callable(self, "_on_projectile_freed"))
+	if projectile.has_signal("stuck"):
+		projectile.connect("stuck", Callable(self, "_on_knife_stuck"))
+	knife_parent().add_child(projectile)
+
+func _find_network_player() -> NetworkedPlayer:
+	var node: Node = self
+	while node:
+		if node is NetworkedPlayer:
+			return node
+		node = node.get_parent()
+	return null
+
+func _has_local_authority() -> bool:
+	if _network_player and is_instance_valid(_network_player):
+		# Prefer a helper on NetworkedPlayer if available to avoid engine warnings
+		if _network_player.has_method("_has_local_authority"):
+			return _network_player._has_local_authority()
+		# As a fallback, guard against missing multiplayer peer
+		if not _network_player.multiplayer or not _network_player.multiplayer.has_multiplayer_peer():
+			return true
+		return _network_player.is_multiplayer_authority()
+	# Fallback for single-player or missing multiplayer data
+	if MultiplayerManager and MultiplayerManager.is_connected and MultiplayerManager.multiplayer.has_multiplayer_peer():
+		return MultiplayerManager.get_local_peer_id() == 1  # host fallback
+	return true
+
+func _request_network_sync() -> void:
+	if _network_player and is_instance_valid(_network_player):
+		_network_player.force_sync()

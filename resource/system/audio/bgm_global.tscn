@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://bdwhcgcuucfw6"]
 
-[ext_resource type="Script" uid="uid://cnrraq8w87r70" path="res://resource/scripts/scene_bgm_controller.gd" id="1_7q467"]
+[ext_resource type="Script" uid="uid://cnrraq8w87r70" path="res://resource/scripts/generic/scene_bgm_controller.gd" id="1_7q467"]
 
 [node name="bgm_global" type="AudioStreamPlayer"]
 playback_type = 1

@@ -1,0 +1,35 @@
+[gd_resource type="Resource" script_class="GameModeDefinition" load_steps=7 format=3 uid="uid://duelmodedef"]
+
+[ext_resource type="Script" uid="uid://c0tmvgbom2o05" path="res://scripts/core/GameModeDefinition.gd" id="1_gamemode"]
+[ext_resource type="PackedScene" uid="uid://duelmodetscn" path="res://scenes/gamemodes/duel_mode_logic.tscn" id="2_logic"]
+[ext_resource type="PackedScene" uid="uid://b0detle3gh4di" path="res://scenes/ui/character_select.tscn" id="3_charselect"]
+[ext_resource type="Script" uid="uid://c5k8m3n7v2p1o" path="res://resource/scripts/gamemode/base/character_definition.gd" id="4_chardef"]
+
+[sub_resource type="Resource" id="vagrant_char"]
+script = ExtResource("4_chardef")
+id = "vagrant"
+display_name = "Vagrant"
+scene_path = "res://resource/entities/player/ss_player_vagrant.tscn"
+description = ""
+is_unlocked = true
+
+[sub_resource type="Resource" id="base_char"]
+script = ExtResource("4_chardef")
+id = "base"
+display_name = "Base"
+scene_path = "res://resource/entities/player/ss_player_base.tscn"
+description = ""
+is_unlocked = true
+
+[resource]
+script = ExtResource("1_gamemode")
+display_name = "Duel"
+description = "Fast-paced 1v1 frag mode inspired by arena shooters."
+mode = 3
+min_players = 2
+max_players = 2
+default_time_limit_minutes = 3.0
+default_score_limit = 5
+logic_scene = ExtResource("2_logic")
+character_select_ui_scene = ExtResource("3_charselect")
+available_characters = Array[ExtResource("4_chardef")]([SubResource("vagrant_char"), SubResource("base_char")])

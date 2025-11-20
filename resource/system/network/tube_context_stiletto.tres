@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="TubeContext" load_steps=2 format=3 uid="uid://bf01148w2vb4s"]
+
+[ext_resource type="Script" uid="uid://t4pe7yqc3pnt" path="res://addons/tube/tube_context.gd" id="1_6dbjj"]
+
+[resource]
+script = ExtResource("1_6dbjj")
+app_id = "AzI1TCSmUmFh3yq"
+trackers_urls = Array[String](["ws://heartheartheart.xyz:9000", "ws://localhost:9000/announce"])
+stun_servers_urls = Array[String](["stun:stun.l.google.com:19302"])
+turn_servers = Array[Dictionary]([])
+metadata/_custom_type_script = "uid://t4pe7yqc3pnt"

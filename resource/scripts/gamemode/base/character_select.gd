@@ -8,6 +8,10 @@ signal character_selected(character_id: String)
 @onready var character_list: VBoxContainer = $Panel/VBoxContainer/CharacterList
 @onready var confirm_button: Button = $Panel/VBoxContainer/Buttons/ConfirmButton
 @onready var skip_button: Button = $Panel/VBoxContainer/Buttons/SkipButton
+@onready var selection_audio: AudioStreamPlayer = $SelectionAudioPlayer
+
+# Path to character selection sounds folder
+const CHARACTER_SOUNDS_PATH = "res://assets/snd/ui/namecall/"
 
 var characters: Array = []
 var selected_character_id: String = ""
@@ -16,8 +20,9 @@ func _ready():
 	# Make sure we're on top of everything
 	move_child(panel, -1)
 	
-	# Show mouse cursor
-	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+	# Show mouse cursor (only for the local peer viewing this UI)
+	if is_multiplayer_authority():
+		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 	
 	# Connect buttons
 	confirm_button.pressed.connect(_on_confirm_pressed)
@@ -80,12 +85,33 @@ func _on_character_button_pressed(character_id: String):
 	selected_character_id = character_id
 	confirm_button.disabled = false
 	
+	# Dynamically load and play character selection sound
+	_play_character_sound(character_id)
+	
 	# Visual feedback - highlight selected button
 	for child in character_list.get_children():
 		if child is Button:
 			var btn = child as Button
 			# Simple selection - just brighten the pressed button
 			btn.modulate = Color(1.2, 1.2, 1.0)  # Slightly brighter
+
+func _play_character_sound(character_id: String):
+	# Try common audio formats
+	var extensions = [".ogg", ".wav", ".mp3"]
+	
+	for ext in extensions:
+		var sound_path = CHARACTER_SOUNDS_PATH + character_id + ext
+		
+		# Check if file exists and load it
+		if ResourceLoader.exists(sound_path):
+			var audio_stream = load(sound_path) as AudioStream
+			if audio_stream:
+				selection_audio.stream = audio_stream
+				selection_audio.play()
+				return
+	
+	# If no sound found, silently continue (no error spam)
+	# This allows characters to optionally have sounds
 
 func _on_confirm_pressed():
 	if not selected_character_id.is_empty():
@@ -104,9 +130,10 @@ func _on_skip_pressed():
 	_close_ui()
 
 func _close_ui():
+	# Only capture mouse for the local player who made the selection
+	if is_multiplayer_authority():
+		Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 	queue_free()
-	# Return to game mouse mode
-	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 
 func _notification(what: int):
 	if what == NOTIFICATION_WM_CLOSE_REQUEST:

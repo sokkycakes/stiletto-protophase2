@@ -1,10 +1,6 @@
 extends Control
 
-@export var config_path: String = "user://resolution_settings.cfg":
-	set(value):
-		config_path = value
-		if config:
-			load_settings()  # Reload settings with new path
+@export var config_path: String = "user://resolution_settings.cfg"
 
 const DEFAULT_SETTINGS = {
 	"window_base_width": 800,

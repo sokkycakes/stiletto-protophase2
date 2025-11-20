@@ -1,0 +1,14 @@
+[remap]
+
+importer="func_godot.map"
+type="Resource"
+uid="uid://fu6id3yritk3"
+path="res://.godot/imported/example.vmf-d2b3aab266495563729a8b8abea1a90a.tres"
+
+[deps]
+
+source_file="res://maps/example.vmf"
+dest_files=["res://.godot/imported/example.vmf-d2b3aab266495563729a8b8abea1a90a.tres"]
+
+[params]
+

@@ -33,7 +33,7 @@ func _on_single_player_pressed():
 func _on_multiplayer_pressed():
 	# Alternative approach: Use scene switching for more reliable UI
 	# Store a reference to return to main menu
-	var mp_menu_path := "res://scenes/ui/multiplayer_menu_standalone.tscn"
+	var mp_menu_path := "res://scenes/mp_framework/main_menu.tscn"
 	if Engine.has_singleton("SceneLoader"):
 		SceneLoader.change_scene(mp_menu_path)
 	else:

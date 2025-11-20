@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="MapConfig" load_steps=3 format=3 uid="uid://c728l3vw4db1u"]
+
+[ext_resource type="Resource" uid="uid://duelmodedef" path="res://resources/gamemodes/duel_game_mode_definition.tres" id="1_746f0"]
+[ext_resource type="Script" uid="uid://cy42m20dsmseu" path="res://scripts/core/MapConfig.gd" id="1_teae7"]
+
+[resource]
+script = ExtResource("1_teae7")
+game_mode = 3
+game_mode_definition = ExtResource("1_746f0")
+time_limit_minutes = 5.0
+score_limit = 25
+description = ""
+metadata/_custom_type_script = "uid://cy42m20dsmseu"

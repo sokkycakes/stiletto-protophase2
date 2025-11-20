@@ -966,6 +966,7 @@ Body = NodePath("../Body")
 
 [node name="Body" type="CharacterBody3D" parent="." node_paths=PackedStringArray("View", "collision_hull", "duck_timer")]
 collision_layer = 2
+collision_mask = 5
 floor_constant_speed = true
 script = ExtResource("7_mapp2")
 Parameters = ExtResource("4_gs0bd")
@@ -1447,7 +1448,7 @@ editor_description = "
 
 [node name="Camera" type="Camera3D" parent="Interpolated Camera/Arm/Arm Anchor"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.000407696, -0.0071907, 0.0215712)
-cull_mask = 4294967293
+cull_mask = 4294967295
 near = 0.001
 script = ExtResource("16_03rbn")
 

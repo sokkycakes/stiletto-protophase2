@@ -25,19 +25,21 @@ buses/default_bus_layout="res://resource/default_bus_layout.tres"
 
 [autoload]
 
-BgmGlobal="*res://resource/bgm_global.tscn"
-PauseMenu="*res://scenes/ui/pause_menu.tscn"
-ResolutionManager="*res://resource/scripts/resolution_manager.tscn"
+BgmGlobal="res://resource/system/audio/bgm_global.tscn"
+PauseMenuv2="*res://scenes/ui/pause_menuv2.tscn"
+ResolutionManager="*res://resource/scripts/generic/resolution_manager.tscn"
 DebugCameraManager="res://resource/system/debug_camera_manager.gd"
-SceneLoader="*res://resource/scripts/scene_loader.gd"
-NextBotManager="*res://scripts/enemy/nextbot_manager.gd"
-MultiplayerManager="*res://resource/scripts/multiplayer_manager.gd"
-BaseGameMaster="res://resource/scripts/base_gamemaster.gd"
+SceneLoader="*res://resource/scripts/generic/scene_loader.gd"
+NextBotManager="*res://resource/scripts/enemy/nextbot_manager.gd"
+GameRulesManager="*res://scripts/core/GameRulesManager.gd"
+TeamManager="*res://scripts/core/TeamManager.gd"
+MultiplayerManager="*res://scripts/core/MultiplayerManager.gd"
 
 [display]
 
 window/size/viewport_width=800
 window/size/viewport_height=600
+window/subwindows/embed_subwindows=false
 window/stretch/mode="viewport"
 window/stretch/aspect="ignore"
 window/per_pixel_transparency/allowed=true
@@ -49,7 +51,7 @@ project/assembly_name="stiletto-proto"
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/GPUTrail-main/plugin.cfg", "res://addons/GoldGdt/plugin.cfg", "res://addons/blender_godot_pipeline/plugin.cfg", "res://addons/coi_serviceworker/plugin.cfg", "res://addons/godotsize/plugin.cfg", "res://addons/grappling_hook_3d/plugin.cfg", "res://addons/prototype_mini_bundle/plugin.cfg", "res://addons/tube/plugin.cfg")
+enabled=PackedStringArray("res://addons/GPUTrail-main/plugin.cfg", "res://addons/GoldGdt/plugin.cfg", "res://addons/blender_godot_pipeline/plugin.cfg", "res://addons/coi_serviceworker/plugin.cfg", "res://addons/func_godot/plugin.cfg", "res://addons/godotsize/plugin.cfg", "res://addons/grappling_hook_3d/plugin.cfg", "res://addons/prototype_mini_bundle/plugin.cfg", "res://addons/tube/plugin.cfg")
 
 [global_group]
 
@@ -205,6 +207,10 @@ pc_warpstrike={
 "events": [Object(InputEventJoypadMotion,"resource_local_to_scene":false,"resource_name":"","device":-1,"axis":5,"axis_value":1.0,"script":null)
 , Object(InputEventMouseButton,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"button_mask":2,"position":Vector2(0, 0),"global_position":Vector2(0, 0),"factor":1.0,"button_index":2,"canceled":false,"pressed":true,"double_click":false,"script":null)
 ]
+}
+pause={
+"deadzone": 0.2,
+"events": []
 }
 
 [limbo_ai]

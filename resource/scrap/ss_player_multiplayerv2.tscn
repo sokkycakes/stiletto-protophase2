@@ -1,0 +1,33 @@
+[gd_scene load_steps=5 format=3 uid="uid://744d5cwcvnhg"]
+
+[ext_resource type="Script" uid="uid://dilry5inngsjs" path="res://resource/scrap/player_multiplayer_wrapper.gd" id="1_wrapper"]
+[ext_resource type="Script" uid="uid://c5xryvcbir65j" path="res://resource/scrap/ss_player_multiplayer.gd" id="9_tdofj"]
+[ext_resource type="Script" uid="uid://metvki7bnruv" path="res://resource/scrap/multiplayer_weapon_sync.gd" id="10_mw12q"]
+
+[sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_1"]
+properties/0/path = NodePath("Character/Body:position")
+properties/0/spawn = true
+properties/0/replication_mode = 1
+properties/1/path = NodePath("Character/Body:velocity")
+properties/1/spawn = false
+properties/1/replication_mode = 1
+properties/2/path = NodePath("Character/Body/Horizontal View:rotation")
+properties/2/spawn = true
+properties/2/replication_mode = 1
+properties/3/path = NodePath("Character/Body/Horizontal View/Vertical View:rotation")
+properties/3/spawn = true
+properties/3/replication_mode = 1
+
+[node name="PlayerMultiplayer" type="Node3D"]
+script = ExtResource("1_wrapper")
+default_character_scene = "res://resource/entities/player/ss_player_base.tscn"
+
+[node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="."]
+replication_config = SubResource("SceneReplicationConfig_1")
+visibility_update_mode = 1
+
+[node name="NetworkedPlayerScript" type="Node" parent="."]
+script = ExtResource("9_tdofj")
+
+[node name="WeaponSync" type="Node" parent="."]
+script = ExtResource("10_mw12q")

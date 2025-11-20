@@ -247,8 +247,23 @@ func _ray(from: Vector3, to: Vector3) -> Dictionary:
 	return result if result.has("position") else {}
 
 func _apply_damage(target: Object, amount: int, hit: Dictionary) -> void:
-	if target and target.has_method("take_damage"):
-		target.take_damage(amount)
+	var receiver := _find_damage_receiver(target)
+	if not receiver:
+		return
+	
+	var attacker_peer_id := -1
+	var attacker_np := _get_networked_player()
+	if attacker_np:
+		attacker_peer_id = attacker_np.peer_id
+	
+	if receiver is NetworkedPlayer:
+		# Route damage via RPC so it is applied on the authoritative instance.
+		# Pass receiver's peer_id for validation to prevent wrong player from taking damage
+		var receiver_np := receiver as NetworkedPlayer
+		var target_peer_id := receiver_np.peer_id if receiver_np else -1
+		receiver.apply_damage.rpc(amount, attacker_peer_id, target_peer_id)
+	elif receiver.has_method("take_damage"):
+		receiver.take_damage(amount)
 	
 	if impact_effect_scene:
 		var pos: Vector3 = hit.get("position", Vector3.ZERO)
@@ -327,6 +342,28 @@ func _get_owner_player() -> Node3D:
 		depth += 1
 	if debug_logging:
 		print("No player node found after checking %s levels up" % [depth])
+	return null
+
+func _find_damage_receiver(target: Object) -> Object:
+	# Walk up from the collider to find a node that can receive damage (e.g., NetworkedPlayer)
+	# When walking up from a collision body, if we find a NetworkedPlayer, that NetworkedPlayer
+	# must own the body (since the body is a descendant). This ensures correct ownership identification.
+	var node := target as Node
+	var target_node := target as Node
+	
+	while node:
+		if node is NetworkedPlayer:
+			# Found a NetworkedPlayer - since we walked UP to reach it, target must be below it
+			# This means this NetworkedPlayer owns the collision body
+			var np := node as NetworkedPlayer
+			# Quick validation: target should be the pawn_body, pawn, or a descendant
+			if np.pawn_body == target_node or np.pawn == target_node:
+				return node
+			# Return the NetworkedPlayer we found walking up (it owns the target)
+			return node
+		elif node.has_method("take_damage"):
+			return node
+		node = node.get_parent()
 	return null
 
 func _check_backstab_ready() -> bool:
@@ -530,6 +567,11 @@ func alt_fire() -> void:
 
 func _throw_knife() -> void:
 	"""Spawn and throw a knife projectile"""
+	# Only authority can throw the knife
+	var networked_player = _get_networked_player()
+	if networked_player and not networked_player.is_multiplayer_authority():
+		return
+	
 	# Get camera for aiming
 	var cam: Camera3D = _camera
 	if cam == null:
@@ -549,11 +591,26 @@ func _throw_knife() -> void:
 	# Calculate velocity
 	var velocity: Vector3 = direction * throw_velocity
 	
-	# Spawn knife projectile
+	# Spawn knife projectile locally
+	_spawn_knife_local(origin, cam.global_rotation, velocity)
+	
+	# Broadcast the knife throw to all clients
+	if throwable_knife_scene:
+		var projectile_path = throwable_knife_scene.resource_path
+		_broadcast_knife_throw.rpc(origin, cam.global_rotation, velocity, projectile_path)
+	
+	if debug_logging:
+		print("Knife thrown from: %s with velocity: %s" % [origin, velocity])
+
+func _spawn_knife_local(origin: Vector3, rotation: Vector3, velocity: Vector3) -> void:
+	"""Spawn a knife projectile locally"""
+	if not throwable_knife_scene:
+		return
+	
 	var knife: Node3D = throwable_knife_scene.instantiate()
 	get_tree().current_scene.add_child(knife)
 	knife.global_position = origin
-	knife.global_rotation = cam.global_rotation
+	knife.global_rotation = rotation
 	
 	# Initialize knife if it has the throw method
 	if knife.has_method("throw"):
@@ -563,9 +620,38 @@ func _throw_knife() -> void:
 	# Play throw sound
 	if throw_sound:
 		_play_sound(throw_sound)
+
+@rpc("any_peer", "call_remote", "reliable")
+func _broadcast_knife_throw(origin: Vector3, rotation: Vector3, velocity: Vector3, projectile_path: String) -> void:
+	"""Spawn knife projectile on remote clients"""
+	var networked_player = _get_networked_player()
+	if networked_player and networked_player.is_multiplayer_authority():
+		return  # Don't spawn on authority (already spawned locally)
 	
-	if debug_logging:
-		print("Knife thrown from: %s with velocity: %s" % [origin, velocity])
+	var knife_scene = load(projectile_path) as PackedScene
+	if not knife_scene:
+		push_warning("Failed to load knife scene: %s" % projectile_path)
+		return
+	
+	var knife: Node3D = knife_scene.instantiate()
+	get_tree().current_scene.add_child(knife)
+	knife.global_position = origin
+	knife.global_rotation = rotation
+	
+	# Initialize knife if it has the throw method
+	if knife.has_method("throw"):
+		knife.throw(velocity, null)  # No thrower reference on remote clients
+
+func _get_networked_player() -> Node:
+	"""Find the owning NetworkedPlayer node"""
+	var n := get_parent()
+	var depth = 0
+	while n and depth < 15:
+		if n.get_class() == "NetworkedPlayer" or n.name == "NetworkedPlayer":
+			return n
+		n = n.get_parent()
+		depth += 1
+	return null
 
 func _recharge_knife() -> void:
 	"""Recharge one knife over time"""

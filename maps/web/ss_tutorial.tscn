@@ -3,7 +3,7 @@
 [ext_resource type="AudioStream" uid="uid://da4yrjk2hwqp8" path="res://assets/snd/ambient/sound_ambient_ambience_urban_rooftop_ambloop02.wav" id="1_5gdh2"]
 [ext_resource type="PackedScene" uid="uid://cmtvhl44mc78y" path="res://scenes/skyboxdetail.tscn" id="2_u6fkj"]
 [ext_resource type="PackedScene" uid="uid://tt2sjt4ypwn7" path="res://resource/entities/player/player_spawner.tscn" id="3_alpy2"]
-[ext_resource type="PackedScene" uid="uid://bu66d5ff4qrd" path="res://resource/entities/player/ss_player_multiplayer.tscn" id="4_b2c2w"]
+[ext_resource type="PackedScene" uid="uid://bu66d5ff4qrd" path="res://resource/scrap/ss_player_multiplayer.tscn" id="4_b2c2w"]
 [ext_resource type="Texture2D" uid="uid://bjcq8axgqat8g" path="res://materials/dev/texture_08.vtf" id="5_kkin0"]
 [ext_resource type="FontFile" uid="uid://dlo8tyh0vtt2f" path="res://assets/ui/IosevkaStiletto-ExtendedMedium.ttf" id="6_oygcb"]
 [ext_resource type="FontFile" uid="uid://bbfeoo2kuf30n" path="res://addons/icons-fonts/icons_fonts/MaterialIcons/material_design_icons.ttf" id="7_u8ql7"]

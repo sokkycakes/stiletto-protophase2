@@ -1,0 +1,176 @@
+[gd_scene load_steps=3 format=3 uid="uid://dpyyy2k0rhldi"]
+
+[ext_resource type="Script" uid="uid://cptnjqwbtor3" path="res://resource/scrap/multiplayer_menu_v2.gd" id="1_w6mlb"]
+[ext_resource type="FontFile" uid="uid://cuxa5noqja2ow" path="res://assets/ui/IosevkaStiletto-ExtendedLight.ttf" id="2_bftue"]
+
+[node name="MultiplayerMenuStandalone" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_w6mlb")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.1, 0.1, 0.1, 0.9)
+
+[node name="MainContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -200.0
+offset_top = -150.0
+offset_right = 200.0
+offset_bottom = 150.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Title" type="Label" parent="MainContainer"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_bftue")
+theme_override_font_sizes/font_size = 32
+text = "MULTIPLAYER"
+horizontal_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="MainContainer"]
+layout_mode = 2
+
+[node name="PlayerNameContainer" type="HBoxContainer" parent="MainContainer"]
+layout_mode = 2
+
+[node name="PlayerNameLabel" type="Label" parent="MainContainer/PlayerNameContainer"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_bftue")
+theme_override_font_sizes/font_size = 16
+text = "Player Name:"
+
+[node name="PlayerNameInput" type="LineEdit" parent="MainContainer/PlayerNameContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_fonts/font = ExtResource("2_bftue")
+theme_override_font_sizes/font_size = 16
+text = "Player"
+placeholder_text = "Enter your name"
+
+[node name="HSeparator2" type="HSeparator" parent="MainContainer"]
+layout_mode = 2
+
+[node name="HostContainer" type="VBoxContainer" parent="MainContainer"]
+layout_mode = 2
+
+[node name="HostButton" type="Button" parent="MainContainer/HostContainer"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_bftue")
+theme_override_font_sizes/font_size = 18
+text = "HOST GAME"
+
+[node name="JoinCodeContainer" type="VBoxContainer" parent="MainContainer/HostContainer"]
+visible = false
+layout_mode = 2
+
+[node name="JoinCodeLabel" type="Label" parent="MainContainer/HostContainer/JoinCodeContainer"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_bftue")
+theme_override_font_sizes/font_size = 14
+text = "Join Code:"
+horizontal_alignment = 1
+
+[node name="JoinCodeDisplay" type="LineEdit" parent="MainContainer/HostContainer/JoinCodeContainer"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_bftue")
+theme_override_font_sizes/font_size = 16
+placeholder_text = "Generating..."
+editable = false
+
+[node name="CopyCodeButton" type="Button" parent="MainContainer/HostContainer/JoinCodeContainer"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_bftue")
+theme_override_font_sizes/font_size = 14
+text = "COPY CODE"
+
+[node name="HSeparator3" type="HSeparator" parent="MainContainer"]
+layout_mode = 2
+
+[node name="JoinContainer" type="VBoxContainer" parent="MainContainer"]
+layout_mode = 2
+
+[node name="JoinCodeInputContainer" type="HBoxContainer" parent="MainContainer/JoinContainer"]
+layout_mode = 2
+
+[node name="JoinCodeInputLabel" type="Label" parent="MainContainer/JoinContainer/JoinCodeInputContainer"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_bftue")
+theme_override_font_sizes/font_size = 16
+text = "Join Code:"
+
+[node name="JoinCodeInput" type="LineEdit" parent="MainContainer/JoinContainer/JoinCodeInputContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_fonts/font = ExtResource("2_bftue")
+theme_override_font_sizes/font_size = 16
+placeholder_text = "Enter join code"
+
+[node name="JoinButton" type="Button" parent="MainContainer/JoinContainer"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_bftue")
+theme_override_font_sizes/font_size = 18
+text = "JOIN GAME"
+
+[node name="HSeparator4" type="HSeparator" parent="MainContainer"]
+layout_mode = 2
+
+[node name="StatusContainer" type="VBoxContainer" parent="MainContainer"]
+layout_mode = 2
+
+[node name="StatusLabel" type="Label" parent="MainContainer/StatusContainer"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_bftue")
+theme_override_font_sizes/font_size = 14
+text = "Ready to connect"
+horizontal_alignment = 1
+
+[node name="PlayerCountLabel" type="Label" parent="MainContainer/StatusContainer"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_bftue")
+theme_override_font_sizes/font_size = 12
+text = "Players: 0/8"
+horizontal_alignment = 1
+
+[node name="HSeparator5" type="HSeparator" parent="MainContainer"]
+layout_mode = 2
+
+[node name="ButtonContainer" type="HBoxContainer" parent="MainContainer"]
+layout_mode = 2
+
+[node name="DisconnectButton" type="Button" parent="MainContainer/ButtonContainer"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_fonts/font = ExtResource("2_bftue")
+theme_override_font_sizes/font_size = 16
+text = "DISCONNECT"
+
+[node name="BackButton" type="Button" parent="MainContainer/ButtonContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_fonts/font = ExtResource("2_bftue")
+theme_override_font_sizes/font_size = 16
+text = "BACK"
+
+[node name="StartGameButton" type="Button" parent="MainContainer/ButtonContainer"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_fonts/font = ExtResource("2_bftue")
+theme_override_font_sizes/font_size = 16
+text = "START GAME"

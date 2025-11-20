@@ -70,3 +70,6 @@ text = "Confirm"
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Skip (Use First)"
+
+[node name="SelectionAudioPlayer" type="AudioStreamPlayer" parent="."]
+bus = &"UI"
