@@ -157,7 +157,7 @@ impact_sound = ExtResource("3_6eid4")
 bullet_decal_texture = ExtResource("4_kfjci")
 
 [node name="MeshInstance3D2" type="MeshInstance3D" parent="."]
-transform = Transform3D(0.734038, -0.178923, -0.655114, 0.679108, 0.193397, 0.708103, 1.10269e-06, -0.964668, 0.263468, 0, 0, 0.0831105)
+transform = Transform3D(0.734038, -0.178923, -0.655114, 0.679108, 0.193397, 0.708103, 1.04308e-06, -0.964668, 0.263468, 0, 0, 0.0831105)
 mesh = SubResource("BoxMesh_ai34g")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="MeshInstance3D2"]

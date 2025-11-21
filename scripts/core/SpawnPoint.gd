@@ -10,6 +10,16 @@ class_name SpawnPoint
 @export var check_for_obstacles: bool = true  ## Whether to check for clear spawn space
 @export var min_distance_from_enemies: float = 5.0  ## Minimum distance from enemy players
 
+# --- Orientation ---
+@export_group("Orientation")
+## If true, uses the SpawnPoint node's rotation for the player's facing direction.
+## If false, uses fixed_yaw_degrees.
+@export var use_node_rotation: bool = true
+
+## Fixed Y-rotation (yaw) in degrees to apply if use_node_rotation is false.
+## Can also be used as an offset if logic is adjusted, but currently acts as override.
+@export_range(-180, 180) var fixed_yaw_degrees: float = 0.0
+
 # --- State Tracking ---
 var last_used_time: float = 0.0
 var total_usage_count: int = 0
@@ -58,6 +68,12 @@ func _create_debug_visualization() -> void:
 	add_child(debug_mesh)
 
 # --- Public API ---
+
+## Get the spawn rotation Y in degrees
+func get_spawn_rotation_y() -> float:
+	if use_node_rotation:
+		return global_rotation_degrees.y + fixed_yaw_degrees
+	return fixed_yaw_degrees
 
 ## Use this spawn point and return the exact spawn position
 func use_spawn_point() -> Vector3:

@@ -24,6 +24,7 @@ var spawn_position: Vector3 = Vector3.ZERO
 var spawn_rotation: Vector3 = Vector3.ZERO
 var last_character_id: String = ""  # Track last selected character for respawning
 var last_processed_scene_path: String = ""  # Track which scene we last processed
+var _active_character_select_ui: Node = null
 
 func _ready():
 	add_to_group("gamemaster")
@@ -145,6 +146,8 @@ func _show_character_select():
 		
 		# Add to scene tree and show
 		get_tree().root.add_child(ui_instance)
+	# Remember this UI so we can close it after a selection
+	_active_character_select_ui = ui_instance
 		
 		# Connect to selection signal
 		if ui_instance.has_signal("character_selected"):
@@ -165,6 +168,11 @@ func _on_character_selected(character_id: String):
 		if char_def.id == character_id and char_def.is_valid():
 			selected_character = char_def
 			last_character_id = character_id  # Save for respawning
+            # Close the character select UI as soon as a selection is made
+            if is_instance_valid(_active_character_select_ui):
+                # Use a Deferred close to ensure UI cleanup logic runs (e.g., mouse unlocking)
+                _active_character_select_ui.call_deferred("_close_ui")
+                _active_character_select_ui = null
 			_spawn_player()
 			return
 	

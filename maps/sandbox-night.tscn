@@ -290,18 +290,6 @@ bus = &"sfx_ambient_radio"
 emission_angle_degrees = 71.0
 doppler_tracking = 2
 
-[node name="ss_player" parent="."]
-_import_path = NodePath("")
-unique_name_in_owner = false
-process_mode = 0
-process_priority = 0
-process_physics_priority = 0
-process_thread_group = 0
-physics_interpolation_mode = 0
-auto_translate_mode = 0
-editor_description = ""
-script = null
-
 [node name="LightmapGI" type="LightmapGI" parent="."]
 visible = false
 light_data = ExtResource("9_2afed")

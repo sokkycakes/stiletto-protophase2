@@ -442,14 +442,15 @@ func _respawn_player() -> void:
 			print("[NetworkedPlayer] Reset PlayerState to NORMAL - PlayerState handles the rest!")
 	
 	# Teleport to spawn point
-	var spawn_pos = _get_spawn_position()
-	global_position = spawn_pos
+	var spawn_point = _get_best_spawn_point()
+	var spawn_pos = Vector3(0, 1, 0)
+	var spawn_yaw = 0.0
 	
-	if pawn:
-		pawn.global_position = spawn_pos
+	if spawn_point:
+		spawn_pos = spawn_point.use_spawn_point()
+		spawn_yaw = spawn_point.get_spawn_rotation_y()
 	
-	if pawn_body:
-		pawn_body.global_position = spawn_pos
+	set_spawn_transform(spawn_pos, spawn_yaw)
 	
 	player_respawned.emit()
 	player_respawned_networked.rpc()
@@ -606,7 +607,48 @@ func _restore_model_transparency_recursive(node: Node) -> void:
 	for child in node.get_children():
 		_restore_model_transparency_recursive(child)
 
-func _get_spawn_position() -> Vector3:
+## Set player position and rotation (teleport)
+func set_spawn_transform(pos: Vector3, yaw_degrees: float) -> void:
+	var yaw_rad = deg_to_rad(yaw_degrees)
+	
+	# CRITICAL: GoldGdt input logic relies on the body/root being unrotated (or aligned with input space).
+	# If we rotate the root/body, the local view yaw is relative to that rotation, 
+	# but the input vector is rotated by local view yaw, leading to mismatched directions.
+	# Instead, we must keep root/body aligned (0) and rotate the VIEW to the desired facing.
+	
+	# 1. Set positions
+	global_position = pos
+	if pawn:
+		pawn.global_position = pos
+	if pawn_body:
+		pawn_body.global_position = pos
+		pawn_body.velocity = Vector3.ZERO
+	
+	# 2. Reset Node Rotations to Identity (World Aligned)
+	rotation = Vector3.ZERO
+	if pawn:
+		pawn.rotation = Vector3.ZERO
+	if pawn_body:
+		pawn_body.rotation = Vector3.ZERO
+	
+	# 3. Apply rotation to the VIEW (Horizontal View / Camera Gimbal)
+	if pawn_horizontal_view:
+		pawn_horizontal_view.rotation.y = yaw_rad
+		pawn_horizontal_view.orthonormalize()
+	
+	# 4. Optionally rotate the player model if it exists (to match view initially)
+	var model = _get_player_model_root()
+	if model:
+		model.rotation.y = yaw_rad
+	
+	# 5. Update sync state
+	last_position = pos
+	last_rotation = Vector3.ZERO
+	last_view_yaw = yaw_rad
+	
+	force_sync()
+
+func _get_best_spawn_point() -> SpawnPoint:
 	# Try to find team spawn points
 	var spawn_points = get_tree().get_nodes_in_group("spawn_points")
 	var team_spawns = []
@@ -619,10 +661,14 @@ func _get_spawn_position() -> Vector3:
 	var available_spawns = team_spawns if team_spawns.size() > 0 else spawn_points
 	
 	if available_spawns.size() > 0:
-		var spawn = available_spawns[randi() % available_spawns.size()]
-		return spawn.global_position
+		return available_spawns[randi() % available_spawns.size()]
 	
-	# Default spawn position
+	return null
+
+func _get_spawn_position() -> Vector3:
+	var spawn = _get_best_spawn_point()
+	if spawn:
+		return spawn.global_position
 	return Vector3(0, 1, 0)
 
 # --- Network Synchronization ---
@@ -732,7 +778,7 @@ func update_health(new_health: float, target_peer_id: int = -1) -> void:
 	# Only update health if we're not the authority (authority already has correct health)
 	# This prevents overwriting authority's health with stale data
 	if not is_multiplayer_authority():
-	health = new_health
+		health = new_health
 
 @rpc("authority", "call_local", "reliable")
 func player_died_networked(killer_peer_id: int) -> void:

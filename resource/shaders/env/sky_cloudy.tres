@@ -1,0 +1,21 @@
+[gd_resource type="Sky" load_steps=9 format=3 uid="uid://cxyml4tnmi7iu"]
+
+[ext_resource type="Shader" uid="uid://ct8nck16ybvfm" path="res://resource/shaders/env/hl_skybox.gdshader" id="1_m6so1"]
+[ext_resource type="Texture2D" uid="uid://bc0hm66hvecep" path="res://assets/env/skybox/stormy/pz.png" id="2_m6so1"]
+[ext_resource type="Texture2D" uid="uid://c4adfhplw4ki4" path="res://assets/env/skybox/stormy/ny.png" id="3_6bivq"]
+[ext_resource type="Texture2D" uid="uid://bm8ewq50uddpw" path="res://assets/env/skybox/stormy/nz.png" id="4_7p0lm"]
+[ext_resource type="Texture2D" uid="uid://d1cxeah83v1v8" path="res://assets/env/skybox/stormy/nx.png" id="5_exxji"]
+[ext_resource type="Texture2D" uid="uid://iqaqprr6tox1" path="res://assets/env/skybox/stormy/px.png" id="6_o5fdl"]
+[ext_resource type="Texture2D" uid="uid://de76npajufp7v" path="res://assets/env/skybox/stormy/py.png" id="7_qprb6"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_pu2ko"]
+shader = ExtResource("1_m6so1")
+shader_parameter/front = ExtResource("4_7p0lm")
+shader_parameter/back = ExtResource("2_m6so1")
+shader_parameter/left = ExtResource("5_exxji")
+shader_parameter/right = ExtResource("6_o5fdl")
+shader_parameter/top = ExtResource("7_qprb6")
+shader_parameter/bottom = ExtResource("3_6bivq")
+
+[resource]
+sky_material = SubResource("ShaderMaterial_pu2ko")

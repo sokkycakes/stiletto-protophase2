@@ -54,10 +54,6 @@ func _enforce_player_limit() -> void:
 func _show_character_select_for_local_player() -> void:
 	print("[DuelGameMode] _show_character_select_for_local_player called")
 	
-	# Only show character select for the local player
-	if not MultiplayerManager:
-		print("[DuelGameMode] No MultiplayerManager")
-		return
 	if not game_world:
 		print("[DuelGameMode] No game_world")
 		return
@@ -65,19 +61,26 @@ func _show_character_select_for_local_player() -> void:
 		print("[DuelGameMode] No mode_definition")
 		return
 	
-	var local_peer_id = MultiplayerManager.get_local_peer_id()
-	print("[DuelGameMode] Local peer ID: ", local_peer_id)
+	# Handle offline mode (no MultiplayerManager) or online mode
+	var local_peer_id: int = 1  # Default for offline mode
+	var is_offline: bool = not MultiplayerManager
 	
-	# If this peer already has a character selected, skip showing character select again
-	if player_character_selections.has(local_peer_id):
-		print("[DuelGameMode] Local player already has a character selection, skipping character select UI.")
-		return
-	
-	if MultiplayerManager.connected_players.has(local_peer_id):
-		var info = MultiplayerManager.connected_players[local_peer_id]
-		if info.has("character_path") and str(info["character_path"]) != "":
-			print("[DuelGameMode] Local player already has character_path set (", info["character_path"], "), skipping character select UI.")
+	if not is_offline:
+		local_peer_id = MultiplayerManager.get_local_peer_id()
+		print("[DuelGameMode] Local peer ID: ", local_peer_id)
+		
+		# If this peer already has a character selected, skip showing character select again
+		if player_character_selections.has(local_peer_id):
+			print("[DuelGameMode] Local player already has a character selection, skipping character select UI.")
 			return
+		
+		if MultiplayerManager.connected_players.has(local_peer_id):
+			var info = MultiplayerManager.connected_players[local_peer_id]
+			if info.has("character_path") and str(info["character_path"]) != "":
+				print("[DuelGameMode] Local player already has character_path set (", info["character_path"], "), skipping character select UI.")
+				return
+	else:
+		print("[DuelGameMode] Offline mode - no MultiplayerManager, using default peer ID: ", local_peer_id)
 	
 	# Get available characters from mode definition
 	var character_definitions = mode_definition.available_characters
@@ -114,7 +117,7 @@ func _show_character_select_for_local_player() -> void:
 	print("[DuelGameMode] Character select UI added to scene tree")
 
 func _on_character_selected(character_id: String, peer_id: int) -> void:
-	if not mode_definition or not MultiplayerManager:
+	if not mode_definition:
 		return
 	
 	var scene_path := _get_character_scene_path(character_id)
@@ -122,6 +125,13 @@ func _on_character_selected(character_id: String, peer_id: int) -> void:
 		push_warning("[DuelGameMode] Character '%s' not found in definition" % character_id)
 		return
 	
+	# Handle offline mode (no MultiplayerManager)
+	if not MultiplayerManager:
+		print("[DuelGameMode] Offline mode - processing character selection directly")
+		_process_character_selection(peer_id, character_id, scene_path)
+		return
+	
+	# Online mode - use multiplayer logic
 	if MultiplayerManager.is_server():
 		_process_character_selection(peer_id, character_id, scene_path)
 	else:
@@ -131,7 +141,12 @@ func _on_character_selected(character_id: String, peer_id: int) -> void:
 func _process_character_selection(peer_id: int, character_id: String, scene_path: String) -> void:
 	player_character_selections[peer_id] = character_id
 	_update_player_character_path(peer_id, scene_path)
-	_spawn_player_with_character.rpc(peer_id, scene_path)
+	
+	# In offline mode, call directly; in online mode, use RPC
+	if not MultiplayerManager:
+		_spawn_player_with_character(peer_id, scene_path)
+	else:
+		_spawn_player_with_character.rpc(peer_id, scene_path)
 
 func _update_player_character_path(peer_id: int, scene_path: String) -> void:
 	if not MultiplayerManager:
@@ -175,21 +190,18 @@ func request_spawn_with_character(peer_id: int, character_id: String) -> void:
 
 @rpc("authority", "call_local", "reliable")
 func _spawn_player_with_character(peer_id: int, scene_path: String) -> void:
-	if not MultiplayerManager:
-		return
-	
-	# Ensure local player info reflects the chosen character
-	if MultiplayerManager.connected_players.has(peer_id):
-		MultiplayerManager.connected_players[peer_id]["character_path"] = scene_path
-	else:
-		MultiplayerManager.connected_players[peer_id] = {
-			"peer_id": peer_id,
-			"name": "Player %s" % peer_id,
-			"team": 0,
-			"score": 0,
-			"character_path": scene_path
-		}
+	# Ensure local player info reflects the chosen character (only in online mode)
+	if MultiplayerManager:
+		if MultiplayerManager.connected_players.has(peer_id):
+			MultiplayerManager.connected_players[peer_id]["character_path"] = scene_path
+		else:
+			MultiplayerManager.connected_players[peer_id] = {
+				"peer_id": peer_id,
+				"name": "Player %s" % peer_id,
+				"team": 0,
+				"score": 0,
+				"character_path": scene_path
+			}
 	
 	if game_world:
 		game_world._spawn_player(peer_id)
-

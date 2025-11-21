@@ -120,9 +120,9 @@ func _collect_spawn_points() -> void:
 	
 	print("Found ", spawn_points.size(), " spawn points")
 
-func get_spawn_point_for_player(peer_id: int) -> Vector3:
+func get_spawn_point_node_for_player(peer_id: int) -> SpawnPoint:
 	if spawn_points.is_empty():
-		return Vector3(0, 2, 0)  # Default spawn
+		return null
 	
 	var player_info = MultiplayerManager.get_player_info(peer_id)
 	var team_id = player_info.get("team", 0)
@@ -145,12 +145,14 @@ func get_spawn_point_for_player(peer_id: int) -> Vector3:
 			oldest_time = spawn.last_used_time
 			best_spawn = spawn
 	
-	if best_spawn:
-		best_spawn.use_spawn_point()
-		return best_spawn.global_position
-	
-	# Fallback
-	return available_spawns[0].global_position
+	return best_spawn if best_spawn else available_spawns[0]
+
+func get_spawn_point_for_player(peer_id: int) -> Vector3:
+	var spawn_node = get_spawn_point_node_for_player(peer_id)
+	if spawn_node:
+		spawn_node.use_spawn_point()
+		return spawn_node.global_position
+	return Vector3(0, 2, 0)
 
 # --- Player Management ---
 
@@ -172,9 +174,14 @@ func _spawn_player(peer_id: int) -> void:
 	var networked_player = NetworkedPlayer.new()
 	networked_player.name = "Player_" + str(peer_id)
 	
-	# Set spawn position
-	var spawn_pos = get_spawn_point_for_player(peer_id)
-	networked_player.global_position = spawn_pos
+	# Set spawn position and rotation
+	var spawn_point = get_spawn_point_node_for_player(peer_id)
+	var spawn_pos = Vector3(0, 2, 0)
+	var spawn_yaw = 0.0
+	
+	if spawn_point:
+		spawn_pos = spawn_point.use_spawn_point()
+		spawn_yaw = spawn_point.get_spawn_rotation_y()
 	
 	# Wire in character selection if provided by the player info
 	var chosen_character_path = ""
@@ -205,6 +212,13 @@ func _spawn_player(peer_id: int) -> void:
 		# Fallback: attach to root if the container is absent (e.g., in simplified setups)
 		get_tree().get_root().add_child(networked_player)
 	players[peer_id] = networked_player
+
+	# Apply spawn transform (position + view rotation)
+	# We do this AFTER adding to tree so the pawn is initialized
+	if networked_player.has_method("set_spawn_transform"):
+		networked_player.set_spawn_transform(spawn_pos, spawn_yaw)
+	else:
+		networked_player.global_position = spawn_pos
 
 	# Register with state replication (server only)
 	if state_sync and MultiplayerManager.is_server():
@@ -519,10 +533,17 @@ func teleport_player_to_spawn(peer_id: int) -> void:
 	
 	var player = get_player_by_peer_id(peer_id)
 	if player:
-		var spawn_pos = get_spawn_point_for_player(peer_id)
-		player.global_position = spawn_pos
-		if player.pawn:
-			player.pawn.global_position = spawn_pos
+		var spawn_point = get_spawn_point_node_for_player(peer_id)
+		if spawn_point:
+			var spawn_pos = spawn_point.use_spawn_point()
+			var spawn_yaw = spawn_point.get_spawn_rotation_y()
+			
+			if player.has_method("set_spawn_transform"):
+				player.set_spawn_transform(spawn_pos, spawn_yaw)
+			else:
+				player.global_position = spawn_pos
+				if player.pawn:
+					player.pawn.global_position = spawn_pos
 
 
 func _start_match_with_map_config() -> void:

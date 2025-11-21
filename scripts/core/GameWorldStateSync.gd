@@ -66,7 +66,16 @@ func unregister_player(player: NetworkedPlayer) -> void:
 	if not state_replication_manager:
 		return
 	
-	state_replication_manager.unregister_entity(player.peer_id)
+	# Find entity by peer_id and unregister it
+	var entity_id_to_remove: int = -1
+	for entity_id in state_replication_manager.registered_entities:
+		var entity = state_replication_manager.registered_entities[entity_id]
+		if entity == player:
+			entity_id_to_remove = entity_id
+			break
+	
+	if entity_id_to_remove != -1:
+		state_replication_manager.unregister_entity(entity_id_to_remove)
 
 ## Send full baseline to newly connected player
 func sync_late_joiner(peer_id: int) -> void:
@@ -261,4 +270,3 @@ func set_snapshot_rate(rate: float) -> void:
 	snapshot_rate = rate
 	if state_replication_manager:
 		state_replication_manager.set_snapshot_rate(rate)
-

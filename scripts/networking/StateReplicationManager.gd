@@ -17,6 +17,7 @@ var registered_entities: Dictionary = {}  # entity_id -> NetworkedEntity
 var snapshot_history: Array[NetworkStateSnapshot] = []
 var current_snapshot_id: int = 0
 var client_baselines: Dictionary = {}  # peer_id -> snapshot_id (last acked snapshot)
+var disconnected_peers: Array[int] = []  # Track peers we know are disconnected to avoid sending RPCs
 
 # --- Update Management ---
 var snapshot_timer: Timer
@@ -49,10 +50,38 @@ func _ready() -> void:
 	bandwidth_timer.timeout.connect(_reset_bandwidth_counter)
 	add_child(bandwidth_timer)
 	
+	# Connect to multiplayer disconnect signals for cleanup
+	if MultiplayerManager:
+		MultiplayerManager.player_disconnected.connect(_on_player_disconnected)
+		MultiplayerManager.player_connected.connect(_on_player_reconnected)
+	
+	# Also connect to engine-level peer disconnect
+	if multiplayer:
+		multiplayer.peer_disconnected.connect(_on_peer_disconnected)
+	
 	# Only server sends snapshots
 	if MultiplayerManager and MultiplayerManager.is_server():
 		snapshot_timer.start()
 		bandwidth_timer.start()
+	
+	# Connect to scene tree exit to stop sending when scene is destroyed
+	if get_tree():
+		get_tree().node_removed.connect(_on_node_removed)
+
+func _exit_tree() -> void:
+	# Stop timers when exiting scene tree
+	if snapshot_timer:
+		snapshot_timer.stop()
+	if bandwidth_timer:
+		bandwidth_timer.stop()
+
+func _on_node_removed(node: Node) -> void:
+	# If our parent (GameWorldStateSync) or GameWorld is being removed, stop sending
+	if node == get_parent() or (get_parent() and node == get_parent().get_parent()):
+		if snapshot_timer:
+			snapshot_timer.stop()
+		if bandwidth_timer:
+			bandwidth_timer.stop()
 
 # --- Entity Registration ---
 
@@ -160,14 +189,85 @@ func _on_snapshot_timer_timeout() -> void:
 	if not MultiplayerManager or not MultiplayerManager.is_server():
 		return
 	
-	# Get all connected peers
-	var peers = MultiplayerManager.get_connected_players().keys()
+	# Skip if no entities are registered (e.g., during character select)
+	if registered_entities.is_empty():
+		return
 	
+	# Verify we're still in a valid scene tree
+	if not is_inside_tree():
+		return
+	
+	# Verify multiplayer is still active
+	if not multiplayer.has_multiplayer_peer():
+		return
+	
+	# Get all connected peers - use a fresh check each time
+	var peers = MultiplayerManager.get_connected_players().keys()
+	var local_peer_id = multiplayer.get_unique_id()
+	
+	# If no remote peers, stop sending snapshots
+	if peers.size() <= 1:  # Only server or no peers
+		return
+	
+	# Build list of valid peers to send to (double-check each one)
+	var valid_peers: Array[int] = []
 	for peer_id in peers:
+		# Skip server's own peer ID (peer ID 1 is always the server)
+		if peer_id == local_peer_id or peer_id == 1:
+			continue
+		
+		# Skip peers we know are disconnected
+		if peer_id in disconnected_peers:
+			continue
+		
+		# Verify peer is still in multiplayer system
+		if multiplayer.multiplayer_peer and multiplayer.multiplayer_peer.has_method("has_peer"):
+			if not multiplayer.multiplayer_peer.has_peer(peer_id):
+				# Peer disconnected, clean up immediately
+				_cleanup_disconnected_peer(peer_id)
+				continue
+		
+		# Also check if peer is still in connected_players (defensive)
+		if peer_id not in MultiplayerManager.get_connected_players():
+			_cleanup_disconnected_peer(peer_id)
+			continue
+		
+		valid_peers.append(peer_id)
+	
+	# Send to valid peers only
+	for peer_id in valid_peers:
 		_send_snapshot_to_peer(peer_id)
 
 ## Send appropriate snapshot to a specific peer
 func _send_snapshot_to_peer(peer_id: int) -> void:
+	# Skip local peer (server doesn't need to send snapshots to itself)
+	var local_peer_id = multiplayer.get_unique_id()
+	if peer_id == local_peer_id or peer_id == 1:
+		return
+	
+	# Verify peer is still connected before sending RPC
+	if not multiplayer.has_multiplayer_peer():
+		return
+	
+	# Check if peer still exists in connected players list
+	if MultiplayerManager:
+		var connected_peers = MultiplayerManager.get_connected_players()
+		if peer_id not in connected_peers:
+			# Peer disconnected, clean up
+			_cleanup_disconnected_peer(peer_id)
+			return
+	
+	# Also check if peer exists in the multiplayer system (if available)
+	if multiplayer.multiplayer_peer and multiplayer.multiplayer_peer.has_method("has_peer"):
+		if not multiplayer.multiplayer_peer.has_peer(peer_id):
+			# Peer disconnected, clean up
+			_cleanup_disconnected_peer(peer_id)
+			return
+	
+	# Skip if no entities registered
+	if registered_entities.is_empty():
+		return
+
 	# Check bandwidth limit
 	if bytes_sent_this_second >= bandwidth_limit:
 		return  # Skip this update to stay under bandwidth limit
@@ -200,6 +300,45 @@ func _send_snapshot_to_peer(peer_id: int) -> void:
 	var snapshot_data = snapshot.serialize()
 	var estimated_size = snapshot.get_estimated_size()
 	
+	# Final verification before sending RPC - check multiple sources
+	# This prevents sending to peers whose scenes have been destroyed
+	
+	# 0. Check our disconnected peers list first (fastest check)
+	if peer_id in disconnected_peers:
+		return
+	
+	# 1. Check MultiplayerManager's connected players list
+	if MultiplayerManager:
+		var connected_peers = MultiplayerManager.get_connected_players()
+		if peer_id not in connected_peers:
+			_cleanup_disconnected_peer(peer_id)
+			return
+	
+	# 2. Verify multiplayer peer still exists
+	if not multiplayer.has_multiplayer_peer():
+		return
+	
+	# 3. Check if peer exists in multiplayer system
+	if multiplayer.multiplayer_peer:
+		if multiplayer.multiplayer_peer.has_method("has_peer"):
+			if not multiplayer.multiplayer_peer.has_peer(peer_id):
+				_cleanup_disconnected_peer(peer_id)
+				return
+		# For ENetMultiplayerPeer, check get_peer() instead
+		elif multiplayer.multiplayer_peer.has_method("get_peer"):
+			var peer = multiplayer.multiplayer_peer.get_peer(peer_id)
+			if not peer or peer.get("connection_status") != 2:  # 2 = CONNECTION_CONNECTED
+				_cleanup_disconnected_peer(peer_id)
+				return
+	
+	# 4. Final check: verify we're still in scene tree (defensive)
+	if not is_inside_tree():
+		return
+	
+	# All checks passed - send RPC
+	# Note: Even with all checks, Godot's RPC system may still try to resolve
+	# the node path on the remote peer. If that peer's scene is destroyed,
+	# we'll get a warning, but the RPC will fail gracefully.
 	_rpc_receive_snapshot.rpc_id(peer_id, snapshot_data)
 	
 	# Track bandwidth
@@ -314,6 +453,11 @@ func _reset_bandwidth_counter() -> void:
 
 @rpc("authority", "call_remote", "unreliable")
 func _rpc_receive_snapshot(snapshot_data: Dictionary) -> void:
+	# Defensive check: if we're not in the scene tree, ignore the RPC
+	# This can happen if the client disconnected and scene was destroyed
+	if not is_inside_tree():
+		return
+	
 	var snapshot = NetworkStateSnapshot.deserialize(snapshot_data)
 	_apply_snapshot(snapshot)
 
@@ -352,6 +496,17 @@ func _spawn_entity_from_state(entity_id: int, state: Dictionary) -> void:
 func send_baseline_to_peer(peer_id: int) -> void:
 	if not MultiplayerManager or not MultiplayerManager.is_server():
 		return
+		
+	# Skip local peer
+	if peer_id == multiplayer.get_unique_id():
+		return
+	
+	# Verify peer is still connected
+	var connected_peers = MultiplayerManager.get_connected_players()
+	if peer_id not in connected_peers:
+		if debug_logging:
+			print("[StateReplicationManager] Peer %d not connected, skipping baseline" % peer_id)
+		return
 	
 	if debug_logging:
 		print("[StateReplicationManager] Sending baseline to peer %d" % peer_id)
@@ -370,6 +525,11 @@ func send_baseline_to_peer(peer_id: int) -> void:
 
 @rpc("authority", "call_remote", "reliable")
 func _rpc_receive_baseline(snapshot_data: Dictionary) -> void:
+	# Defensive check: if we're not in the scene tree, ignore the RPC
+	# This can happen if the client disconnected and scene was destroyed
+	if not is_inside_tree():
+		return
+	
 	if debug_logging:
 		print("[StateReplicationManager] Received baseline snapshot")
 	var snapshot = NetworkStateSnapshot.deserialize(snapshot_data)
@@ -405,6 +565,72 @@ func get_bandwidth_stats() -> Dictionary:
 ## Get entity count
 func get_entity_count() -> int:
 	return registered_entities.size()
+
+# --- Cleanup for Disconnected Peers ---
+
+## Handle player disconnect from MultiplayerManager
+func _on_player_disconnected(peer_id: int) -> void:
+	# Clean up immediately and synchronously
+	_cleanup_disconnected_peer(peer_id)
+
+## Handle peer disconnect from engine-level multiplayer
+func _on_peer_disconnected(peer_id: int) -> void:
+	# Clean up immediately and synchronously - this fires before scene cleanup
+	_cleanup_disconnected_peer(peer_id)
+
+## Handle player reconnection
+func _on_player_reconnected(peer_id: int, _player_info: Dictionary) -> void:
+	# Remove from disconnected list if they reconnect
+	if peer_id in disconnected_peers:
+		disconnected_peers.erase(peer_id)
+		if debug_logging:
+			print("[StateReplicationManager] Peer %d reconnected, removed from disconnected list" % peer_id)
+
+## Clean up state for a disconnected peer
+func _cleanup_disconnected_peer(peer_id: int) -> void:
+	# Mark as disconnected immediately to prevent any further RPCs
+	if peer_id not in disconnected_peers:
+		disconnected_peers.append(peer_id)
+	
+	# Remove from client baselines immediately
+	if peer_id in client_baselines:
+		client_baselines.erase(peer_id)
+	
+	# Unregister any entities associated with this peer
+	var entities_to_remove: Array[int] = []
+	for entity_id in registered_entities:
+		var entity = registered_entities[entity_id]
+		if not is_instance_valid(entity):
+			entities_to_remove.append(entity_id)
+			continue
+		
+		# Check if entity is a NetworkedPlayer with matching peer_id
+		if entity is NetworkedPlayer:
+			var player = entity as NetworkedPlayer
+			if player.peer_id == peer_id:
+				entities_to_remove.append(entity_id)
+	
+	# Remove entities
+	for entity_id in entities_to_remove:
+		unregister_entity(entity_id)
+	
+	if debug_logging:
+		print("[StateReplicationManager] Cleaned up disconnected peer: %d" % peer_id)
+
+## Reset state for when scene changes or game ends
+func reset_state() -> void:
+	"""Clear all state - useful when returning to lobby"""
+	registered_entities.clear()
+	client_baselines.clear()
+	snapshot_history.clear()
+	entity_priorities.clear()
+	update_buckets.clear()
+	current_snapshot_id = 0
+	next_entity_id = 1000
+	bytes_sent_this_second = 0
+	
+	if debug_logging:
+		print("[StateReplicationManager] State reset")
 
 ## Clear all state (for cleanup)
 func clear_all_state() -> void:

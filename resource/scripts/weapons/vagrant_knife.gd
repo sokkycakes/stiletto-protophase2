@@ -231,18 +231,7 @@ func _apply_damage(target: Object, amount: int, hit: Dictionary) -> void:
 	if not receiver:
 		return
 	
-	var attacker_peer_id := -1
-	var attacker_np := _get_networked_player()
-	if attacker_np:
-		attacker_peer_id = attacker_np.peer_id
-	
-	if receiver is NetworkedPlayer:
-		# Route damage via RPC so it is applied on the authoritative instance.
-		# Pass receiver's peer_id for validation to prevent wrong player from taking damage
-		var receiver_np := receiver as NetworkedPlayer
-		var target_peer_id := receiver_np.peer_id if receiver_np else -1
-		receiver.apply_damage.rpc(amount, attacker_peer_id, target_peer_id)
-	elif receiver.has_method("take_damage"):
+	if receiver.has_method("take_damage"):
 		receiver.take_damage(amount)
 	
 	if impact_effect_scene:
@@ -314,35 +303,12 @@ func _get_owner_player() -> Node3D:
 	print("No player node found after checking ", depth, " levels up")
 	return null
 
-func _get_networked_player() -> NetworkedPlayer:
-	# Traverse up from this weapon to find the owning NetworkedPlayer
-	var n := get_parent()
-	var depth := 0
-	while n and depth < 15:
-		if n is NetworkedPlayer:
-			return n
-		n = n.get_parent()
-		depth += 1
-	return null
-
 func _find_damage_receiver(target: Object) -> Object:
-	# Walk up from the collider to find a node that can receive damage (e.g., NetworkedPlayer)
-	# When walking up from a collision body, if we find a NetworkedPlayer, that NetworkedPlayer
-	# must own the body (since the body is a descendant). This ensures correct ownership identification.
+	# Walk up from the collider to find a node that can receive damage
 	var node := target as Node
-	var target_node := target as Node
 	
 	while node:
-		if node is NetworkedPlayer:
-			# Found a NetworkedPlayer - since we walked UP to reach it, target must be below it
-			# This means this NetworkedPlayer owns the collision body
-			var np := node as NetworkedPlayer
-			# Quick validation: target should be the pawn_body, pawn, or a descendant
-			if np.pawn_body == target_node or np.pawn == target_node:
-				return node
-			# Return the NetworkedPlayer we found walking up (it owns the target)
-			return node
-		elif node.has_method("take_damage"):
+		if node.has_method("take_damage"):
 			return node
 		node = node.get_parent()
 	return null

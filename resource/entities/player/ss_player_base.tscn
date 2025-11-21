@@ -1,4 +1,4 @@
-[gd_scene load_steps=58 format=4 uid="uid://dp44rlw4fpypj"]
+[gd_scene load_steps=58 format=4 uid="uid://bqy4bixjl3qf6"]
 
 [ext_resource type="Script" uid="uid://b8548jsvjq2xi" path="res://addons/GoldGdt/src/GoldGdt_Pawn.gd" id="1_dkgp6"]
 [ext_resource type="Texture2D" uid="uid://pttrbdbpfhei" path="res://assets/ui/huddeco-quickinfo.png" id="2_aakih"]
