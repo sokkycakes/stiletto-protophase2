@@ -1,4 +1,4 @@
-[gd_scene load_steps=18 format=4 uid="uid://bfeo3ogd0783p"]
+[gd_scene load_steps=19 format=4 uid="uid://bfeo3ogd0783p"]
 
 [ext_resource type="Script" uid="uid://ckcg4im8r7b72" path="res://resource/entities/killbox.gd" id="1_1wfhl"]
 [ext_resource type="AudioStream" uid="uid://c0rqyetgcgp61" path="res://assets/snd/music/likeastaratdawnloop.ogg" id="1_q2k8o"]
@@ -10,6 +10,7 @@
 [ext_resource type="AudioStream" uid="uid://b8ey7tn8nevm1" path="res://assets/snd/ambient/sound_ambient_italianradio.wav" id="7_y5yci"]
 [ext_resource type="LightmapGIData" uid="uid://c35n1ymqfaugu" path="res://materials/lightmap/sandbox_night.lmbake" id="9_2afed"]
 [ext_resource type="Material" uid="uid://dyx4l6ea0am6f" path="res://addons/prototype_mini_bundle/M_prototype_green.tres" id="10_dgapv"]
+[ext_resource type="Script" uid="uid://dbu01l7o8ls25" path="res://scripts/core/SpawnPoint.gd" id="11_2aeuv"]
 
 [sub_resource type="WorldBoundaryShape3D" id="WorldBoundaryShape3D_boack"]
 
@@ -306,5 +307,16 @@ layout_mode = 0
 offset_right = 40.0
 offset_bottom = 23.0
 text = "Press Q to respawn."
+
+[node name="spawns" type="Node3D" parent="." groups=["spawn_points"]]
+
+[node name="SpawnPoint1" type="Marker3D" parent="spawns"]
+transform = Transform3D(0.707107, 0, -0.707107, 0, 1, 0, 0.707107, 0, 0.707107, -5.97621, 1, 6.02205)
+script = ExtResource("11_2aeuv")
+show_debug_visualization = true
+
+[node name="SpawnPoint2" type="Marker3D" parent="spawns"]
+transform = Transform3D(-0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, -0.707107, 5.98302, 1, -6.02205)
+script = ExtResource("11_2aeuv")
 
 [editable path="world_props/light1"]

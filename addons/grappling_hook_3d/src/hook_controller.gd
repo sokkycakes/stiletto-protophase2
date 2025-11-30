@@ -65,6 +65,7 @@ var current_state: GrappleState = GrappleState.IDLE
 # --- Internal Variables ---
 var current_hook_instance: Node3D = null
 var grapple_target_point: Vector3
+var hook_tip_position: Vector3 = Vector3.ZERO  # Tracks the actual hook tip position for visual updates
 var hit_collider: Object = null
 var is_grapple_button_held: bool = false
 var is_player_stuck_to_wall: bool = false
@@ -310,6 +311,8 @@ func set_state(new_state: GrappleState):
 		GrappleState.GRAPPLE_PULLING_PLAYER:
 			is_player_stuck_to_wall = false
 			locked_enemy = null # stop camera lock when player pulling
+			# Lock hook tip position to the attachment point in global space
+			hook_tip_position = grapple_target_point
 			if player_body and player_body is CharacterBody3D:
 				var direction_to_hook = (grapple_target_point - player_body.global_position).normalized()
 				var anchor_pos_init = grapple_target_point - (grapple_target_normal * snap_offset) if grapple_target_normal != Vector3.ZERO else grapple_target_point
@@ -377,6 +380,7 @@ func fire_hook():
 		current_hook_instance = grappling_hook_scene.instantiate()
 		get_parent().add_child(current_hook_instance)
 		current_hook_instance.global_position = get_spawn_position()
+		hook_tip_position = get_spawn_position()  # Initialize hook tip at spawn position
 		current_hook_instance.look_at(grapple_target_point)
 		set_state(GrappleState.HOOK_FLYING)
 		
@@ -388,18 +392,25 @@ func fire_hook():
 func process_hook_flying(delta: float):
 	if not current_hook_instance:
 		return
-	var hook_pos = current_hook_instance.global_position
-	var distance_to_target = hook_pos.distance_to(grapple_target_point)
-	var distance_from_player = hook_pos.distance_to(get_spawn_position())
+	var distance_to_target = hook_tip_position.distance_to(grapple_target_point)
+	var distance_from_player = hook_tip_position.distance_to(get_spawn_position())
 	var current_max_distance = get_dynamic_distance()
 	if distance_from_player > current_max_distance:
 		print("Hook flew too far.")
 		initiate_retraction()
 		return
-	var direction = (grapple_target_point - hook_pos).normalized()
+	var direction = (grapple_target_point - hook_tip_position).normalized()
 	var current_hook_speed = get_dynamic_hook_speed()
 	var travel = current_hook_speed * delta
-	current_hook_instance.global_position = hook_pos.move_toward(grapple_target_point, travel)
+	hook_tip_position = hook_tip_position.move_toward(grapple_target_point, travel)
+	
+	# Update rope visual to stretch from player to hook tip
+	# The extend_from_to function will position the hook instance root at source and hook_end at target
+	if current_hook_instance.has_method("extend_from_to"):
+		var source_pos = get_spawn_position()
+		var normal = grapple_target_normal if grapple_target_normal != Vector3.ZERO else Vector3.UP
+		current_hook_instance.extend_from_to(source_pos, hook_tip_position, normal)
+	
 	# Short raycast from hook tip
 	var _world := get_world_3d()
 	if _world == null:
@@ -407,21 +418,23 @@ func process_hook_flying(delta: float):
 		return
 	var space_state = _world.direct_space_state
 	var query = PhysicsRayQueryParameters3D.create(
-		hook_pos,
-		hook_pos + direction * 0.5 # 0.5 units in 3D
+		hook_tip_position,
+		hook_tip_position + direction * 0.5 # 0.5 units in 3D
 	)
 	query.collide_with_areas = false
 	query.collide_with_bodies = true
 	query.exclude = [self, current_hook_instance]
 	var collision_result = space_state.intersect_ray(query)
-	if hook_pos.is_equal_approx(grapple_target_point) or collision_result:
+	if hook_tip_position.is_equal_approx(grapple_target_point) or collision_result:
 		if collision_result:
 			print("Hook hit intermediate object.")
 			grapple_target_point = collision_result.position
+			hook_tip_position = collision_result.position
 			# Update the stored surface normal from the collision
 			grapple_target_normal = collision_result.normal
 			hit_collider = collision_result.collider
-		current_hook_instance.global_position = grapple_target_point
+		else:
+			hook_tip_position = grapple_target_point
 		print("Hook reached target or hit something.")
 		set_state(GrappleState.HOOK_CONTACT_EVAL)
 
@@ -572,8 +585,17 @@ func process_player_pull(delta: float):
 	if not is_grapple_button_held:
 		initiate_retraction()
 		return
-	var target_pos = current_hook_instance.global_position
+	
+	# Use grapple_target_point (the fixed attachment point in global space) for the anchor
+	# This ensures the hook stays fixed at the wall even if the player moves
+	var target_pos = grapple_target_point
 	var anchor_pos = target_pos - (grapple_target_normal * snap_offset) if grapple_target_normal != Vector3.ZERO else target_pos
+	
+	# Update rope visual to stretch from player to the fixed hook attachment point
+	if current_hook_instance.has_method("extend_from_to"):
+		var source_pos = get_spawn_position()
+		var normal = grapple_target_normal if grapple_target_normal != Vector3.ZERO else Vector3.UP
+		current_hook_instance.extend_from_to(source_pos, target_pos, normal)
 	if player_body and player_body is CharacterBody3D:
 		if is_player_stuck_to_wall:
 			var snap_pos = anchor_pos
@@ -626,11 +648,18 @@ func process_hook_retracting(delta: float):
 		return
 	var retraction_target_pos = get_spawn_position()
 	var current_hook_speed = get_dynamic_hook_speed()
-	current_hook_instance.global_position = current_hook_instance.global_position.move_toward(
+	hook_tip_position = hook_tip_position.move_toward(
 		retraction_target_pos,
 		current_hook_speed * retraction_speed_multiplier * delta
 	)
-	if current_hook_instance.global_position.distance_to(retraction_target_pos) < 0.2:
+	
+	# Update rope visual to stretch from player to hook
+	if current_hook_instance.has_method("extend_from_to"):
+		var source_pos = get_spawn_position()
+		var normal = grapple_target_normal if grapple_target_normal != Vector3.ZERO else Vector3.UP
+		current_hook_instance.extend_from_to(source_pos, hook_tip_position, normal)
+	
+	if hook_tip_position.distance_to(retraction_target_pos) < 0.2:
 		destroy_hook()
 
 func initiate_retraction():
@@ -678,6 +707,7 @@ func destroy_hook():
 		current_hook_instance = null
 	hit_collider = null
 	grapple_target_point = Vector3.ZERO
+	hook_tip_position = Vector3.ZERO
 	locked_enemy = null
 	_awaiting_hold_decision = false
 	_grapple_press_timer = 0.0

@@ -147,11 +147,20 @@ func _process(delta: float) -> void:
 			position = original_position
 			shake_offset = Vector2.ZERO
 			if icon:
-				icon.modulate = Color.WHITE
+				# Restore appropriate color based on health state
+				if current_health == max_health:
+					icon.modulate = Color(0.3, 0.6, 1.0, 1.0)  # Blue at full health
+				else:
+					icon.modulate = Color.WHITE
 
 func _on_health_changed(new_health: int, health_max: int) -> void:
+	print("[HP HUD] _on_health_changed called - new_health: ", new_health, ", max: ", health_max, ", was_dead: ", is_dead)
 	current_health = new_health
 	max_health = health_max
+	# Reset dead state if health is restored
+	if new_health > 0:
+		print("[HP HUD] Resetting is_dead from ", is_dead, " to false")
+		is_dead = false
 	_update_icon()
 
 func _on_damage_taken(amount: int, new_health: int, health_max: int) -> void:
@@ -173,6 +182,7 @@ func _on_hit_taken(current_hits: int, max_hits: int) -> void:
 	_update_icon()
 
 func _on_player_died() -> void:
+	print("[HP HUD] _on_player_died called - setting is_dead to true")
 	is_dead = true
 	_update_icon()
 
@@ -187,11 +197,14 @@ func _update_icon() -> void:
 	var target_texture: Texture2D
 	
 	if is_dead or current_health <= 0:
+		print("[HP HUD] _update_icon - Showing DEAD texture (is_dead: ", is_dead, ", health: ", current_health, ")")
 		target_texture = dead_texture
-	elif current_health < max_health:
-		# Show hurt texture when at 1 HP (for 2 HP system)
+	elif current_health == 1:
+		# Show hurt texture only when at exactly 1 HP
+		print("[HP HUD] _update_icon - Showing HURT texture (health: ", current_health, "/", max_health, ")")
 		target_texture = hurt_texture
 	else:
+		print("[HP HUD] _update_icon - Showing FULL texture (health: ", current_health, "/", max_health, ")")
 		target_texture = full_health_texture
 	
 	# Update both icon and shadow textures
@@ -199,6 +212,13 @@ func _update_icon() -> void:
 		icon.texture = target_texture
 		if shadow:
 			shadow.texture = target_texture
+	
+	# Apply blue color when at full health (only to icon, not shadow)
+	if current_health == max_health:
+		icon.modulate = Color(0.3, 0.6, 1.0, 1.0)  # Blue color
+	else:
+		# Reset to white for other states
+		icon.modulate = Color.WHITE
 
 # Public methods for external control
 func set_health(health: int, max_hp: int) -> void:

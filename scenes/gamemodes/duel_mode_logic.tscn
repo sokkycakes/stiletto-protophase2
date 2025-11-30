@@ -1,7 +1,9 @@
 [gd_scene load_steps=2 format=3 uid="uid://duelmodetscn"]
 
-[ext_resource type="Script" path="res://scripts/gamemodes/DuelGameMode.gd" id="1_3w7ip"]
+[ext_resource type="Script" uid="uid://bhtcnk8jw47qw" path="res://scripts/gamemodes/DuelGameMode.gd" id="1_3w7ip"]
 
 [node name="DuelGameModeLogic" type="Node"]
 script = ExtResource("1_3w7ip")
-
+countdown_label_path = NodePath("mapui/preround")
+scoreboard_path = NodePath("mapui/scoreboard")
+clock_label_path = NodePath("mapui/scoreboard/clock")

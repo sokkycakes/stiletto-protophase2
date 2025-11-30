@@ -42,9 +42,18 @@ func _ready() -> void:
 	if weapons.size() > 0:
 		current_weapon = weapons[0]
 		_setup_weapon(current_weapon)
+		print("WeaponManager: Current weapon set to: ", current_weapon.name, " fire_action='", fire_action, "'")
+	else:
+		print("WeaponManager: No weapons found!")
 	
 	# Connect weapon signals
 	_connect_weapon_signals()
+	
+	# Debug: Check if input action exists
+	if InputMap.has_action(fire_action):
+		print("WeaponManager: Fire action '", fire_action, "' exists in InputMap")
+	else:
+		print("WeaponManager: WARNING - Fire action '", fire_action, "' NOT found in InputMap!")
 
 func _process(delta: float) -> void:
 	if current_weapon and _crosshair_accuracy:
@@ -63,10 +72,12 @@ func _auto_detect_weapons() -> void:
 func _input(event: InputEvent) -> void:
 	# Handle firing
 	if Input.is_action_just_pressed(fire_action):
+		print("WeaponManager: Fire action pressed!")
 		_fire_current_weapon()
 	
 	# Handle reloading
 	if Input.is_action_just_pressed(reload_action):
+		print("WeaponManager: Reload action pressed!")
 		_reload_current_weapon()
 	
 	# Handle weapon switching
@@ -76,8 +87,15 @@ func _input(event: InputEvent) -> void:
 			break
 
 func _fire_current_weapon() -> void:
-	if current_weapon and _can_fire_weapon(current_weapon):
-		current_weapon.shoot()
+	if current_weapon:
+		var can_fire = _can_fire_weapon(current_weapon)
+		print("WeaponManager: _fire_current_weapon() - can_fire=", can_fire, " ammo=", current_weapon.ammo_in_clip, " reload_timer=", current_weapon._reload_timer.time_left)
+		if can_fire:
+			current_weapon.shoot()
+		else:
+			print("WeaponManager: Cannot fire weapon - blocked by _can_fire_weapon() check")
+	else:
+		print("WeaponManager: No current weapon to fire")
 
 func _reload_current_weapon() -> void:
 	if current_weapon and _can_reload_weapon(current_weapon):

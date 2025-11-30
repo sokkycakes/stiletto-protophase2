@@ -42,116 +42,125 @@ var _target_pull_direction  : Vector3 = Vector3.ZERO
 #  we can smooth the initial velocity rather than replacing it outright.
 # -----------------------------------------------------------------------------
 func set_state(new_state : GrappleState) -> void:
-    # Cache velocity before the base method potentially overwrites it.
-    if player_body and player_body is CharacterBody3D:
-        _pre_transition_velocity = player_body.velocity
-    else:
-        _pre_transition_velocity = Vector3.ZERO
+	# Cache velocity before the base method potentially overwrites it.
+	if player_body and player_body is CharacterBody3D:
+		_pre_transition_velocity = player_body.velocity
+	else:
+		_pre_transition_velocity = Vector3.ZERO
 
-    # Call the original implementation (does all the heavy lifting).
-    super.set_state(new_state)
+	# Call the original implementation (does all the heavy lifting).
+	super.set_state(new_state)
 
-    # If we've just started pulling the player, blend velocity instead of hard set.
-    if new_state == GrappleState.GRAPPLE_PULLING_PLAYER and player_body and player_body is CharacterBody3D:
-        # Direction towards hook has already been calculated inside the base call
-        # and the velocity has been set to that direction * pull_speed.  We'll
-        # retrieve that velocity and blend it with the velocity we had before.
-        var current_pull_velocity : Vector3 = player_body.velocity
-        player_body.velocity = _pre_transition_velocity.lerp(current_pull_velocity, hook_direction_blend)
-        _target_pull_direction  = (grapple_target_point - player_body.global_position).normalized()
+	# If we've just started pulling the player, blend velocity instead of hard set.
+	if new_state == GrappleState.GRAPPLE_PULLING_PLAYER and player_body and player_body is CharacterBody3D:
+		# Direction towards hook has already been calculated inside the base call
+		# and the velocity has been set to that direction * pull_speed.  We'll
+		# retrieve that velocity and blend it with the velocity we had before.
+		var current_pull_velocity : Vector3 = player_body.velocity
+		player_body.velocity = _pre_transition_velocity.lerp(current_pull_velocity, hook_direction_blend)
+		_target_pull_direction  = (grapple_target_point - player_body.global_position).normalized()
 
 # -----------------------------------------------------------------------------
 #  Player pull processing – we override just enough to introduce acceleration
 #  towards the desired velocity (momentum smoothing) and hook-kick boost.
 # -----------------------------------------------------------------------------
 func process_player_pull(delta : float) -> void:
-    # 1.  If the player releases the grapple we fall back to the base logic.
-    if not is_grapple_button_held:
-        initiate_retraction()
-        return
+	# 1.  If the player releases the grapple we fall back to the base logic.
+	if not is_grapple_button_held:
+		initiate_retraction()
+		return
 
-    if not player_body or player_body == null or not (player_body is CharacterBody3D):
-        # Fallback to original implementation for non-CharacterBody players.
-        super.process_player_pull(delta)
-        return
+	if not player_body or player_body == null or not (player_body is CharacterBody3D):
+		# Fallback to original implementation for non-CharacterBody players.
+		super.process_player_pull(delta)
+		return
 
-    # Anchor point = where the rope is truly attached (with optional wall offset).
-    var anchor_pos : Vector3 = grapple_target_point - (grapple_target_normal * snap_offset) if grapple_target_normal != Vector3.ZERO else grapple_target_point
+	# Anchor point = where the rope is truly attached (with optional wall offset).
+	var anchor_pos : Vector3 = grapple_target_point - (grapple_target_normal * snap_offset) if grapple_target_normal != Vector3.ZERO else grapple_target_point
 
-    # Re-calculate direction every frame (rope can move slightly if target moves).
-    var dir_to_hook : Vector3 = (anchor_pos - player_body.global_position).normalized()
-    _target_pull_direction = dir_to_hook # store for kick-boost
+	# Re-calculate direction every frame (rope can move slightly if target moves).
+	var dir_to_hook : Vector3 = (anchor_pos - player_body.global_position).normalized()
+	_target_pull_direction = dir_to_hook # store for kick-boost
 
-    # Desired velocity we ultimately want to reach.
-    var desired_velocity : Vector3 = dir_to_hook * pull_speed
+	# Desired velocity we ultimately want to reach.
+	var desired_velocity : Vector3 = dir_to_hook * pull_speed
 
-    # Blend / accelerate current velocity towards desired velocity.
-    var step : float = pull_acceleration * delta
-    player_body.velocity = player_body.velocity.move_toward(desired_velocity, step)
+	# Blend / accelerate current velocity towards desired velocity.
+	var step : float = pull_acceleration * delta
+	player_body.velocity = player_body.velocity.move_toward(desired_velocity, step)
 
-    # Minimum speed clamp (reuse from base).
-    if player_body.velocity.length() < grapple_min_velocity:
-        player_body.velocity = dir_to_hook * grapple_min_velocity
+	# Minimum speed clamp (reuse from base).
+	if player_body.velocity.length() < grapple_min_velocity:
+		player_body.velocity = dir_to_hook * grapple_min_velocity
 
-    # Extra decay so it still "feels" like the original controller.
-    player_body.velocity *= grapple_velocity_decay
+	# Extra decay so it still "feels" like the original controller.
+	player_body.velocity *= grapple_velocity_decay
 
-    # Kick-boost – just-pressed event for pm_gunjump while still reeling.
-    if Input.is_action_just_pressed("pm_gunjump"):
-        _apply_kickboost()
+	# Kick-boost – just-pressed event for pm_gunjump while still reeling.
+	if Input.is_action_just_pressed("pm_gunjump"):
+		_apply_kickboost()
 
-    # Move the player
-    player_body.move_and_slide()
+	# Move the player
+	player_body.move_and_slide()
+	
+	# Update rope visual to stretch from player to the fixed hook attachment point
+	# Use grapple_target_point (the fixed attachment point in global space) to ensure
+	# the hook stays fixed at the wall even if the player moves
+	if current_hook_instance and current_hook_instance.has_method("extend_from_to"):
+		var source_pos = get_spawn_position()
+		var target_pos = grapple_target_point  # Always use the fixed attachment point
+		var normal = grapple_target_normal if grapple_target_normal != Vector3.ZERO else Vector3.UP
+		current_hook_instance.extend_from_to(source_pos, target_pos, normal)
 
-    # Snap when close enough.
-    if player_body.global_position.distance_to(anchor_pos) < 0.5:
-        player_body.global_position = anchor_pos
-        player_body.velocity       = Vector3.ZERO
-        is_player_stuck_to_wall    = true
+	# Snap when close enough.
+	if player_body.global_position.distance_to(anchor_pos) < 0.5:
+		player_body.global_position = anchor_pos
+		player_body.velocity       = Vector3.ZERO
+		is_player_stuck_to_wall    = true
 
 # -----------------------------------------------------------------------------
 #  Kick-boost helper
 # -----------------------------------------------------------------------------
 func _apply_kickboost() -> void:
-    if not player_body or not (player_body is CharacterBody3D):
-        return
+	if not player_body or not (player_body is CharacterBody3D):
+		return
 
-    # Get camera for look direction
-    var camera = get_viewport().get_camera_3d()
-    if not camera:
-        return
+	# Get camera for look direction
+	var camera = get_viewport().get_camera_3d()
+	if not camera:
+		return
 
-    # Check leash distance - don't allow boost if it would exceed max hook distance
-    var current_distance = player_body.global_position.distance_to(grapple_target_point)
-    var max_hook_distance = get_dynamic_distance()
-    
-    if current_distance >= max_hook_distance:
-        # Already at max distance, don't boost
-        return
+	# Check leash distance - don't allow boost if it would exceed max hook distance
+	var current_distance = player_body.global_position.distance_to(grapple_target_point)
+	var max_hook_distance = get_dynamic_distance()
+	
+	if current_distance >= max_hook_distance:
+		# Already at max distance, don't boost
+		return
 
-    # Build boost vector – upward plus a portion along the camera's forward direction.
-    var look_direction = -camera.global_transform.basis.z.normalized()
-    var boost : Vector3 = look_direction * (pull_speed * kickboost_forward_multiplier)
-    boost.y += kickboost_vertical
+	# Build boost vector – upward plus a portion along the camera's forward direction.
+	var look_direction = -camera.global_transform.basis.z.normalized()
+	var boost : Vector3 = look_direction * (pull_speed * kickboost_forward_multiplier)
+	boost.y += kickboost_vertical
 
-    # Check if this boost would exceed the leash distance
-    var projected_position = player_body.global_position + boost * 0.1 # Small step to check
-    var projected_distance = projected_position.distance_to(grapple_target_point)
-    
-    if projected_distance > max_hook_distance:
-        # Scale down the boost to stay within leash distance
-        var scale_factor = (max_hook_distance - current_distance) / (projected_distance - current_distance)
-        boost *= scale_factor
+	# Check if this boost would exceed the leash distance
+	var projected_position = player_body.global_position + boost * 0.1 # Small step to check
+	var projected_distance = projected_position.distance_to(grapple_target_point)
+	
+	if projected_distance > max_hook_distance:
+		# Scale down the boost to stay within leash distance
+		var scale_factor = (max_hook_distance - current_distance) / (projected_distance - current_distance)
+		boost *= scale_factor
 
-    player_body.velocity += boost
+	player_body.velocity += boost
 
-    # Consume all charges and set faster refill
-    current_charges = 0
-    charges_changed.emit(current_charges)
-    
-    # Set all timers to the faster kickboost refill time
-    for i in range(MAX_CHARGES):
-        charge_timers[i] = kickboost_charge_refill_time
+	# Consume all charges and set faster refill
+	current_charges = 0
+	charges_changed.emit(current_charges)
+	
+	# Set all timers to the faster kickboost refill time
+	for i in range(MAX_CHARGES):
+		charge_timers[i] = kickboost_charge_refill_time
 
-    # Optional: reuse hook_pull_sound for audible feedback.
-    play_sound(hook_pull_sound, 1.15)
+	# Optional: reuse hook_pull_sound for audible feedback.
+	play_sound(hook_pull_sound, 1.15)

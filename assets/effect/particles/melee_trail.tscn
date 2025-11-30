@@ -1,0 +1,53 @@
+[gd_scene load_steps=11 format=3 uid="uid://dmyb3yh7nv3vo"]
+
+[ext_resource type="Shader" uid="uid://chte40u8vejbe" path="res://addons/GPUTrail-main/shaders/trail.gdshader" id="1_mivq4"]
+[ext_resource type="Shader" uid="uid://chhqh64xmu4sh" path="res://addons/GPUTrail-main/shaders/trail_draw_pass.gdshader" id="2_lhbll"]
+[ext_resource type="Script" uid="uid://dpb1gu2rixhrk" path="res://addons/GPUTrail-main/GPUTrail3D.gd" id="3_wa57o"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_vkas7"]
+shader = ExtResource("1_mivq4")
+
+[sub_resource type="Gradient" id="Gradient_dy6ya"]
+colors = PackedColorArray(0.460938, 0.460938, 0.460938, 1, 0.101563, 0.101563, 0.101563, 0)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_3xlld"]
+gradient = SubResource("Gradient_dy6ya")
+
+[sub_resource type="Curve" id="Curve_68jhh"]
+bake_resolution = 16
+_data = [Vector2(0, 0.707584), 0.0, -0.384319, 0, 1, Vector2(1, 0.323265), -0.384319, 0.0, 1, 0]
+point_count = 2
+
+[sub_resource type="CurveTexture" id="CurveTexture_kjj3k"]
+curve = SubResource("Curve_68jhh")
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_di1fv"]
+resource_local_to_scene = true
+render_priority = 0
+shader = ExtResource("2_lhbll")
+shader_parameter/uv_offset = Vector2(0, 0)
+shader_parameter/color_ramp = SubResource("GradientTexture1D_3xlld")
+shader_parameter/curve = SubResource("CurveTexture_kjj3k")
+shader_parameter/emmission_transform = Projection(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)
+shader_parameter/flags = 40
+
+[sub_resource type="QuadMesh" id="QuadMesh_5kfd1"]
+material = SubResource("ShaderMaterial_di1fv")
+
+[node name="meleeTrail" type="Node3D"]
+
+[node name="GPUTrail3D" type="GPUParticles3D" parent="."]
+amount = 7
+lifetime = 7.0
+explosiveness = 1.0
+fixed_fps = 60
+interpolate = false
+process_material = SubResource("ShaderMaterial_vkas7")
+draw_pass_1 = SubResource("QuadMesh_5kfd1")
+script = ExtResource("3_wa57o")
+length = 7
+length_seconds = 0.116667
+color_ramp = SubResource("GradientTexture1D_3xlld")
+curve = SubResource("CurveTexture_kjj3k")
+_defaults_have_been_set = true
+metadata/_custom_type_script = "uid://dpb1gu2rixhrk"

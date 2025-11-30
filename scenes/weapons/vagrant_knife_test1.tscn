@@ -1,4 +1,4 @@
-[gd_scene load_steps=22 format=4 uid="uid://w4ctxvw65o4g"]
+[gd_scene load_steps=24 format=4 uid="uid://w4ctxvw65o4g"]
 
 [ext_resource type="Script" uid="uid://cqfev8l37lv4s" path="res://resource/scripts/weapons/vagrant_knife_test1.gd" id="1_o8asi"]
 [ext_resource type="Shader" path="res://resource/shaders/wireframe.gdshader" id="2_1mb0c"]
@@ -10,6 +10,8 @@
 [ext_resource type="Texture2D" uid="uid://x248i3vehcka" path="res://assets/effect/decal/bullethole.png" id="4_kfjci"]
 [ext_resource type="AudioStream" uid="uid://bh8kmvll8dm5n" path="res://assets/snd/weapon/crit.ogg" id="5_773h0"]
 [ext_resource type="AudioStream" uid="uid://bvxukce472ruv" path="res://assets/snd/weapon/knife_swing.wav" id="6_n77rf"]
+[ext_resource type="AudioStream" uid="uid://730w8xjc87hb" path="res://assets/snd/weapon/stinger_slash2.ogg" id="6_nswkl"]
+[ext_resource type="PackedScene" uid="uid://bqnv8j8y5g6vq" path="res://scenes/effects/spark_effect.tscn" id="8_nswkl"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_ss7vx"]
 render_priority = 0
@@ -152,6 +154,8 @@ throwable_knife_scene = ExtResource("2_kfjci")
 throw_sound = ExtResource("3_asxq7")
 backstab_hit_sound = ExtResource("4_773h0")
 backstab_crit_sound = ExtResource("5_773h0")
+player_hit_sound = ExtResource("6_nswkl")
+impact_effect_scene = ExtResource("8_nswkl")
 swing_sound = ExtResource("6_n77rf")
 impact_sound = ExtResource("3_6eid4")
 bullet_decal_texture = ExtResource("4_kfjci")

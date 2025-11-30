@@ -1,0 +1,33 @@
+[gd_scene load_steps=5 format=3 uid="uid://c7e1uohpwckdm"]
+
+[ext_resource type="PackedScene" path="res://scenes/enemies/ProjectileKnight.tscn" id="1_knight"]
+[ext_resource type="Script" uid="uid://b7v4x8iaj2n5m" path="res://resource/scripts/gamemode/base/base_gamemaster.gd" id="2_erxue"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_floor"]
+size = Vector3(20, 0.5, 20)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_floor"]
+size = Vector3(20, 0.5, 20)
+
+[node name="ProjectileKnightTest" type="Node3D"]
+
+[node name="ProjectileKnight" parent="." instance=ExtResource("1_knight")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 5)
+
+[node name="Floor" type="StaticBody3D" parent="."]
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Floor"]
+mesh = SubResource("BoxMesh_floor")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Floor"]
+shape = SubResource("BoxShape3D_floor")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.707107, -0.5, 0.5, 0, 0.707107, 0.707107, -0.707107, -0.5, 0.5, 0, 10, 0)
+shadow_enabled = true
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.866025, 0.5, 0, -0.5, 0.866025, 0, 5, -10)
+
+[node name="Node" type="Node" parent="."]
+script = ExtResource("2_erxue")

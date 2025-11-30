@@ -43,19 +43,25 @@ func _ready() -> void:
 	if not is_authority():
 		weapon_sync_timer.start()
 
-func _input(event: InputEvent) -> void:
+func _input(_event: InputEvent) -> void:
 	# Only process input if we have authority
 	if not is_authority():
 		return
 	# Use the global Input singleton to query actions (avoid binding to event types)
 	# Handle firing with network prediction
 	if Input.is_action_just_pressed(fire_action):
+		print("NetworkedWeaponManager: Fire action pressed!")
 		_fire_current_weapon_networked()
 		return
 
 	# Handle reloading
 	if Input.is_action_just_pressed(reload_action):
 		_reload_current_weapon_networked()
+		return
+
+	# Handle melee attack
+	if Input.is_action_just_pressed("melee"):
+		_perform_melee_attack_networked()
 		return
 
 	# Handle weapon switching
@@ -94,12 +100,26 @@ func _find_networked_player() -> NetworkedPlayer:
 # --- Networked Weapon Actions ---
 
 func _fire_current_weapon_networked() -> void:
-	if not current_weapon or not _can_fire_weapon(current_weapon):
+	print("NetworkedWeaponManager: _fire_current_weapon_networked() called")
+	if not current_weapon:
+		print("NetworkedWeaponManager: No current weapon!")
+		return
+	
+	var can_fire = _can_fire_weapon(current_weapon)
+	print("NetworkedWeaponManager: can_fire=", can_fire, " ammo=", current_weapon.ammo_in_clip, " reload_timer=", current_weapon._reload_timer.time_left)
+	if not can_fire:
+		print("NetworkedWeaponManager: Cannot fire - blocked by _can_fire_weapon()")
 		return
 
 	# Special-case melee knives: let their custom shoot() handle traces, sounds, and decals.
 	# These weapons already encapsulate their own hit logic and feedback.
 	if current_weapon is KnifeBaseScript or current_weapon is KnifeScript:
+		current_weapon.shoot()
+		return
+	
+	# For projectile weapons, call shoot() directly
+	if current_weapon.has_method("shoot"):
+		print("NetworkedWeaponManager: Calling current_weapon.shoot()")
 		current_weapon.shoot()
 		return
 	
@@ -148,6 +168,19 @@ func _switch_weapon_networked(weapon_index: int) -> void:
 	else:
 		# Request weapon switch from server
 		request_weapon_switch.rpc_id(1, weapon_index)
+
+func _perform_melee_attack_networked() -> void:
+	"""Perform melee attack - client-side only for now"""
+	var hook_melee = get_node_or_null("../HookMeleeAttack")
+	if hook_melee and hook_melee.has_method("perform_attack"):
+		hook_melee.perform_attack()
+	else:
+		# Try finding it as a sibling of camera
+		var camera = get_node_or_null("..")
+		if camera:
+			hook_melee = camera.get_node_or_null("HookMeleeAttack")
+			if hook_melee and hook_melee.has_method("perform_attack"):
+				hook_melee.perform_attack()
 
 # --- Server Authority Methods ---
 
@@ -423,18 +456,29 @@ func spawn_weapon_projectile(origin: Vector3, direction: Vector3, projectile_pat
 	var proj = scene.instantiate() as Node3D
 	if not proj:
 		return
-	# Place at origin and give it a velocity if possible
-	proj.global_position = origin
-	if proj is RigidBody3D:
-		(proj as RigidBody3D).linear_velocity = direction * 1000
-	elif proj.has_method("initialize_velocity"):
-		proj.call("initialize_velocity", direction * 1000)
 	
-	# Set projectile owner using universal ownership system
-	_set_projectile_owner(proj, null, owner_peer_id)
-	
-	# Add to current scene
+	# Add to scene tree first (needed for some initialization methods)
 	get_tree().current_scene.add_child(proj)
+	
+	# Set the projectile as top-level so position is in global space
+	if proj is Node3D:
+		(proj as Node3D).set_as_top_level(true)
+		(proj as Node3D).global_position = origin
+	
+	# Initialize projectile with owner info if it supports initialize()
+	if proj.has_method("initialize"):
+		# Projectile class uses initialize(start_position, direction, owner_ref, owner_id)
+		proj.initialize(origin, direction, null, owner_peer_id)
+		print("[NetworkedWeaponManager] Projectile initialized with owner_peer_id: ", owner_peer_id)
+	else:
+		# Fallback: set position and velocity manually
+		if proj is RigidBody3D:
+			(proj as RigidBody3D).linear_velocity = direction * 1000
+		elif proj.has_method("initialize_velocity"):
+			proj.call("initialize_velocity", direction * 1000)
+		
+		# Set projectile owner using universal ownership system
+		_set_projectile_owner(proj, null, owner_peer_id)
 
 ## Helper to set projectile owner using universal ownership system
 func _set_projectile_owner(projectile: Node, owner_ref: Node3D = null, owner_id: int = -1) -> void:

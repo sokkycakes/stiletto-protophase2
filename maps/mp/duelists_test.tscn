@@ -1,4 +1,4 @@
-[gd_scene load_steps=38 format=4 uid="uid://crs5yeidk8wva"]
+[gd_scene load_steps=42 format=4 uid="uid://crs5yeidk8wva"]
 
 [ext_resource type="Script" uid="uid://e2i2bsrkkqx5" path="res://scripts/core/GameWorld.gd" id="1_k48ig"]
 [ext_resource type="Script" uid="uid://cwu5cf7a0awcd" path="res://addons/func_godot/src/map/func_godot_map.gd" id="1_v8jto"]
@@ -15,6 +15,7 @@
 [ext_resource type="Material" uid="uid://pkame0di48o4" path="res://mapsrc/textures/prototype_blue.tres" id="7_ptdwm"]
 [ext_resource type="Texture2D" uid="uid://iqaqprr6tox1" path="res://assets/env/skybox/stormy/px.png" id="8_kmpsf"]
 [ext_resource type="Texture2D" uid="uid://de76npajufp7v" path="res://assets/env/skybox/stormy/py.png" id="9_yrnrd"]
+[ext_resource type="FontFile" uid="uid://dhj8nspajgm8t" path="res://assets/ui/Helvetica Black Regular.otf" id="16_rvmh3"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_pu2ko"]
 shader = ExtResource("3_ptdwm")
@@ -129,6 +130,20 @@ points = PackedVector3Array(0, 0.5, 0, 0, -0.5, 0, -14.2222, 0.5, 0, -14.2222, -
 [sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_wyku4"]
 points = PackedVector3Array(14.2222, 0.5, 14.2222, 14.2222, -0.5, 14.2222, 0, 0.5, 14.2222, 0, -0.5, 14.2222, 14.2222, 0.5, 0, 14.2222, -0.5, 0, 0, 0.5, 0, 0, -0.5, 0)
 
+[sub_resource type="FontVariation" id="FontVariation_8fwbo"]
+base_font = ExtResource("16_rvmh3")
+variation_embolden = 0.26
+variation_transform = Transform2D(1.085, 0, 0, 0.68, 0, 0)
+
+[sub_resource type="LabelSettings" id="LabelSettings_6ffb1"]
+font = SubResource("FontVariation_8fwbo")
+font_size = 66
+
+[sub_resource type="LabelSettings" id="LabelSettings_sf28e"]
+font_size = 19
+outline_size = 7
+outline_color = Color(0.226563, 0.226563, 0.226563, 1)
+
 [node name="Node3D" type="Node3D"]
 script = ExtResource("1_k48ig")
 map_config = ExtResource("2_mapconfig")
@@ -140,8 +155,8 @@ spawn_path = NodePath("../spawns")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="Environment"]
 transform = Transform3D(-0.586495, 0.535073, -0.608047, 0.19134, 0.821, 0.53791, 0.787028, 0.199138, -0.583894, 0, 10, 0)
-light_color = Color(0.835294, 0.721569, 0.552941, 1)
-light_energy = 0.53
+light_color = Color(0.34, 0.29376, 0.2244, 1)
+light_angular_distance = 4.55
 shadow_enabled = true
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="Environment"]
@@ -215,10 +230,89 @@ shape = SubResource("ConvexPolygonShape3D_wyku4")
 [node name="spawns" type="Node3D" parent="." groups=["spawn_points"]]
 
 [node name="SpawnPoint1" type="Marker3D" parent="spawns"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.97621, 1, 6.02205)
+transform = Transform3D(0.707107, 0, -0.707107, 0, 1, 0, 0.707107, 0, 0.707107, -5.97621, 1, 6.02205)
 script = ExtResource("6_026e5")
 show_debug_visualization = true
 
 [node name="SpawnPoint2" type="Marker3D" parent="spawns"]
 transform = Transform3D(-0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, -0.707107, 5.98302, 1, -6.02205)
 script = ExtResource("6_026e5")
+
+[node name="mapui" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+grow_horizontal = 2
+
+[node name="preround" type="Label" parent="mapui"]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -49.5
+offset_top = 49.0
+offset_right = 49.5
+offset_bottom = 72.0
+grow_horizontal = 2
+text = "---"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="scoreboard" type="Control" parent="mapui"]
+custom_minimum_size = Vector2(240, 0)
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -120.0
+offset_top = 14.0
+offset_right = 120.0
+offset_bottom = 54.0
+grow_horizontal = 2
+
+[node name="localScore" type="Label" parent="mapui/scoreboard"]
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_top = -50.0
+offset_right = 45.0
+offset_bottom = 34.0
+grow_vertical = 2
+text = "0"
+label_settings = SubResource("LabelSettings_6ffb1")
+
+[node name="oppScore" type="Label" parent="mapui/scoreboard"]
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -45.0
+offset_top = -50.0
+offset_bottom = 34.0
+grow_horizontal = 0
+grow_vertical = 2
+text = "0"
+label_settings = SubResource("LabelSettings_6ffb1")
+horizontal_alignment = 2
+
+[node name="clock" type="Label" parent="mapui/scoreboard"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -11.5
+offset_right = 20.0
+offset_bottom = 11.5
+grow_horizontal = 2
+grow_vertical = 2
+text = "00:00"
+label_settings = SubResource("LabelSettings_sf28e")
+horizontal_alignment = 1
+vertical_alignment = 1

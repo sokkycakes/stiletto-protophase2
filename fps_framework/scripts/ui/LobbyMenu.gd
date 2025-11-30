@@ -140,6 +140,16 @@ func _scan_for_maps() -> void:
 	print("Found %d maps: %s" % [available_maps.size(), available_maps.map(func(m): return m.name)])
 
 func _scan_directory_for_maps(directory_path: String) -> void:
+	# Use ResourceLoader.list_directory (Godot 4.4+) for PCK compatibility in exported builds
+	# Check engine version - ResourceLoader.list_directory was added in 4.4
+	var version_info = Engine.get_version_info()
+	var use_resource_loader = version_info.major >= 4 and version_info.minor >= 4
+	
+	if use_resource_loader:
+		_scan_directory_with_resource_loader(directory_path)
+		return
+	
+	# Fallback to DirAccess for older versions or editor
 	var dir = DirAccess.open(directory_path)
 	if not dir:
 		print("Could not open directory: ", directory_path)
@@ -169,6 +179,30 @@ func _scan_directory_for_maps(directory_path: String) -> void:
 					})
 
 		file_name = dir.get_next()
+
+
+func _scan_directory_with_resource_loader(directory_path: String) -> void:
+	# Use ResourceLoader.list_directory for PCK compatibility (Godot 4.4+)
+	var files: PackedStringArray = ResourceLoader.list_directory(directory_path)
+	
+	for file_name in files:
+		# Check if it's a scene file and not excluded
+		var is_scene_file = false
+		for extension in map_file_extensions:
+			if file_name.ends_with(extension):
+				is_scene_file = true
+				break
+		
+		if is_scene_file and not file_name in excluded_scenes:
+			var full_path = directory_path + file_name
+			var map_name = _generate_map_name(file_name)
+			
+			# Verify the scene file exists and is valid
+			if ResourceLoader.exists(full_path):
+				available_maps.append({
+					"name": map_name,
+					"path": full_path
+				})
 
 func _generate_map_name(file_name: String) -> String:
 	# Remove file extension

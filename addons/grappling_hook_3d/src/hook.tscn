@@ -1,11 +1,11 @@
-[gd_scene load_steps=6 format=3 uid="uid://dlqm10204rcaq"]
+[gd_scene load_steps=7 format=3 uid="uid://dlqm10204rcaq"]
 
 [ext_resource type="Script" uid="uid://bxkcbfryj3m7v" path="res://addons/grappling_hook_3d/src/hook_model.gd" id="1_axmsb"]
 [ext_resource type="Material" uid="uid://cmu4vfp7y5t6b" path="res://addons/prototype_mini_bundle/M_prototype_purple.tres" id="2_1tpjt"]
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_2uiuu"]
-top_radius = 0.05
-bottom_radius = 0.05
+top_radius = 0.025
+bottom_radius = 0.025
 height = 1.0
 radial_segments = 4
 cap_top = false
@@ -14,6 +14,10 @@ cap_bottom = false
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_8746b"]
 albedo_color = Color(0.568627, 0.568627, 0.568627, 1)
 metallic = 1.0
+
+[sub_resource type="PrismMesh" id="PrismMesh_1tpjt"]
+size = Vector3(0.205, 0.595, 0.05)
+subdivide_width = 1
 
 [sub_resource type="BoxMesh" id="BoxMesh_usc5b"]
 size = Vector3(0.1, 0.1, 0.25)
@@ -32,8 +36,13 @@ surface_material_override/0 = SubResource("StandardMaterial3D_8746b")
 [node name="Hook End" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1)
 
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Hook End"]
+transform = Transform3D(1, 0, 0, 0, 2.98023e-08, 1, 0, -1, 2.98023e-08, 0, 0, -0.0337505)
+mesh = SubResource("PrismMesh_1tpjt")
+
 [node name="Model" type="MeshInstance3D" parent="Hook End"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.125)
+visible = false
 mesh = SubResource("BoxMesh_usc5b")
 skeleton = NodePath("../..")
 surface_material_override/0 = ExtResource("2_1tpjt")

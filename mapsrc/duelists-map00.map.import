@@ -1,0 +1,14 @@
+[remap]
+
+importer="func_godot.map"
+type="Resource"
+uid="uid://ciahfygtqirog"
+path="res://.godot/imported/duelists-map00.map-f00edb4e4b8eb2cf7d42cd7afb634013.tres"
+
+[deps]
+
+source_file="res://mapsrc/duelists-map00.map"
+dest_files=["res://.godot/imported/duelists-map00.map-f00edb4e4b8eb2cf7d42cd7afb634013.tres"]
+
+[params]
+

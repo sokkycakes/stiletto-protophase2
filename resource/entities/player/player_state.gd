@@ -51,7 +51,7 @@ var is_death_timescale_active: bool = false
 var is_returning_to_normal_time: bool = false
 
 # Pain effects references
-var pain_audio_player: AudioStreamPlayer = null
+var pain_audio_player: AudioStreamPlayer3D = null
 
 # Cached viewmodel reference for performance
 var viewmodel_node: Node3D = null
@@ -272,20 +272,83 @@ func _start_death_timescale() -> void:
 
 func _setup_pain_audio() -> void:
 	"""Setup the audio player for pain sounds"""
-	pain_audio_player = AudioStreamPlayer.new()
+	# Use AudioStreamPlayer3D for spatial audio so other players can hear pain sounds
+	pain_audio_player = AudioStreamPlayer3D.new()
+	pain_audio_player.name = "PainAudioPlayer3D"
 	pain_audio_player.bus = pain_audio_bus
-	add_child(pain_audio_player)
-	print("PlayerState: Pain audio player created")
+	pain_audio_player.attenuation_model = AudioStreamPlayer3D.ATTENUATION_INVERSE_DISTANCE
+	pain_audio_player.max_distance = 50.0  # Can be heard up to 50 units away
+	pain_audio_player.volume_db = 0.0
+	# Attach to player body for proper positioning
+	if player:
+		player.add_child(pain_audio_player)
+		print("PlayerState: Pain audio player created (3D spatial) and attached to player: ", player.name)
+	else:
+		add_child(pain_audio_player)
+		print("PlayerState: Pain audio player created (3D spatial) and attached to PlayerState (player not available)")
+	
+	# Verify it's in the scene tree
+	if pain_audio_player.is_inside_tree():
+		print("PlayerState: Pain audio player is in scene tree")
+	else:
+		push_warning("PlayerState: Pain audio player is NOT in scene tree!")
 
 func _play_pain_sound() -> void:
 	"""Play a random pain sound from the array"""
-	if pain_sounds.size() > 0 and pain_audio_player:
-		var random_sound = pain_sounds[randi() % pain_sounds.size()]
-		pain_audio_player.stream = random_sound
-		pain_audio_player.play()
-		print("PlayerState: Pain sound played (", pain_sounds.find(random_sound), "/", pain_sounds.size() - 1, ")")
-	else:
-		print("PlayerState: No pain sounds configured or audio player missing")
+	print("PlayerState: _play_pain_sound() called - pain_sounds.size(): ", pain_sounds.size(), ", pain_audio_player: ", pain_audio_player)
+	
+	if pain_sounds.size() == 0:
+		print("PlayerState: No pain sounds configured in array")
+		return
+	
+	if not pain_audio_player:
+		print("PlayerState: Pain audio player is null!")
+		return
+	
+	if not is_instance_valid(pain_audio_player):
+		print("PlayerState: Pain audio player is not valid!")
+		return
+	
+	# Check if audio player is in scene tree
+	if not pain_audio_player.is_inside_tree():
+		print("PlayerState: WARNING - Pain audio player is NOT in scene tree! Attempting to add...")
+		if player and player.is_inside_tree():
+			player.add_child(pain_audio_player)
+		elif is_inside_tree():
+			add_child(pain_audio_player)
+		else:
+			print("PlayerState: ERROR - Cannot add audio player to scene tree, neither player nor PlayerState are in tree!")
+			return
+	
+	var random_sound = pain_sounds[randi() % pain_sounds.size()]
+	if not random_sound:
+		print("PlayerState: Selected pain sound is null!")
+		return
+	
+	# For AudioStreamPlayer3D, position should be relative to parent (player)
+	# If parent is player, position is already correct (0,0,0 relative to player)
+	# If we need to set global position, do it after ensuring it's in tree
+	if player and pain_audio_player.get_parent() == player:
+		# Audio player is child of player, so it's already positioned correctly
+		# Just ensure it's at origin relative to player for proper 3D audio
+		pain_audio_player.position = Vector3.ZERO
+	elif pain_audio_player.get_parent() == self:
+		# Audio player is child of PlayerState, need to position it at player location
+		if player:
+			pain_audio_player.global_position = player.global_position
+	
+	# Set stream and play
+	pain_audio_player.stream = random_sound
+	pain_audio_player.volume_db = 0.0  # Ensure volume is set
+	
+	# Stop any currently playing sound and play the new one
+	if pain_audio_player.playing:
+		pain_audio_player.stop()
+	
+	pain_audio_player.play()
+	
+	print("PlayerState: Pain sound played (", pain_sounds.find(random_sound), "/", pain_sounds.size() - 1, ") - stream: ", random_sound.resource_path if random_sound else "null")
+	print("PlayerState: Audio player in tree: ", pain_audio_player.is_inside_tree(), ", playing: ", pain_audio_player.playing, ", position: ", pain_audio_player.global_position, ", bus: ", pain_audio_player.bus, ", stream valid: ", pain_audio_player.stream != null, ", max_distance: ", pain_audio_player.max_distance)
 
 func _process(delta: float) -> void:
 	# Handle kill key input (only works when alive)
@@ -449,8 +512,8 @@ func set_state(new_state: PlayerState) -> void:
 				goldgdt_controls.enable_camera()  # Allow camera look during stun
 				print("PlayerState: GoldGdt movement disabled, camera enabled")
 			
-			# Play pain sound when taking a hit
-			_play_pain_sound()
+			# Pain sound is now played in _on_health_damage_taken() for all damage types
+			# This ensures it plays for both PvP (skip_stun) and enemy damage
 			
 			# Apply stun effects (scripts will check state and disable input)
 			_set_viewmodel_visible(false)
@@ -539,16 +602,21 @@ func get_hits_taken() -> int:
 # Health component callbacks
 # ------------------------------------------------------------------
 
-func _on_health_damage_taken(amount: int, current_health: int, max_health_in: int) -> void:
-	print("PlayerState: Health damage taken - amount: ", amount, ", current: ", current_health, ", max: ", max_health_in)
+func _on_health_damage_taken(amount: int, current_health: int, max_health_in: int, skip_stun: bool = false) -> void:
+	print("PlayerState: Health damage taken - amount: ", amount, ", current: ", current_health, ", max: ", max_health_in, ", skip_stun: ", skip_stun)
 	
 	# Emit hit_taken signal for UI compatibility (convert health to hits)
 	var hits_taken = max_health_in - current_health
 	emit_signal("hit_taken", hits_taken, max_health_in)
 
+	# Always play pain sound when taking damage (even for PvP damage)
+	print("PlayerState: Attempting to play pain sound...")
+	_play_pain_sound()
+
 	if current_health <= 0:
 		die()
-	else:
+	elif not skip_stun:
+		# Only apply stun if not skipping (for PvP damage, stun is disabled)
 		set_state(PlayerState.STUNNED)
 		stun_timer = stun_duration
 

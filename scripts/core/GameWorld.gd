@@ -13,6 +13,10 @@ var players: Dictionary = {}  # peer_id -> NetworkedPlayer instance
 var spawn_points: Array[SpawnPoint] = []
 var state_sync: GameWorldStateSync
 
+# --- Spawn Point Assignments (for Duel mode) ---
+var player_spawn_assignments: Dictionary = {}  # peer_id -> SpawnPoint
+var spawn_assignments_initialized: bool = false
+
 # --- Game State ---
 var game_active: bool = false
 var match_started: bool = false
@@ -36,6 +40,9 @@ func _requires_character_selection() -> bool:
 	return false
 
 func _ready() -> void:
+	# Add to group for easy lookup
+	add_to_group("game_world")
+	
 	# Hide chat input initially
 	if chat_input:
 		chat_input.visible = false
@@ -58,6 +65,10 @@ func _ready() -> void:
 
 	# Collect spawn points
 	_collect_spawn_points()
+	
+	# Initialize spawn point assignments for Duel mode
+	if _is_duel_mode():
+		_initialize_spawn_assignments()
 
 	# Setup Source Engine-style state replication
 	# Create StateSync on all peers (needed for RPC path resolution)
@@ -120,10 +131,181 @@ func _collect_spawn_points() -> void:
 	
 	print("Found ", spawn_points.size(), " spawn points")
 
+func _is_duel_mode() -> bool:
+	if GameRulesManager:
+		return GameRulesManager.current_mode == GameRulesManager.GameMode.DUEL
+	if map_config:
+		return map_config.game_mode == 3  # Duel mode enum value
+	return false
+
+func _initialize_spawn_assignments() -> void:
+	if spawn_assignments_initialized:
+		return
+	
+	if spawn_points.is_empty():
+		print("[GameWorld] No spawn points available for assignment")
+		return
+	
+	# Only initialize on server
+	if not MultiplayerManager or not MultiplayerManager.is_server():
+		return
+	
+	# Get all connected peer IDs
+	var connected_peers = MultiplayerManager.get_connected_players()
+	var peer_ids: Array[int] = []
+	for peer_id in connected_peers:
+		peer_ids.append(peer_id)
+	
+	# Sort for consistency
+	peer_ids.sort()
+	
+	# Shuffle spawn points for random assignment
+	var available_spawns = spawn_points.duplicate()
+	available_spawns.shuffle()
+	
+	# Assign spawn points to players
+	for i in range(peer_ids.size()):
+		var peer_id = peer_ids[i]
+		var spawn_index = i % available_spawns.size()
+		var assigned_spawn = available_spawns[spawn_index]
+		player_spawn_assignments[peer_id] = assigned_spawn
+		print("[GameWorld] Assigned spawn point to peer %d: %s" % [peer_id, assigned_spawn.name])
+	
+	spawn_assignments_initialized = true
+	
+	# Sync assignments to clients
+	if MultiplayerManager.is_server():
+		_sync_spawn_assignments_to_clients()
+
+func _sync_spawn_assignments_to_clients() -> void:
+	# Convert SpawnPoint references to names for RPC
+	var assignments_data: Dictionary = {}
+	for peer_id in player_spawn_assignments:
+		var spawn: SpawnPoint = player_spawn_assignments[peer_id]
+		# Store by spawn point name - clients will look it up
+		assignments_data[peer_id] = spawn.name
+	
+	_set_spawn_assignments.rpc(assignments_data)
+
+@rpc("authority", "call_local", "reliable")
+func _set_spawn_assignments(assignments_data: Dictionary) -> void:
+	# Reconstruct spawn point assignments from names
+	player_spawn_assignments.clear()
+	for peer_id in assignments_data:
+		var spawn_name: String = assignments_data[peer_id]
+		# Find spawn point by name
+		var spawn: SpawnPoint = null
+		for sp in spawn_points:
+			if sp.name == spawn_name:
+				spawn = sp
+				break
+		
+		if spawn:
+			player_spawn_assignments[peer_id] = spawn
+			print("[GameWorld] Received spawn assignment for peer %d: %s" % [peer_id, spawn.name])
+		else:
+			push_warning("[GameWorld] Failed to find spawn point with name: %s" % spawn_name)
+	
+	spawn_assignments_initialized = true
+
+func _assign_spawn_point_to_late_joiner(peer_id: int) -> void:
+	## Assign a spawn point to a late-joining player in Duel mode
+	## Ensures they get a unique spawn point that isn't already assigned
+	if not _is_duel_mode() or not MultiplayerManager or not MultiplayerManager.is_server():
+		return
+	
+	if spawn_points.is_empty():
+		print("[GameWorld] No spawn points available for late joiner: ", peer_id)
+		return
+	
+	# If late joiner already has an assignment (shouldn't happen, but handle it)
+	if peer_id in player_spawn_assignments:
+		var existing_spawn = player_spawn_assignments[peer_id]
+		# Check if another active player is using this spawn
+		var spawn_in_use = false
+		for assigned_peer_id in player_spawn_assignments:
+			if assigned_peer_id != peer_id and assigned_peer_id in MultiplayerManager.get_connected_players() and assigned_peer_id in players:
+				if player_spawn_assignments[assigned_peer_id] == existing_spawn:
+					spawn_in_use = true
+					break
+		# If spawn is not in use, keep the existing assignment
+		if not spawn_in_use:
+			print("[GameWorld] Late joiner peer %d already has valid spawn assignment: %s" % [peer_id, existing_spawn.name])
+			_sync_single_spawn_assignment(peer_id, existing_spawn)
+			return
+	
+	# Find spawn points that are not already assigned to active players
+	var assigned_spawns: Array[SpawnPoint] = []
+	for assigned_peer_id in player_spawn_assignments:
+		# Only count spawns assigned to players that are still connected AND spawned
+		if assigned_peer_id != peer_id and assigned_peer_id in MultiplayerManager.get_connected_players() and assigned_peer_id in players:
+			var assigned_spawn = player_spawn_assignments[assigned_peer_id]
+			if assigned_spawn:
+				assigned_spawns.append(assigned_spawn)
+	
+	# Find unassigned spawn points
+	var unassigned_spawns: Array[SpawnPoint] = []
+	for spawn in spawn_points:
+		if spawn not in assigned_spawns:
+			unassigned_spawns.append(spawn)
+	
+	# Prefer unassigned spawns, but if all are assigned, use the least recently used one
+	var spawn_to_assign: SpawnPoint = null
+	if unassigned_spawns.size() > 0:
+		# Pick a random unassigned spawn
+		spawn_to_assign = unassigned_spawns[randi() % unassigned_spawns.size()]
+	else:
+		# All spawns are assigned - find the least recently used one
+		var least_recently_used: SpawnPoint = spawn_points[0]
+		var oldest_time: float = least_recently_used.last_used_time
+		for spawn in spawn_points:
+			if spawn.last_used_time < oldest_time:
+				oldest_time = spawn.last_used_time
+				least_recently_used = spawn
+		spawn_to_assign = least_recently_used
+		print("[GameWorld] All spawns assigned, using least recently used for late joiner: ", spawn_to_assign.name)
+	
+	# Assign the spawn point to the late joiner
+	player_spawn_assignments[peer_id] = spawn_to_assign
+	print("[GameWorld] Assigned spawn point to late joiner peer %d: %s" % [peer_id, spawn_to_assign.name])
+	
+	# Sync this assignment to all clients
+	_sync_single_spawn_assignment(peer_id, spawn_to_assign)
+
+func _sync_single_spawn_assignment(peer_id: int, spawn: SpawnPoint) -> void:
+	## Sync a single spawn assignment to all clients
+	if not MultiplayerManager or not MultiplayerManager.is_server():
+		return
+	
+	_set_single_spawn_assignment.rpc(peer_id, spawn.name)
+
+@rpc("authority", "call_local", "reliable")
+func _set_single_spawn_assignment(peer_id: int, spawn_name: String) -> void:
+	## Client-side: Receive a single spawn assignment update
+	var spawn: SpawnPoint = null
+	for sp in spawn_points:
+		if sp.name == spawn_name:
+			spawn = sp
+			break
+	
+	if spawn:
+		player_spawn_assignments[peer_id] = spawn
+		print("[GameWorld] Received spawn assignment update for peer %d: %s" % [peer_id, spawn_name])
+	else:
+		push_warning("[GameWorld] Failed to find spawn point with name: %s for late joiner" % spawn_name)
+
 func get_spawn_point_node_for_player(peer_id: int) -> SpawnPoint:
 	if spawn_points.is_empty():
 		return null
 	
+	# For Duel mode, use assigned spawn points
+	if _is_duel_mode() and spawn_assignments_initialized:
+		if peer_id in player_spawn_assignments:
+			return player_spawn_assignments[peer_id]
+		# Fallback if assignment not found
+		print("[GameWorld] Warning: No spawn assignment for peer %d in Duel mode, using fallback" % peer_id)
+	
+	# Default behavior: team-based or least recently used
 	var player_info = MultiplayerManager.get_player_info(peer_id)
 	var team_id = player_info.get("team", 0)
 	
@@ -146,6 +328,12 @@ func get_spawn_point_node_for_player(peer_id: int) -> SpawnPoint:
 			best_spawn = spawn
 	
 	return best_spawn if best_spawn else available_spawns[0]
+
+func get_assigned_spawn_point_for_player(peer_id: int) -> SpawnPoint:
+	## Get the assigned spawn point for a player (used in Duel mode)
+	if _is_duel_mode() and peer_id in player_spawn_assignments:
+		return player_spawn_assignments[peer_id]
+	return null
 
 func get_spawn_point_for_player(peer_id: int) -> Vector3:
 	var spawn_node = get_spawn_point_node_for_player(peer_id)
@@ -210,6 +398,9 @@ func _spawn_player(peer_id: int) -> void:
 		players_container.add_child(networked_player)
 	else:
 		# Fallback: attach to root if the container is absent (e.g., in simplified setups)
+		if not is_inside_tree() or not get_tree():
+			push_warning("[GameWorld] Cannot spawn player %d: GameWorld not in scene tree" % peer_id)
+			return
 		get_tree().get_root().add_child(networked_player)
 	players[peer_id] = networked_player
 
@@ -283,6 +474,12 @@ func _on_player_disconnected(peer_id: int) -> void:
 
 		player.queue_free()
 		players.erase(peer_id)
+		
+		# Clear spawn assignment for disconnected player (for Duel mode)
+		if _is_duel_mode() and peer_id in player_spawn_assignments:
+			player_spawn_assignments.erase(peer_id)
+			print("[GameWorld] Cleared spawn assignment for disconnected player: ", peer_id)
+		
 		print("Removed disconnected player: ", peer_id)
 
 func remove_player_from_match(peer_id: int) -> void:
@@ -309,6 +506,19 @@ func _remove_player_local(peer_id: int) -> void:
 		print("Removed player from match: ", peer_id)
 
 func _on_player_connected_to_game(peer_id: int, _player_info: Dictionary) -> void:
+	# Ensure we're in the tree before spawning
+	if not is_inside_tree():
+		call_deferred("_on_player_connected_to_game", peer_id, _player_info)
+		return
+	
+	# For Duel mode, assign spawn point to newly connected player
+	if _is_duel_mode() and MultiplayerManager.is_server():
+		if not spawn_assignments_initialized:
+			_initialize_spawn_assignments()
+		else:
+			# Late joiner: assign them an available spawn point
+			_assign_spawn_point_to_late_joiner(peer_id)
+	
 	# Spawn the newly connected player
 	_spawn_player(peer_id)
 	
@@ -331,10 +541,18 @@ func _spawn_existing_players_for_new_client(new_peer_id: int) -> void:
 	if not MultiplayerManager.is_server():
 		return
 	
+	# Check if we're still in the tree (scene might be unloading)
+	if not is_inside_tree():
+		return
+	
 	print("[GameWorld] Spawning existing players for new client: ", new_peer_id)
 	
 	# Wait a moment for the new client's scene to be ready
 	await get_tree().create_timer(0.3).timeout
+	
+	# Check again after await (scene might have unloaded during wait)
+	if not is_inside_tree():
+		return
 	
 	# Spawn all existing players (including host) for the new client
 	for existing_peer_id in players.keys():
@@ -593,3 +811,69 @@ func _clear_game_mode_logic() -> void:
 	if active_game_mode_logic:
 		active_game_mode_logic.queue_free()
 		active_game_mode_logic = null
+
+## Clean up all players and game world resources
+## Call this before changing scenes to ensure proper cleanup
+func cleanup_all_players() -> void:
+	print("[GameWorld] Cleaning up all players before returning to lobby")
+	
+	# Release mouse capture immediately
+	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+	
+	# Disable processing on this node to prevent any further updates
+	set_process(false)
+	set_physics_process(false)
+	set_process_input(false)
+	set_process_unhandled_input(false)
+	
+	# Clean up local player UI first
+	if local_player:
+		_cleanup_local_player_ui()
+		# Disable input on local player before cleanup
+		if is_instance_valid(local_player):
+			local_player._disable_pawn_input()
+			# Also disable processing on the pawn itself
+			if local_player.pawn:
+				local_player.pawn.set_process(false)
+				local_player.pawn.set_physics_process(false)
+				local_player.pawn.set_process_input(false)
+				local_player.pawn.set_process_unhandled_input(false)
+		local_player = null
+	
+	# Clean up all player instances - disable input first, then free
+	var player_ids = players.keys()
+	for peer_id in player_ids:
+		if peer_id in players:
+			var player = players[peer_id]
+			if is_instance_valid(player):
+				# Disable all input processing first
+				player._disable_pawn_input()
+				
+				# Disable processing on pawn
+				if player.pawn:
+					player.pawn.set_process(false)
+					player.pawn.set_physics_process(false)
+					player.pawn.set_process_input(false)
+					player.pawn.set_process_unhandled_input(false)
+				
+				# Unregister from state replication if server
+				if state_sync and MultiplayerManager.is_server():
+					state_sync.unregister_player(player)
+				
+				# Free immediately to prevent any further processing
+				player.free()
+			players.erase(peer_id)
+	
+	players.clear()
+	print("[GameWorld] All players cleaned up")
+	
+	# Clean up state sync
+	if state_sync:
+		if state_sync.state_replication_manager:
+			if state_sync.state_replication_manager.has_method("reset_state"):
+				state_sync.state_replication_manager.reset_state()
+		state_sync = null
+	
+	# Reset game state
+	game_active = false
+	match_started = false

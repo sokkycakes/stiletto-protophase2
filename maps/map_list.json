@@ -1,43 +1,223 @@
 [
 	{
+		"name": "ArcherEnemy",
+		"path": "res://scenes/enemies/ArcherEnemy.tscn"
+	},
+	{
+		"name": "HookV1",
+		"path": "res://scenes/player/HookV1.tscn"
+	},
+	{
+		"name": "HookV2",
+		"path": "res://scenes/player/HookV2.tscn"
+	},
+	{
+		"name": "KnightV2",
+		"path": "res://scenes/enemies/KnightV2.tscn"
+	},
+	{
+		"name": "NetworkedPlayer",
+		"path": "res://scenes/mp_framework/NetworkedPlayer.tscn"
+	},
+	{
+		"name": "PauseMenu",
+		"path": "res://scenes/mp_framework/ui/PauseMenu.tscn"
+	},
+	{
+		"name": "ammoindicator",
+		"path": "res://scenes/ui/ammoindicator.tscn"
+	},
+	{
+		"name": "archer_test",
+		"path": "res://scenes/archer_test.tscn"
+	},
+	{
+		"name": "base_enemy",
+		"path": "res://scenes/enemy/base_enemy.tscn"
+	},
+	{
 		"name": "belltower",
 		"path": "res://maps/belltower.tscn"
+	},
+	{
+		"name": "belltower_web",
+		"path": "res://maps/web/belltower_web.tscn"
+	},
+	{
+		"name": "bouncer",
+		"path": "res://scenes/enemy/quake/bouncer.tscn"
+	},
+	{
+		"name": "bouncer_test",
+		"path": "res://scenes/bouncer_test.tscn"
+	},
+	{
+		"name": "bullet_impact",
+		"path": "res://scenes/effects/bullet_impact.tscn"
+	},
+	{
+		"name": "bullet_trail",
+		"path": "res://scenes/effects/bullet_trail.tscn"
+	},
+	{
+		"name": "character_select",
+		"path": "res://scenes/ui/character_select.tscn"
 	},
 	{
 		"name": "deadcenter01",
 		"path": "res://maps/deadcenter01.tscn"
 	},
 	{
+		"name": "duel_mode_logic",
+		"path": "res://scenes/gamemodes/duel_mode_logic.tscn"
+	},
+	{
+		"name": "duelists_test",
+		"path": "res://maps/mp/duelists_test.tscn"
+	},
+	{
 		"name": "example",
 		"path": "res://maps/example.tscn"
+	},
+	{
+		"name": "game_world",
+		"path": "res://scenes/mp_framework/game_world.tscn"
+	},
+	{
+		"name": "gamemaster_belltower",
+		"path": "res://maps/gamemaster_belltower.tscn"
+	},
+	{
+		"name": "hp",
+		"path": "res://scenes/ui/hp.tscn"
+	},
+	{
+		"name": "hp_test",
+		"path": "res://scenes/ui/hp_test.tscn"
 	},
 	{
 		"name": "intro00",
 		"path": "res://maps/intro00.tscn"
 	},
 	{
-		"name": "level_1",
+		"name": "knight",
+		"path": "res://scenes/enemy/quake/knight.tscn"
+	},
+	{
+		"name": "level",
 		"path": "res://maps/level_1/level.tscn"
 	},
 	{
-		"name": "level_2",
+		"name": "level",
 		"path": "res://maps/level_2/level.tscn"
 	},
 	{
-		"name": "level_3",
+		"name": "level",
 		"path": "res://maps/level_3/level.tscn"
+	},
+	{
+		"name": "main",
+		"path": "res://scenes/main.tscn"
+	},
+	{
+		"name": "mouse_sensitivity_control",
+		"path": "res://scenes/ui/mouse_sensitivity_control.tscn"
+	},
+	{
+		"name": "mp_lobby",
+		"path": "res://scenes/ui/multiplayer/mp_lobby.tscn"
+	},
+	{
+		"name": "mp_menu",
+		"path": "res://scenes/ui/multiplayer/mp_menu.tscn"
+	},
+	{
+		"name": "muzzle_flash",
+		"path": "res://scenes/effects/muzzle_flash.tscn"
+	},
+	{
+		"name": "nextbottest",
+		"path": "res://scenes/enemy/nextbot/test/nextbottest.tscn"
+	},
+	{
+		"name": "nextbottest",
+		"path": "res://scenes/nextbottest.tscn"
+	},
+	{
+		"name": "obby00",
+		"path": "res://maps/obby00.tscn"
+	},
+	{
+		"name": "options_menu",
+		"path": "res://scenes/ui/options_menu.tscn"
+	},
+	{
+		"name": "pause_menuold",
+		"path": "res://scenes/ui/pause_menuold.tscn"
+	},
+	{
+		"name": "pause_menuv1",
+		"path": "res://scenes/ui/pause_menuv1.tscn"
+	},
+	{
+		"name": "pause_menuv2",
+		"path": "res://scenes/ui/pause_menuv2.tscn"
 	},
 	{
 		"name": "residence",
 		"path": "res://maps/residence.tscn"
 	},
 	{
-		"name": "sandbox-night",
-		"path": "res://maps/sandbox-night.tscn"
+		"name": "revolver_src",
+		"path": "res://scenes/weapons/revolver_src.tscn"
 	},
 	{
 		"name": "sandbox",
 		"path": "res://maps/sandbox.tscn"
+	},
+	{
+		"name": "sandbox-night",
+		"path": "res://maps/sandbox-night.tscn"
+	},
+	{
+		"name": "shader_loading_screen",
+		"path": "res://scenes/ui/shader_loading_screen.tscn"
+	},
+	{
+		"name": "simple_tube_lobby",
+		"path": "res://scenes/ui/multiplayer/simple_tube_lobby/simple_tube_lobby.tscn"
+	},
+	{
+		"name": "skyboxdetail",
+		"path": "res://scenes/skyboxdetail.tscn"
+	},
+	{
+		"name": "spark_effect",
+		"path": "res://scenes/effects/spark_effect.tscn"
+	},
+	{
+		"name": "ss_scenariotest00",
+		"path": "res://maps/web/ss_scenariotest00.tscn"
+	},
+	{
+		"name": "ss_scenariotest01",
+		"path": "res://maps/web/ss_scenariotest01.tscn"
+	},
+	{
+		"name": "ss_scenariotest02",
+		"path": "res://maps/web/ss_scenariotest02.tscn"
+	},
+	{
+		"name": "ss_template",
+		"path": "res://maps/web/ss_template.tscn"
+	},
+	{
+		"name": "ss_tutorial",
+		"path": "res://maps/web/ss_tutorial.tscn"
+	},
+	{
+		"name": "tester",
+		"path": "res://scenes/mp_framework/tester.tscn"
 	},
 	{
 		"name": "thebox",
@@ -48,7 +228,75 @@
 		"path": "res://maps/thebox_alt.tscn"
 	},
 	{
+		"name": "thebox_altempty",
+		"path": "res://maps/thebox_altempty.tscn"
+	},
+	{
+		"name": "thebox_empty",
+		"path": "res://maps/thebox_empty.tscn"
+	},
+	{
+		"name": "throwable_knife_projectile",
+		"path": "res://scenes/weapons/throwable_knife_projectile.tscn"
+	},
+	{
+		"name": "thrown_knife_projectile",
+		"path": "res://scenes/weapons/thrown_knife_projectile.tscn"
+	},
+	{
+		"name": "trenchtest",
+		"path": "res://maps/trenchtest.tscn"
+	},
+	{
+		"name": "trialmenu",
+		"path": "res://scenes/ui/trialmenu.tscn"
+	},
+	{
+		"name": "trialmenuv2",
+		"path": "res://scenes/ui/trialmenuv2.tscn"
+	},
+	{
 		"name": "tutorial_standards",
 		"path": "res://maps/tutorial_standards.tscn"
+	},
+	{
+		"name": "tutorial_standards",
+		"path": "res://maps/web/tutorial_standards.tscn"
+	},
+	{
+		"name": "v_revolver",
+		"path": "res://scenes/weapons/v_revolver.tscn"
+	},
+	{
+		"name": "v_revolver2",
+		"path": "res://scenes/weapons/v_revolver2.tscn"
+	},
+	{
+		"name": "v_revolver3",
+		"path": "res://scenes/weapons/v_revolver3.tscn"
+	},
+	{
+		"name": "v_revolver3alt",
+		"path": "res://scenes/weapons/v_revolver3alt.tscn"
+	},
+	{
+		"name": "vagrant_knife",
+		"path": "res://scenes/weapons/vagrant_knife.tscn"
+	},
+	{
+		"name": "vagrant_knife_test1",
+		"path": "res://scenes/weapons/vagrant_knife_test1.tscn"
+	},
+	{
+		"name": "vagrant_knife_test2",
+		"path": "res://scenes/weapons/vagrant_knife_test2.tscn"
+	},
+	{
+		"name": "vagrant_knife_test3",
+		"path": "res://scenes/weapons/vagrant_knife_test3.tscn"
+	},
+	{
+		"name": "warpstrike_indicator",
+		"path": "res://scenes/effects/warpstrike_indicator.tscn"
 	}
 ]

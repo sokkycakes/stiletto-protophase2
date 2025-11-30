@@ -158,7 +158,13 @@ func set_team_id(new_team_id: int) -> void:
 
 func _find_clear_spawn_position(preferred_position: Vector3) -> Vector3:
 	# Use physics to find a clear position
-	var space_state = get_world_3d().direct_space_state
+	var world = get_world_3d()
+	if not world:
+		return preferred_position
+	
+	var space_state = world.direct_space_state
+	if not space_state:
+		return preferred_position
 	
 	# Check if preferred position is clear
 	if _is_position_clear(preferred_position, space_state):

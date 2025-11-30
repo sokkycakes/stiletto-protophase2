@@ -10,7 +10,7 @@ signal stuck(location: Transform3D, normal: Vector3)
 ## Handles physics, damage, and collision for thrown knives
 
 # Damage configuration
-@export var damage: int = 40
+@export var damage: int = 1
 @export var backstab_damage_multiplier: float = 2.0
 @export var lifetime: float = 10.0  # Auto-destroy after this time
 
@@ -130,17 +130,23 @@ func _on_body_entered(body: Node) -> void:
 	var final_damage := damage
 
 	if receiver:
-		is_backstab = _can_backstab(receiver)
-		if is_backstab:
-			if receiver.has_method("take_backstab"):
-				receiver.take_backstab()
-			else:
-				# Fallback: multiply damage
-				if receiver.has_method("get_health"):
-					var health = int(receiver.get_health())
-					final_damage = int(max(float(health) * backstab_damage_multiplier, float(damage)))
+		# For thrown knives, always deal base damage (1hp) to players, regardless of backstab
+		if receiver is NetworkedPlayer:
+			# Thrown knives always deal 1hp to players
+			final_damage = damage
+		else:
+			# For non-players (enemies), check for backstab
+			is_backstab = _can_backstab(receiver)
+			if is_backstab:
+				if receiver.has_method("take_backstab"):
+					receiver.take_backstab()
 				else:
-					final_damage = damage * 10
+					# Fallback: multiply damage
+					if receiver.has_method("get_health"):
+						var health = int(receiver.get_health())
+						final_damage = int(max(float(health) * backstab_damage_multiplier, float(damage)))
+					else:
+						final_damage = damage * 10
 		
 		var attacker_peer_id := -1
 		var attacker_np := _get_networked_player_for(_thrower)
@@ -152,7 +158,8 @@ func _on_body_entered(body: Node) -> void:
 			# Pass receiver's peer_id for validation to prevent wrong player from taking damage
 			var receiver_np := receiver as NetworkedPlayer
 			var target_peer_id := receiver_np.peer_id if receiver_np else -1
-			receiver.apply_damage.rpc(final_damage, attacker_peer_id, target_peer_id)
+			# Send RPC specifically to the authority peer (the player who owns this NetworkedPlayer)
+			receiver.apply_damage.rpc_id(target_peer_id, final_damage, attacker_peer_id, target_peer_id)
 		elif receiver.has_method("take_damage"):
 			receiver.take_damage(final_damage)
 	

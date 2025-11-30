@@ -1,0 +1,67 @@
+[gd_scene load_steps=7 format=3 uid="uid://uhefvpetr8ak"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_of4h1"]
+transparency = 1
+blend_mode = 1
+specular_mode = 1
+albedo_color = Color(1, 0.816667, 0, 0.0862745)
+roughness = 0.36
+emission_enabled = true
+emission = Color(0.76, 0.4275, 0, 1)
+rim_enabled = true
+rim_tint = 0.81
+clearcoat = 0.36
+clearcoat_roughness = 0.72
+
+[sub_resource type="SphereMesh" id="SphereMesh_cl88i"]
+material = SubResource("StandardMaterial3D_of4h1")
+height = 0.93
+radial_segments = 10
+rings = 4
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ml7qb"]
+shading_mode = 2
+diffuse_mode = 3
+specular_mode = 1
+albedo_color = Color(0.527344, 0.527344, 0.527344, 1)
+metallic = 0.74
+metallic_specular = 1.0
+roughness = 0.26
+
+[sub_resource type="SphereMesh" id="SphereMesh_bg6fc"]
+material = SubResource("StandardMaterial3D_ml7qb")
+height = 0.93
+radial_segments = 10
+rings = 4
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_jppq0"]
+transparency = 4
+blend_mode = 1
+cull_mode = 1
+shading_mode = 2
+diffuse_mode = 2
+albedo_color = Color(1, 0.816667, 0, 0.670588)
+roughness = 0.04
+emission_enabled = true
+emission = Color(0.6, 0.34, 0, 1)
+rim_enabled = true
+rim_tint = 0.4
+
+[sub_resource type="SphereMesh" id="SphereMesh_raojo"]
+material = SubResource("StandardMaterial3D_jppq0")
+height = 0.93
+radial_segments = 10
+rings = 4
+
+[node name="stickyMine" type="Node3D"]
+
+[node name="shell_outer" type="MeshInstance3D" parent="."]
+mesh = SubResource("SphereMesh_cl88i")
+
+[node name="core" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.480734, 0, 0, 0, 0.480734, 0, 0, 0, 0.480734, 0, 0, 0)
+mesh = SubResource("SphereMesh_bg6fc")
+
+[node name="shell_inner" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.870849, 0, 0, 0, 0.870849, 0, 0, 0, 0.870849, 0, 0, 0)
+mesh = SubResource("SphereMesh_raojo")

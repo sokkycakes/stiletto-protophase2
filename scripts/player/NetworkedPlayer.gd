@@ -20,10 +20,11 @@ var player_name: String = "Player"
 var team_id: int = 0
 
 # --- Player State ---
-var health: float = 100.0
-var max_health: float = 100.0
+var health: float = 4.0
+var max_health: float = 4.0
 var is_alive: bool = true
 var respawn_time: float = 5.0
+var last_attacker_peer_id: int = -1  # Track last attacker for kill attribution
 
 # --- Network Sync ---
 var last_position: Vector3 = Vector3.ZERO
@@ -134,6 +135,9 @@ func _spawn_pawn() -> void:
 		
 		# Set up weapon manager
 		_setup_weapon_manager()
+		
+		# Set up health component synchronization
+		_setup_health_component_sync()
 		
 		# Connect to PlayerState death signal for multiplayer death handling
 		var player_state = pawn.get_node_or_null("Body/PlayerState")
@@ -322,22 +326,49 @@ func take_damage(amount: float, attacker_peer_id: int = -1) -> void:
 	if not is_multiplayer_authority() or not is_alive:
 		return
 	
-	var old_health = health
-	health = max(0.0, health - amount)
+	# Store attacker for kill attribution
+	if attacker_peer_id >= 0:
+		last_attacker_peer_id = attacker_peer_id
 	
-	# Forward to character health component (if present) for audio/FX.
+	# Determine if damage is from a player (PvP damage)
+	# attacker_peer_id >= 0 means the attacker is a player
+	var is_pvp_damage: bool = attacker_peer_id >= 0
+	
+	# Check if health component is invulnerable before applying damage
+	# Skip invulnerability check for PvP damage (players can always damage each other)
 	var health_component := _get_health_component()
-	if health_component and health_component.has_method("take_damage"):
-		health_component.take_damage(int(amount))
+	if health_component and not is_pvp_damage:
+		# If health component exists, check invulnerability first (only for non-PvP damage)
+		if health_component.has_method("is_invulnerable") and health_component.is_invulnerable():
+			# Health component is invulnerable - don't apply damage to NetworkedPlayer health
+			# Still forward to health component for it to handle (it will block internally)
+			if health_component.has_method("take_damage"):
+				health_component.take_damage(int(amount))
+			return
 	
-	health_changed.emit(old_health, health)
-	update_health.rpc(health, peer_id)
+	# Health component either doesn't exist, or is not invulnerable, or this is PvP damage
+	# Forward to character health component first (source of truth)
+	# Pass skip_invulnerability=true for PvP damage to disable invulnerability and stun
+	if health_component and health_component.has_method("take_damage"):
+		health_component.take_damage(int(amount), is_pvp_damage)
+		# Sync NetworkedPlayer health from health component after damage
+		if health_component.has_method("get_current_health"):
+			var old_health = health
+			health = float(health_component.get_current_health())
+			if old_health != health:
+				health_changed.emit(old_health, health)
+				update_health.rpc(health, peer_id)
+	else:
+		# No health component - use NetworkedPlayer's own health tracking
+		var old_health = health
+		health = max(0.0, health - amount)
+		health_changed.emit(old_health, health)
+		update_health.rpc(health, peer_id)
 	
 	if health <= 0.0 and is_alive:
-		print("[NetworkedPlayer] DEATH TRIGGERED: health=", health, " is_alive=", is_alive)
-		_die(attacker_peer_id)
+		_die(last_attacker_peer_id)
 
-@rpc("any_peer", "call_remote", "reliable")
+@rpc("any_peer", "call_local", "reliable")
 func apply_damage(amount: float, attacker_peer_id: int = -1, target_peer_id: int = -1) -> void:
 	# Network entry point: routes damage to the authoritative instance.
 	# CRITICAL: Verify this RPC is being called on the correct NetworkedPlayer instance
@@ -385,25 +416,60 @@ func _get_health_component() -> Node:
 	# Fallback: search by name anywhere under pawn
 	return pawn.find_child("Health", true, false)
 
+func _setup_health_component_sync() -> void:
+	"""Connect to health component signals to keep NetworkedPlayer health in sync"""
+	var health_component := _get_health_component()
+	if not health_component:
+		return
+	
+	# Connect to health_changed signal to sync when health component heals
+	if health_component.has_signal("health_changed"):
+		# Disconnect first to avoid duplicate connections
+		if health_component.health_changed.is_connected(_on_health_component_health_changed):
+			health_component.health_changed.disconnect(_on_health_component_health_changed)
+		health_component.health_changed.connect(_on_health_component_health_changed)
+		print("[NetworkedPlayer] Connected to health component health_changed signal")
+	
+	# Initialize NetworkedPlayer health from health component
+	if health_component.has_method("get_current_health"):
+		var component_health = health_component.get_current_health()
+		# Check if max_health property exists (it's an exported property)
+		if "max_health" in health_component:
+			max_health = float(health_component.max_health)
+		health = float(component_health)
+		print("[NetworkedPlayer] Initialized health from component: ", health, "/", max_health)
+
+func _on_health_component_health_changed(current_health: int, max_health_in: int) -> void:
+	"""Called when health component's health changes (including healing)"""
+	if not is_multiplayer_authority():
+		return
+	
+	# Update NetworkedPlayer's health to match health component
+	var old_health = health
+	health = float(current_health)
+	max_health = float(max_health_in)
+	
+	# Only emit if health actually changed (avoid spam from healing ticks)
+	if old_health != health:
+		health_changed.emit(old_health, health)
+		update_health.rpc(health, peer_id)
+		print("[NetworkedPlayer] Health synced from component: ", health, "/", max_health)
+
 func _on_playerstate_died() -> void:
 	"""Called when PlayerState emits player_died signal"""
-	print("[NetworkedPlayer] _on_playerstate_died() - PlayerState died signal received for: ", player_name)
-	_die()
+	# Use stored attacker if available, otherwise -1 (suicide/world kill)
+	_die(last_attacker_peer_id)
 
 func _on_playerstate_respawn_requested() -> void:
 	"""Called when PlayerState emits respawn_requested signal (player pressed respawn key)"""
-	print("[NetworkedPlayer] _on_playerstate_respawn_requested() - Player requested respawn: ", player_name)
 	if is_multiplayer_authority():
 		_respawn_player()
 
 func _die(killer_peer_id: int = -1) -> void:
-	print("[NetworkedPlayer] _die() called, is_alive before check: ", is_alive)
 	if not is_alive:
-		print("[NetworkedPlayer] _die() returning early - already dead")
 		return
 	
 	is_alive = false
-	print("[NetworkedPlayer] _die() setting is_alive to false")
 	
 	# Apply death material to model
 	_set_dead_visuals()
@@ -411,21 +477,63 @@ func _die(killer_peer_id: int = -1) -> void:
 	# Let PlayerState handle all death behavior (camera, movement, etc)
 	# It already has all the logic we need - don't interfere with it!
 	
-	# Notify game rules
+	# Notify game rules - always route through server for kill registration
+	# This ensures kills are always registered on the server, regardless of who the killer/victim is
 	if GameRulesManager:
-		GameRulesManager.on_player_killed(killer_peer_id, peer_id)
+		# If we're the server, register directly
+		if MultiplayerManager and MultiplayerManager.is_server():
+			GameRulesManager.on_player_killed(killer_peer_id, peer_id)
+		else:
+			# If we're a client, use RPC to notify server
+			register_player_kill.rpc_id(1, killer_peer_id, peer_id)
 	
 	player_died.emit(killer_peer_id)
 	
 	# Broadcast death to all clients (including this one via call_local)
 	player_died_networked.rpc(killer_peer_id)
 	
-	# NOTE: Do NOT auto-respawn here; wait for explicit respawn requests
-	print("Player ", player_name, " died (waiting for manual respawn)")
+@rpc("any_peer", "call_remote", "reliable")
+func register_player_kill(killer_peer_id: int, victim_peer_id: int) -> void:
+	"""RPC to register a kill on the server"""
+	# Only server should process kill registration
+	if not MultiplayerManager or not MultiplayerManager.is_server():
+		return
+	
+	# Verify the victim_peer_id matches this instance
+	if victim_peer_id != peer_id:
+		push_warning("[NetworkedPlayer] register_player_kill called with wrong victim_id! Expected %d, got %d" % [peer_id, victim_peer_id])
+		return
+	
+	# Register the kill on the server
+	if GameRulesManager:
+		GameRulesManager.on_player_killed(killer_peer_id, victim_peer_id)
 
 func _respawn_player() -> void:
+	var old_health = health
 	health = max_health
 	is_alive = true
+	last_attacker_peer_id = -1  # Reset attacker tracking on respawn
+	
+	# Restore Health component (this will emit health_changed signal for hp.gd)
+	var health_component := _get_health_component()
+	if health_component:
+		if health_component.has_method("restore_full_health"):
+			health_component.restore_full_health()
+		elif health_component.has_method("heal") and health_component.has_method("get_current_health"):
+			# Fallback: try to heal to max if restore_full_health doesn't exist
+			# Note: This may not work if health component is dead, but it's a fallback
+			var current_hp = health_component.get_current_health()
+			var max_hp = health_component.max_health if health_component.has("max_health") else 2
+			var heal_amount = max_hp - current_hp
+			if heal_amount > 0:
+				# Try to heal - if component is dead, this won't work, but that's okay
+				# The restore_full_health method should be used instead
+				for i in range(heal_amount):
+					health_component.heal(1)
+	
+	# Emit health_changed signal to update HUD (authority only)
+	if is_multiplayer_authority():
+		health_changed.emit(old_health, health)
 	
 	# Clear death material
 	_clear_dead_visuals()
@@ -454,7 +562,7 @@ func _respawn_player() -> void:
 	
 	player_respawned.emit()
 	player_respawned_networked.rpc()
-	update_health.rpc(health)
+	update_health.rpc(health, peer_id)
 	force_sync()
 	
 	print("Player ", player_name, " respawned")
@@ -649,6 +757,13 @@ func set_spawn_transform(pos: Vector3, yaw_degrees: float) -> void:
 	force_sync()
 
 func _get_best_spawn_point() -> SpawnPoint:
+	# Check if GameWorld has assigned spawn points (for Duel mode)
+	var game_world = get_tree().get_first_node_in_group("game_world") as GameWorld
+	if game_world and game_world.has_method("get_assigned_spawn_point_for_player"):
+		var assigned_spawn = game_world.get_assigned_spawn_point_for_player(peer_id)
+		if assigned_spawn:
+			return assigned_spawn
+	
 	# Try to find team spawn points
 	var spawn_points = get_tree().get_nodes_in_group("spawn_points")
 	var team_spawns = []
@@ -778,7 +893,10 @@ func update_health(new_health: float, target_peer_id: int = -1) -> void:
 	# Only update health if we're not the authority (authority already has correct health)
 	# This prevents overwriting authority's health with stale data
 	if not is_multiplayer_authority():
+		var old_health = health
 		health = new_health
+		# Emit health_changed signal to update HUD on non-authority clients
+		health_changed.emit(old_health, health)
 
 @rpc("authority", "call_local", "reliable")
 func player_died_networked(killer_peer_id: int) -> void:
@@ -792,14 +910,33 @@ func player_respawned_networked() -> void:
 	# Clear death material
 	_clear_dead_visuals()
 	
+	# Ensure pawn is visible
+	if pawn:
+		pawn.visible = true
+		# Ensure all mesh instances are visible
+		_set_all_meshes_visible(pawn, true)
+	
+	# Restore Health component on all clients (for hp.gd HUD)
+	var health_component := _get_health_component()
+	if health_component and health_component.has_method("restore_full_health"):
+		health_component.restore_full_health()
+	
 	# Reset PlayerState to NORMAL - it handles everything else
 	var player_state = pawn.get_node_or_null("Body/PlayerState") if pawn else null
 	if player_state and player_state.has_method("set_state"):
-		if player_state.get("PlayerState"):
+		# Access PlayerState enum directly
 			player_state.set_state(player_state.PlayerState.NORMAL)
 			print("[NetworkedPlayer] Reset PlayerState to NORMAL via RPC - PlayerState handles the rest!")
 	
-	print("[NetworkedPlayer] Cleared death visuals for player: ", player_name)
+	print("[NetworkedPlayer] Cleared death visuals and restored visibility for player: ", player_name)
+
+func _set_all_meshes_visible(node: Node, visible: bool) -> void:
+	"""Recursively set visibility on all MeshInstance3D nodes"""
+	if node is MeshInstance3D:
+		(node as MeshInstance3D).visible = visible
+	
+	for child in node.get_children():
+		_set_all_meshes_visible(child, visible)
 
 # --- Public API ---
 

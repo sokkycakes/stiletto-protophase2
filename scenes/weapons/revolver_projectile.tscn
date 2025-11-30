@@ -1,0 +1,23 @@
+[gd_scene load_steps=7 format=3 uid="uid://5g4obc1j7i5s"]
+
+[ext_resource type="Script" uid="uid://d4lrgh170awtl" path="res://resource/scripts/weapons/revolver_projectile.gd" id="1_revolver"]
+[ext_resource type="PackedScene" uid="uid://bb1ki6ldu1bfx" path="res://scenes/effects/muzzle_flash.tscn" id="2_muzzle"]
+[ext_resource type="AudioStream" uid="uid://3jjbfxm6iwvg" path="res://assets/player/sound/gunshotv4.ogg" id="3_d823e"]
+[ext_resource type="PackedScene" uid="uid://p262qaitjp3" path="res://scenes/effects/bullet_impact.tscn" id="3_impact"]
+[ext_resource type="PackedScene" uid="uid://btwgc82jallc3" path="res://resource/entities/player/projectile.tscn" id="5_projectile"]
+[ext_resource type="Texture2D" uid="uid://x248i3vehcka" path="res://assets/effect/decal/bullethole.png" id="6_decal"]
+
+[node name="revolver_projectile" type="Node3D"]
+script = ExtResource("1_revolver")
+projectile_scene = ExtResource("5_projectile")
+projectile_damage = 1
+fire_sound = ExtResource("3_d823e")
+auto_reload_delay = 0.6
+bullet_damage = 25
+muzzle_flash_scene = ExtResource("2_muzzle")
+impact_effect_scene = ExtResource("3_impact")
+muzzle_path = NodePath("muzzle")
+bullet_decal_texture = ExtResource("6_decal")
+
+[node name="muzzle" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0139066, 0)

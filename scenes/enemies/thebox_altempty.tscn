@@ -1,16 +1,16 @@
 [gd_scene load_steps=12 format=4 uid="uid://8s0n3a2aunrh"]
 
-[ext_resource type="AudioStream" uid="uid://dan8mha5pc8s8" path="res://assets/snd/ambient/sound_ambient_ambience_mall_amb_loop.wav" id="1_o0dax"]
-[ext_resource type="AudioStream" uid="uid://c0rqyetgcgp61" path="res://assets/snd/music/likeastaratdawnloop.ogg" id="2_2ft4x"]
-[ext_resource type="Environment" uid="uid://c216uw67ybw0p" path="res://assets/env/sandbox.tres" id="2_y6phf"]
-[ext_resource type="Script" uid="uid://cw71vo1m4dwjr" path="res://resource/scripts/generic/respawn.gd" id="3_2ft4x"]
-[ext_resource type="LightmapGIData" uid="uid://dmep4lj5lpug7" path="res://maps/thebox.lmbake" id="4_72rce"]
-[ext_resource type="Texture2D" uid="uid://bjcq8axgqat8g" path="res://materials/dev/texture_08.vtf" id="5_5w5xi"]
-[ext_resource type="PackedScene" uid="uid://c3owyv3c2oaku" path="res://resource/entities/enemy_spawner.tscn" id="7_y6phf"]
-[ext_resource type="PackedScene" uid="uid://b2v1e0gbgvyqo" path="res://scenes/enemies/KnightV2.tscn" id="8_2ft4x"]
+[ext_resource type="AudioStream" uid="uid://dan8mha5pc8s8" path="res://assets/snd/ambient/sound_ambient_ambience_mall_amb_loop.wav" id="1_atsav"]
+[ext_resource type="AudioStream" uid="uid://c0rqyetgcgp61" path="res://assets/snd/music/likeastaratdawnloop.ogg" id="2_b12ee"]
+[ext_resource type="Environment" uid="uid://c216uw67ybw0p" path="res://assets/env/sandbox.tres" id="3_ioafr"]
+[ext_resource type="Script" uid="uid://cw71vo1m4dwjr" path="res://resource/scripts/generic/respawn.gd" id="4_mfmsv"]
+[ext_resource type="LightmapGIData" uid="uid://dmep4lj5lpug7" path="res://maps/thebox.lmbake" id="5_jb88j"]
+[ext_resource type="Texture2D" uid="uid://bjcq8axgqat8g" path="res://materials/dev/texture_08.vtf" id="6_2wxny"]
+[ext_resource type="PackedScene" uid="uid://c3owyv3c2oaku" path="res://resource/entities/enemy_spawner.tscn" id="7_r4d4j"]
+[ext_resource type="PackedScene" uid="uid://b2v1e0gbgvyqo" path="res://scenes/enemies/KnightV2.tscn" id="8_qno66"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_67aua"]
-albedo_texture = ExtResource("5_5w5xi")
+albedo_texture = ExtResource("6_2wxny")
 uv1_scale = Vector3(3, 3, 3)
 metadata/details = {
 "$basetexture": "dev/texture_08"
@@ -39,20 +39,20 @@ data = PackedVector3Array(-0.5, -0.5, 0.5, -0.5, 0.5, -0.5, -0.5, -0.5, -0.5, 0.
 [node name="env" type="Node" parent="."]
 
 [node name="ambience" type="AudioStreamPlayer" parent="env"]
-stream = ExtResource("1_o0dax")
+stream = ExtResource("1_atsav")
 autoplay = true
 
 [node name="ambience2" type="AudioStreamPlayer" parent="env"]
-stream = ExtResource("2_2ft4x")
+stream = ExtResource("2_b12ee")
 bus = &"bgm"
 playback_type = 1
 parameters/looping = true
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="env"]
-environment = ExtResource("2_y6phf")
+environment = ExtResource("3_ioafr")
 
 [node name="respawn" type="Node" parent="env"]
-script = ExtResource("3_2ft4x")
+script = ExtResource("4_mfmsv")
 
 [node name="world" type="Node3D" parent="."]
 transform = Transform3D(3.33843, 0, 0, 0, 3.33843, 0, 0, 0, 3.33843, 0, 0, 0)
@@ -60,7 +60,7 @@ transform = Transform3D(3.33843, 0, 0, 0, 3.33843, 0, 0, 0, 3.33843, 0, 0, 0)
 [node name="LightmapGI" type="LightmapGI" parent="world"]
 transform = Transform3D(1.4741, 0, 0, 0, 1.4741, 0, 0, 0, 1.4741, 0, 0, 0)
 interior = true
-light_data = ExtResource("4_72rce")
+light_data = ExtResource("5_jb88j")
 
 [node name="CSGBox3D" type="CSGBox3D" parent="world"]
 transform = Transform3D(10.7769, 0, 0, 0, 10.7769, 0, 0, 0, 10.7769, 0, 0, 0)
@@ -93,8 +93,8 @@ omni_attenuation = 0.118
 [node name="SpawnPoint" type="Marker3D" parent="." groups=["spawn_point"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -14.679, 0)
 
-[node name="EnemySpawner" parent="." instance=ExtResource("7_y6phf")]
+[node name="EnemySpawner" parent="." instance=ExtResource("7_r4d4j")]
 transform = Transform3D(0.164406, 0, 0, 0, 0.164406, 0, 0, 0, 0.164406, 0, -10.3462, -22.1767)
-enemy_scene = ExtResource("8_2ft4x")
+enemy_scene = ExtResource("8_qno66")
 knight_scene = null
 archer_scene = null

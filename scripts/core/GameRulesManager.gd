@@ -72,6 +72,7 @@ signal player_scored(peer_id: int, points: int)
 signal match_time_updated(time_remaining: float)
 signal pause_menu_visibility_changed(show: bool)
 signal match_pause_state_changed(show: bool)
+signal player_stats_updated(stats: Dictionary)
 
 func _ready() -> void:
 	# Create match timer
@@ -132,8 +133,12 @@ func on_player_killed(killer_id: int, victim_id: int) -> void:
 	if not MultiplayerManager.is_server():
 		return
 	
-	# Update killer stats
-	if killer_id in player_stats:
+	# Initialize stats for killer if not present
+	if killer_id >= 0 and killer_id not in player_stats:
+		_initialize_player_stats(killer_id)
+	
+	# Update killer stats (only if valid killer, not suicide/world kill)
+	if killer_id >= 0 and killer_id in player_stats:
 		player_stats[killer_id]["kills"] += 1
 		player_stats[killer_id]["score"] += _get_kill_points()
 		
@@ -149,6 +154,10 @@ func on_player_killed(killer_id: int, victim_id: int) -> void:
 	
 	# Update victim stats
 	if victim_id in player_stats:
+		player_stats[victim_id]["deaths"] += 1
+	elif victim_id >= 0:
+		# Initialize stats for victim if not present
+		_initialize_player_stats(victim_id)
 		player_stats[victim_id]["deaths"] += 1
 	
 	# Sync stats to all clients
@@ -198,6 +207,7 @@ func end_match_for_all(winner_info: Dictionary) -> void:
 @rpc("authority", "call_local", "reliable")
 func sync_player_stats(stats: Dictionary) -> void:
 	player_stats = stats
+	player_stats_updated.emit(player_stats)
 
 # --- Internal Methods ---
 

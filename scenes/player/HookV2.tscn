@@ -10,21 +10,17 @@
 [ext_resource type="AudioStream" uid="uid://cgk361fdegvbf" path="res://assets/player/sound/hook_retract.wav" id="8_8xpxx"]
 [ext_resource type="AudioStream" uid="uid://v71imalbt2mr" path="res://assets/player/sound/hook_bouncev1.wav" id="9_2c4f4"]
 
-[node name="HookController" type="Node3D" node_paths=PackedStringArray("hook_spawn_marker", "player_body", "crosshair_tex", "charge_indicator")]
+[node name="HookController" type="Node3D"]
 script = ExtResource("1_o3yn1")
 grappling_hook_scene = ExtResource("2_4won0")
-hook_spawn_marker = NodePath("")
 max_distance = 20.0
 hook_speed = 45.0
 pull_speed = 30.0
 retraction_speed_multiplier = 2.0
 jump_pull_height_threshold = 2.97
-player_body = NodePath("")
-crosshair_tex = NodePath("")
 crosshair_grapple = ExtResource("3_14ufa")
 crosshair_no_grapple = ExtResource("4_14pc2")
 grapple_min_velocity = 7.0
-charge_indicator = NodePath("")
 spark_scene = ExtResource("5_62fsg")
 goldgdt_view = NodePath("../View Control")
 goldgdt_controls = NodePath("../Move Functions")

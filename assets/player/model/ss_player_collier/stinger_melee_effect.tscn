@@ -1,0 +1,44 @@
+[gd_scene load_steps=4 format=3 uid="uid://dk6t0yt35vshl"]
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_2jqfr"]
+top_radius = 0.025
+bottom_radius = 0.025
+height = 1.0
+radial_segments = 4
+cap_top = false
+cap_bottom = false
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_lki31"]
+albedo_color = Color(0.568627, 0.568627, 0.568627, 1)
+metallic = 1.0
+
+[sub_resource type="PrismMesh" id="PrismMesh_pqbvd"]
+size = Vector3(0.205, 0.595, 0.05)
+subdivide_width = 1
+
+[node name="Node3D" type="Node3D"]
+
+[node name="Rope" type="Node3D" parent="."]
+transform = Transform3D(0.943981, 0.0699793, 0.322494, -0.0719814, 0.997389, -0.00572889, -0.322053, -0.0178056, 0.946554, 0, 0, 0)
+
+[node name="Rope Mesh" type="MeshInstance3D" parent="Rope"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 0, -0.5)
+mesh = SubResource("CylinderMesh_2jqfr")
+skeleton = NodePath("../..")
+surface_material_override/0 = SubResource("StandardMaterial3D_lki31")
+
+[node name="Rope Mesh2" type="MeshInstance3D" parent="Rope"]
+transform = Transform3D(0.741249, 0.670852, -0.0225273, -0.0148195, 0.0499091, 0.998644, 0.671067, -0.739909, 0.0469368, 0.315357, 0.0180385, -1.32188)
+mesh = SubResource("CylinderMesh_2jqfr")
+skeleton = NodePath("../..")
+surface_material_override/0 = SubResource("StandardMaterial3D_lki31")
+
+[node name="Rope Mesh3" type="MeshInstance3D" parent="Rope"]
+transform = Transform3D(0.173072, 0.98274, -0.0653239, -0.0540306, 0.0756984, 0.995666, 0.983426, -0.168792, 0.0661992, 1.1264, 0.0739629, -1.77595)
+mesh = SubResource("CylinderMesh_2jqfr")
+skeleton = NodePath("../..")
+surface_material_override/0 = SubResource("StandardMaterial3D_lki31")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.158106, 0.987422, -2.94274e-08, 0, 2.98023e-08, 1, 0.987422, -0.158106, 4.71193e-09, 1.10765, 0, -2.28792)
+mesh = SubResource("PrismMesh_pqbvd")

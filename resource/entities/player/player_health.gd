@@ -4,14 +4,14 @@ extends Node
 # Implements 2 HP system with invulnerability and healing mechanics
 
 # Exported properties
-@export var max_health: int = 2 : set = _set_max_health
-@export var start_health: int = 2
+@export var max_health: int = 4 : set = _set_max_health
+@export var start_health: int = 4
 @export var invulnerability_duration: float = 1.3  # Seconds of invulnerability after taking damage
 @export var healing_delay: float = 12.0  # Seconds before healing starts when not taking damage
 
 # Signals
 signal health_changed(current_health: int, max_health: int)
-signal damage_taken(amount: int, current_health: int, max_health: int)
+signal damage_taken(amount: int, current_health: int, max_health: int, skip_stun: bool)
 signal died
 signal invulnerability_started
 signal invulnerability_ended
@@ -64,27 +64,33 @@ func _process(delta: float) -> void:
 				_healing_timer = 0.0
 				print("Health: Healing interrupted by recent damage")
 
-func take_damage(amount: int = 1) -> void:
-	if amount <= 0 or is_dead() or _is_invulnerable:
+func take_damage(amount: int = 1, skip_invulnerability: bool = false) -> void:
+	if amount <= 0 or is_dead() or (_is_invulnerable and not skip_invulnerability):
 		print("Health: Damage blocked - dead: ", is_dead(), ", invulnerable: ", _is_invulnerable)
 		return
 	
 	_current_health = max(_current_health - amount, 0)
 	_last_damage_time = Time.get_unix_time_from_system()
 	
-	# Start invulnerability
-	_is_invulnerable = true
-	_invulnerability_timer = invulnerability_duration
+	# Start invulnerability only if not skipping (for PvP damage)
+	if not skip_invulnerability:
+		_is_invulnerable = true
+		_invulnerability_timer = invulnerability_duration
+		emit_signal("invulnerability_started")
 	
 	# Reset healing
 	_is_healing = false
 	_healing_timer = 0.0
 	
-	emit_signal("damage_taken", amount, _current_health, max_health)
+	# Determine if stun should be skipped (same condition as invulnerability)
+	var skip_stun = skip_invulnerability
+	emit_signal("damage_taken", amount, _current_health, max_health, skip_stun)
 	emit_signal("health_changed", _current_health, max_health)
-	emit_signal("invulnerability_started")
 	
-	print("Health: Damage taken - amount: ", amount, ", new health: ", _current_health, ", invulnerable for: ", invulnerability_duration, "s")
+	if skip_invulnerability:
+		print("Health: Damage taken (PvP) - amount: ", amount, ", new health: ", _current_health, ", invulnerability skipped")
+	else:
+		print("Health: Damage taken - amount: ", amount, ", new health: ", _current_health, ", invulnerable for: ", invulnerability_duration, "s")
 	
 	if _current_health == 0:
 		emit_signal("died")
@@ -125,4 +131,19 @@ func get_healing_time_remaining() -> float:
 	if _current_health >= max_health:
 		return 0.0
 	var time_since_damage = Time.get_unix_time_from_system() - _last_damage_time
-	return max(0.0, healing_delay - time_since_damage) 
+	return max(0.0, healing_delay - time_since_damage)
+
+func restore_full_health() -> void:
+	## Fully restore health to max (used on respawn)
+	## Bypasses dead check and resets all timers
+	var old_health = _current_health
+	_current_health = max_health
+	_is_invulnerable = false
+	_invulnerability_timer = 0.0
+	_is_healing = false
+	_healing_timer = 0.0
+	_last_damage_time = 0.0
+	
+	print("[Health Component] restore_full_health - old: ", old_health, " -> new: ", _current_health, "/", max_health)
+	print("[Health Component] Emitting health_changed signal: (", _current_health, ", ", max_health, ")")
+	emit_signal("health_changed", _current_health, max_health) 

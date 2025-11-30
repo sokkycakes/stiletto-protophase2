@@ -164,5 +164,8 @@ func _ensure_debug_camera() -> void:
 		parent.add_child(debug_camera)
 	# If the scene changed and the camera is no longer in the tree, re-attach it
 	elif not debug_camera.is_inside_tree():
+		# Remove from old parent if it still has one
+		if debug_camera.get_parent():
+			debug_camera.get_parent().remove_child(debug_camera)
 		var parent = get_tree().current_scene if get_tree().current_scene else get_tree().root
 		parent.add_child(debug_camera) 

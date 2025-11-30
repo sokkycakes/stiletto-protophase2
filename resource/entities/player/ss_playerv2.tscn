@@ -40,7 +40,7 @@
 [ext_resource type="Script" uid="uid://drur6ejin23t2" path="res://addons/GoldGdt/src/GoldGdt_Camera.gd" id="29_iimdc"]
 [ext_resource type="Script" uid="uid://dmy2w5b50d86e" path="res://resource/entities/player/viewmodel_lag.gd" id="30_n412n"]
 [ext_resource type="PackedScene" uid="uid://y16mdft5mt7a" path="res://scenes/weapons/revolver_src.tscn" id="31_5yrtq"]
-[ext_resource type="Script" path="res://scripts/weapons/NetworkedWeaponManager.gd" id="31_6sj7j"]
+[ext_resource type="Script" uid="uid://bg56ctm5mt6dw" path="res://scripts/weapons/NetworkedWeaponManager.gd" id="31_6sj7j"]
 [ext_resource type="PackedScene" uid="uid://cvnedpp1pj7o6" path="res://scenes/player/HookV2.tscn" id="35_ljgr2"]
 [ext_resource type="AudioStream" uid="uid://vi528wyc5ebr" path="res://assets/player/sound/clangv2.wav" id="39_ty5gj"]
 [ext_resource type="Script" uid="uid://c68yqrkkxup8g" path="res://resource/scripts/player/knockback_module.gd" id="42_5i37u"]
@@ -1504,6 +1504,7 @@ pain_sounds = Array[AudioStream]([ExtResource("22_kikgo"), ExtResource("23_ajclf
 
 [node name="PlayerModel" type="Node3D" parent="Body"]
 transform = Transform3D(0.285, 0, 0, 0, 0.285, 0, 0, 0, 0.285, 0, -0.910052, 0)
+visible = false
 script = ExtResource("26_fstuj")
 metadata/run = true
 
@@ -1959,8 +1960,10 @@ mesh = SubResource("CylinderMesh_j45u4")
 [node name="HookRopeStart" type="Marker3D" parent="Interpolated Camera/Arm/Arm Anchor/Camera"]
 transform = Transform3D(0.193021, 0.476234, 3.81445, -0.350946, 0.669893, -2.32394, -0.924805, -0.154815, 1.67802, -0.198825, -0.102318, -0.553146)
 
-[node name="HookController" parent="." node_paths=PackedStringArray("player_body") instance=ExtResource("35_ljgr2")]
+[node name="HookController" parent="." node_paths=PackedStringArray("hook_spawn_marker", "player_body", "charge_indicator") instance=ExtResource("35_ljgr2")]
+hook_spawn_marker = NodePath("../Interpolated Camera/Arm/Arm Anchor/Camera/HookRopeStart")
 player_body = NodePath("../Body")
+charge_indicator = NodePath("../HUD/Control/Center/ChargeIndicator")
 hook_hit_sound = ExtResource("39_ty5gj")
 
 [node name="GunJump" type="Node3D" parent="."]

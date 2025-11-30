@@ -12,6 +12,10 @@ class_name KnifeBase
 @export var collide_with_areas: bool = true
 @export var collide_with_bodies: bool = true
 
+# Parry/Reflect properties
+@export var can_parry_projectiles: bool = true  # Can this melee attack reflect projectiles?
+@export var parry_reflect_speed_multiplier: float = 1.2  # Speed multiplier for reflected projectiles
+
 @export var backstab_speed_boost: float = 5.0  # Units/sec added to velocity
 @export var backstab_boost_duration: float = 1.5
 
@@ -137,6 +141,7 @@ func shoot() -> void:
 		_swing_in_progress = false
 		return
 
+	# TF2-style melee trace: raycast first, then hull trace if raycast misses
 	var hit: Dictionary = _melee_trace()
 	if hit.is_empty():
 		# Miss feedback for melee
@@ -150,6 +155,13 @@ func shoot() -> void:
 	if target == null:
 		if miss_sound:
 			_play_sound(miss_sound)
+		emit_signal("fired")
+		_swing_in_progress = false
+		return
+
+	# Check if it's a projectile that can be parried
+	if can_parry_projectiles and target is Area3D and _is_projectile(target as Area3D):
+		_parry_projectile(target as Area3D)
 		emit_signal("fired")
 		_swing_in_progress = false
 		return
@@ -206,17 +218,91 @@ func shoot() -> void:
 	_swing_in_progress = false
 
 func _melee_trace() -> Dictionary:
+	"""TF2-style melee trace: raycast first, then hull trace (swept box) if raycast misses"""
 	var cam: Camera3D = _camera
 	if cam == null:
 		var origin: Vector3 = global_position
 		var dir: Vector3 = -global_transform.basis.z
-		return _ray(origin, origin + dir * melee_range)
+		return _do_swing_trace(origin, origin + dir * melee_range)
 	
 	var origin: Vector3 = cam.global_position
 	var dir: Vector3 = -cam.global_transform.basis.z
-	return _ray(origin, origin + dir * melee_range)
+	var end: Vector3 = origin + dir * melee_range
+	return _do_swing_trace(origin, end)
+
+func _do_swing_trace(start: Vector3, end: Vector3) -> Dictionary:
+	"""TF2-style swing trace: try raycast first, then hull trace (swept box) if raycast misses"""
+	# Setup swing bounds (TF2 uses -18 to +18 units, which is ~13.5cm in Source units)
+	# Convert to Godot meters: TF2 units are ~0.75 inches = ~1.9cm, so 18 units = ~34cm = 0.34m
+	var swing_size = Vector3(0.34, 0.34, 0.34)  # 36x36x36 Source units = ~68cm box
+	
+	var space_state = get_world_3d().direct_space_state
+	
+	# Step 1: Try raycast first (TF2's UTIL_TraceLine)
+	var ray_query = PhysicsRayQueryParameters3D.create(start, end)
+	ray_query.exclude = [self]
+	ray_query.collide_with_areas = collide_with_areas
+	ray_query.collide_with_bodies = collide_with_bodies
+	
+	var ray_result: Dictionary = space_state.intersect_ray(ray_query)
+	
+	# If raycast hit something, return it (TF2 checks trace.fraction < 1.0)
+	if ray_result.has("position") and ray_result.has("collider"):
+		return ray_result
+	
+	# Step 2: Raycast missed (fraction >= 1.0) - try hull trace (TF2's UTIL_TraceHull)
+	# Simulate swept box by checking multiple points along the path
+	var hull_query = PhysicsShapeQueryParameters3D.new()
+	var box_shape = BoxShape3D.new()
+	box_shape.size = swing_size
+	hull_query.shape = box_shape
+	hull_query.collide_with_areas = collide_with_areas
+	hull_query.collide_with_bodies = collide_with_bodies
+	hull_query.exclude = [self]
+	
+	# Sample points along the sweep path (more samples = more accurate but slower)
+	var step_count = 6
+	var best_hit: Dictionary = {}
+	var closest_distance: float = INF
+	var best_collider = null
+	
+	for i in range(step_count + 1):
+		var t = float(i) / float(step_count)
+		var check_pos = start.lerp(end, t)
+		
+		# Position the box at this point along the sweep
+		hull_query.transform = Transform3D(Basis(), check_pos)
+		var shape_results = space_state.intersect_shape(hull_query, 32)
+		
+		for result in shape_results:
+			var collider = result.get("collider")
+			if not collider:
+				continue
+			
+			# Get hit position (use collider's position if result doesn't have one)
+			var hit_pos = result.get("position", collider.global_position if collider is Node3D else check_pos)
+			var distance = start.distance_to(hit_pos)
+			
+			# Prefer the closest hit
+			if distance < closest_distance:
+				closest_distance = distance
+				best_collider = collider
+				# Build a proper trace result dictionary
+				best_hit = {
+					"position": hit_pos,
+					"collider": collider,
+					"normal": (hit_pos - check_pos).normalized() if hit_pos != check_pos else Vector3.UP
+				}
+	
+	# If hull trace found something, return it
+	if best_hit.has("position") and best_hit.has("collider"):
+		return best_hit
+	
+	# Both raycast and hull trace missed
+	return {}
 
 func _ray(from: Vector3, to: Vector3) -> Dictionary:
+	"""Legacy ray function - kept for compatibility"""
 	var space_state := get_world_3d().direct_space_state
 	var q := PhysicsRayQueryParameters3D.create(from, to)
 	q.exclude = [self]
@@ -238,6 +324,141 @@ func _apply_damage(target: Object, amount: int, hit: Dictionary) -> void:
 		var pos: Vector3 = hit.get("position", Vector3.ZERO)
 		var normal: Vector3 = hit.get("normal", Vector3.UP)
 		_spawn_impact(pos, normal)
+
+
+func _is_projectile(area: Area3D) -> bool:
+	"""Check if an area is a projectile that can be parried"""
+	if not area:
+		return false
+	
+	# Check if it has projectile properties
+	if area.has_method("set_owner_info") or area.has_method("set_owner"):
+		return true
+	
+	# Check for common projectile properties
+	if "owner_peer_id" in area or "owner_node" in area or "direction" in area:
+		return true
+	
+	# Check if it's a known projectile class
+	if area is Projectile or area.get_script() and "Projectile" in str(area.get_script().resource_path):
+		return true
+	
+	return false
+
+func _parry_projectile(projectile: Area3D) -> void:
+	"""Parry/reflect a projectile back at its original shooter"""
+	if not projectile:
+		return
+	
+	print("[VagrantKnife] Parrying projectile: ", projectile.name)
+	
+	# Get the original shooter's peer_id
+	var original_shooter_peer_id: int = -1
+	if "owner_peer_id" in projectile:
+		original_shooter_peer_id = projectile.owner_peer_id
+	elif projectile.has_method("get_owner_peer_id"):
+		original_shooter_peer_id = projectile.get_owner_peer_id()
+	
+	# Find the original shooter's position (to reflect back at them)
+	var original_shooter_position: Vector3 = Vector3.ZERO
+	if original_shooter_peer_id >= 0:
+		var scene_root = get_tree().current_scene if get_tree() else null
+		if scene_root:
+			var original_shooter = NetworkedProjectileOwnership.find_networked_player_by_peer_id(scene_root, original_shooter_peer_id)
+			if original_shooter:
+				var shooter_body = original_shooter.get_node_or_null("Body")
+				if shooter_body and shooter_body is Node3D:
+					original_shooter_position = shooter_body.global_position
+				else:
+					original_shooter_position = original_shooter.global_position
+	
+	# Get parrier's NetworkedPlayer
+	var parrier_np = _get_networked_player()
+	var parrier_peer_id: int = -1
+	var parrier_node: Node3D = null
+	
+	if parrier_np:
+		parrier_peer_id = parrier_np.peer_id
+		var parrier_body = parrier_np.get_node_or_null("Body")
+		if parrier_body and parrier_body is Node3D:
+			parrier_node = parrier_body
+		else:
+			parrier_node = parrier_np
+	
+	# If we couldn't find the shooter, reflect in the opposite direction
+	var reflect_direction: Vector3
+	if original_shooter_position != Vector3.ZERO:
+		reflect_direction = (original_shooter_position - projectile.global_position).normalized()
+	else:
+		# Reverse the current direction
+		if "direction" in projectile:
+			reflect_direction = -projectile.direction.normalized()
+		else:
+			# Fallback: reflect away from parrier
+			if parrier_node:
+				reflect_direction = (projectile.global_position - parrier_node.global_position).normalized()
+			else:
+				reflect_direction = Vector3.FORWARD
+	
+	# Update projectile direction
+	if "direction" in projectile:
+		projectile.direction = reflect_direction.normalized()
+		# Update speed if projectile has it
+		if "speed" in projectile and parry_reflect_speed_multiplier != 1.0:
+			projectile.speed *= parry_reflect_speed_multiplier
+	
+	# Change ownership to the parrier
+	if parrier_node and parrier_peer_id >= 0:
+		# Use set_owner_info if available (preferred method)
+		if projectile.has_method("set_owner_info"):
+			projectile.set_owner_info(parrier_node, parrier_peer_id)
+		else:
+			# Direct property assignment (works for all projectiles)
+			if "owner_node" in projectile:
+				projectile.owner_node = parrier_node
+			if "owner_peer_id" in projectile:
+				projectile.owner_peer_id = parrier_peer_id
+			# Update owner exclusions
+			if "owner_exclusions" in projectile:
+				projectile.owner_exclusions = _get_parrier_collision_bodies(parrier_node)
+	
+	# Update projectile rotation to face new direction
+	if projectile is Node3D:
+		var proj_node = projectile as Node3D
+		proj_node.look_at(proj_node.global_position + reflect_direction)
+	
+	print("[VagrantKnife] Projectile parried! New owner: ", parrier_peer_id, ", direction: ", reflect_direction)
+
+func _get_parrier_collision_bodies(parrier: Node3D) -> Array:
+	"""Get all collision bodies from the parrier for exclusion"""
+	var collision_bodies: Array = []
+	if not parrier:
+		return collision_bodies
+	
+	# Recursively collect all CollisionObject3D nodes
+	var nodes_to_check: Array = [parrier]
+	while nodes_to_check.size() > 0:
+		var current_node = nodes_to_check.pop_back()
+		
+		if current_node is CollisionObject3D:
+			collision_bodies.append(current_node)
+		
+		# Add children to check
+		for child in current_node.get_children():
+			nodes_to_check.append(child)
+	
+	return collision_bodies
+
+func _get_networked_player() -> NetworkedPlayer:
+	"""Get the NetworkedPlayer that owns this weapon"""
+	var node = get_parent()
+	var depth = 0
+	while node and depth < 10:
+		if node is NetworkedPlayer:
+			return node as NetworkedPlayer
+		node = node.get_parent()
+		depth += 1
+	return null
 
 func _can_perform_backstab_against_target(target: Object) -> bool:
 	var vagrant: Node3D = _get_owner_player()

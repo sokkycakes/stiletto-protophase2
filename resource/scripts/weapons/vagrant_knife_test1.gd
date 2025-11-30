@@ -12,6 +12,9 @@ class_name Knife
 @export var collide_with_areas: bool = true
 @export var collide_with_bodies: bool = true
 
+# Parry component (optional - add ParryComponent as child node to enable parrying)
+var _parry_component: ParryComponent = null
+
 @export var backstab_speed_boost: float = 5.0  # Units/sec added to velocity
 @export var backstab_boost_duration: float = 1.5
 
@@ -30,6 +33,7 @@ class_name Knife
 @export var backstab_pitch_step: float = 0.05	# added to pitch_scale per stack
 @export var backstab_pitch_max_stacks: int = 8
 @export var backstab_pitch_window: float = 2.0	# seconds to keep/decay stacks
+@export var debug_label_path: NodePath = NodePath("")  # Path to Label node for debug display
 
 # ===== THROWABLE KNIFE CONFIGURATION =====
 @export_group("Throwable Knife (Alt Fire)")
@@ -52,6 +56,7 @@ var _animation_player: AnimationPlayer = null
 var _backstab_pitch_stacks: int = 0
 var _backstab_pitch_timer: Timer
 var _backstab_player: AudioStreamPlayer
+var _debug_label: Label = null
 
 # Internal
 var _can_attack: bool = true
@@ -60,8 +65,10 @@ var _weapon_manager: WeaponManager = null
 var _camera: Camera3D = null
 @export var swing_hit_delay: float = 0.25
 var _swing_in_progress: bool = false
+
 @export var backstab_hit_sound: AudioStream
 @export var backstab_crit_sound: AudioStream
+@export var player_hit_sound: AudioStream  # Sound when hitting a player
 
 # Throwable knife internal state
 var _thrown_knives_count: int = 0  # Current number of knives available to throw
@@ -121,8 +128,23 @@ func _ready() -> void:
 		# Start with idle animation
 		_animation_player.play(idle_animation_name)
 	
+	# Cache debug label reference
+	if debug_label_path != NodePath(""):
+		_debug_label = get_node_or_null(debug_label_path) as Label
+		if _debug_label == null:
+			push_warning("Debug label not found at path: %s" % [str(debug_label_path)])
+	
 	# Initialize throwable knife system
 	_init_throwable_knife_system()
+	
+	# Find parry component if it exists
+	_parry_component = _find_parry_component()
+	if _parry_component:
+		# Configure parry component with weapon settings
+		_parry_component.melee_range = melee_range
+		_parry_component.camera = _camera
+		if debug_logging:
+			print("[VagrantKnifeTest1] Parry component found and configured")
 
 func _process(_delta: float) -> void:
 	if not _animation_player:
@@ -138,6 +160,8 @@ func _process(_delta: float) -> void:
 	else:
 		if _animation_player.current_animation != idle_animation_name:
 			_animation_player.play(idle_animation_name)
+	
+	# Parry component handles its own updates
 
 func shoot() -> void:
 	if debug_logging:
@@ -149,6 +173,10 @@ func shoot() -> void:
 	_can_attack = false
 	_swing_in_progress = true
 	_cooldown_timer.start(fire_cooldown)
+
+	# Activate parry component if present
+	if _parry_component:
+		_parry_component.activate()
 
 	# Swing sound feedback
 	if swing_sound:
@@ -173,6 +201,68 @@ func shoot() -> void:
 	if target == null:
 		if miss_sound:
 			_play_sound(miss_sound)
+		emit_signal("fired")
+		_swing_in_progress = false
+		return
+
+	# Note: Projectile parrying is handled by ParryComponent if present
+
+	# Check if target is a player
+	var is_player: bool = _is_player(target)
+	
+	# Handle player damage (with backstab support)
+	if is_player:
+		var receiver := _find_damage_receiver(target)
+		if not receiver:
+			emit_signal("fired")
+			_swing_in_progress = false
+			return
+		
+		# Check for backstab against players
+		var is_backstab: bool = _can_perform_backstab_against_target(target)
+		var player_dmg: float = 1.0
+		var played_backstab_audio: bool = false
+		
+		if is_backstab:
+			if debug_logging:
+				print("Player backstab detected! Target: %s" % [str(target)])
+			# Backstab against players: instant kill (4 damage to kill in one hit)
+			player_dmg = 4.0
+			played_backstab_audio = _play_backstab_audio()
+			_apply_backstab_speed_boost()
+		
+		# Get attacker's NetworkedPlayer for peer_id
+		var attacker_peer_id := -1
+		var attacker_np := _get_networked_player_for_attacker()
+		if attacker_np:
+			attacker_peer_id = attacker_np.peer_id
+		
+		# Apply damage via RPC for NetworkedPlayer (required for multiplayer)
+		if receiver is NetworkedPlayer:
+			var receiver_np := receiver as NetworkedPlayer
+			var target_peer_id := receiver_np.peer_id if receiver_np else -1
+			receiver.apply_damage.rpc(player_dmg, attacker_peer_id, target_peer_id)
+		elif receiver.has_method("take_damage"):
+			receiver.take_damage(player_dmg)
+		
+		# Spawn impact effects
+		if impact_effect_scene:
+			var hit_pos: Vector3 = hit.get("position", Vector3.ZERO)
+			var hit_normal: Vector3 = hit.get("normal", Vector3.UP)
+			_spawn_impact(hit_pos, hit_normal)
+		
+		# Play appropriate sound
+		if not played_backstab_audio:
+			if player_hit_sound:
+				_play_sound(player_hit_sound)
+			elif impact_sound:
+				_play_sound(impact_sound)
+		
+		# Impact feedback and decal on hit
+		var hit_pos: Vector3 = hit.get("position", Vector3.ZERO)
+		var hit_normal: Vector3 = hit.get("normal", Vector3.UP)
+		if bullet_decal_texture:
+			_spawn_decal(hit_pos, hit_normal)
 		emit_signal("fired")
 		_swing_in_progress = false
 		return
@@ -226,17 +316,91 @@ func shoot() -> void:
 	_swing_in_progress = false
 
 func _melee_trace() -> Dictionary:
+	"""TF2-style melee trace: raycast first, then hull trace (swept box) if raycast misses"""
 	var cam: Camera3D = _camera
 	if cam == null:
 		var origin: Vector3 = global_position
 		var dir: Vector3 = -global_transform.basis.z
-		return _ray(origin, origin + dir * melee_range)
+		return _do_swing_trace(origin, origin + dir * melee_range)
 	
 	var origin: Vector3 = cam.global_position
 	var dir: Vector3 = -cam.global_transform.basis.z
-	return _ray(origin, origin + dir * melee_range)
+	var end: Vector3 = origin + dir * melee_range
+	return _do_swing_trace(origin, end)
+
+func _do_swing_trace(start: Vector3, end: Vector3) -> Dictionary:
+	"""TF2-style swing trace: try raycast first, then hull trace (swept box) if raycast misses"""
+	# Setup swing bounds (TF2 uses -18 to +18 units, which is ~13.5cm in Source units)
+	# Convert to Godot meters: TF2 units are ~0.75 inches = ~1.9cm, so 18 units = ~34cm = 0.34m
+	var swing_size = Vector3(0.34, 0.34, 0.34)  # 36x36x36 Source units = ~68cm box
+	
+	var space_state = get_world_3d().direct_space_state
+	
+	# Step 1: Try raycast first (TF2's UTIL_TraceLine)
+	var ray_query = PhysicsRayQueryParameters3D.create(start, end)
+	ray_query.exclude = [self]
+	ray_query.collide_with_areas = collide_with_areas
+	ray_query.collide_with_bodies = collide_with_bodies
+	
+	var ray_result: Dictionary = space_state.intersect_ray(ray_query)
+	
+	# If raycast hit something, return it (TF2 checks trace.fraction < 1.0)
+	if ray_result.has("position") and ray_result.has("collider"):
+		return ray_result
+	
+	# Step 2: Raycast missed (fraction >= 1.0) - try hull trace (TF2's UTIL_TraceHull)
+	# Simulate swept box by checking multiple points along the path
+	var hull_query = PhysicsShapeQueryParameters3D.new()
+	var box_shape = BoxShape3D.new()
+	box_shape.size = swing_size
+	hull_query.shape = box_shape
+	hull_query.collide_with_areas = collide_with_areas
+	hull_query.collide_with_bodies = collide_with_bodies
+	hull_query.exclude = [self]
+	
+	# Sample points along the sweep path (more samples = more accurate but slower)
+	var step_count = 6
+	var best_hit: Dictionary = {}
+	var closest_distance: float = INF
+	var best_collider = null
+	
+	for i in range(step_count + 1):
+		var t = float(i) / float(step_count)
+		var check_pos = start.lerp(end, t)
+		
+		# Position the box at this point along the sweep
+		hull_query.transform = Transform3D(Basis(), check_pos)
+		var shape_results = space_state.intersect_shape(hull_query, 32)
+		
+		for result in shape_results:
+			var collider = result.get("collider")
+			if not collider:
+				continue
+			
+			# Get hit position (use collider's position if result doesn't have one)
+			var hit_pos = result.get("position", collider.global_position if collider is Node3D else check_pos)
+			var distance = start.distance_to(hit_pos)
+			
+			# Prefer the closest hit
+			if distance < closest_distance:
+				closest_distance = distance
+				best_collider = collider
+				# Build a proper trace result dictionary
+				best_hit = {
+					"position": hit_pos,
+					"collider": collider,
+					"normal": (hit_pos - check_pos).normalized() if hit_pos != check_pos else Vector3.UP
+				}
+	
+	# If hull trace found something, return it
+	if best_hit.has("position") and best_hit.has("collider"):
+		return best_hit
+	
+	# Both raycast and hull trace missed
+	return {}
 
 func _ray(from: Vector3, to: Vector3) -> Dictionary:
+	"""Legacy ray function - kept for compatibility"""
 	var space_state := get_world_3d().direct_space_state
 	var q := PhysicsRayQueryParameters3D.create(from, to)
 	q.exclude = [self]
@@ -246,62 +410,162 @@ func _ray(from: Vector3, to: Vector3) -> Dictionary:
 	# Always return a Dictionary; use {} for "no hit"
 	return result if result.has("position") else {}
 
-func _apply_damage(target: Object, amount: int, hit: Dictionary) -> void:
+func _apply_damage(target: Object, amount, hit: Dictionary) -> void:
+	# amount can be int (for enemies) or float (for players)
 	var receiver := _find_damage_receiver(target)
 	if not receiver:
 		return
 	
 	if receiver.has_method("take_damage"):
-		receiver.take_damage(amount)
+		# NetworkedPlayer.take_damage expects float, enemies may expect int
+		if receiver is NetworkedPlayer:
+			receiver.take_damage(float(amount))
+		else:
+			receiver.take_damage(int(amount))
 	
 	if impact_effect_scene:
 		var pos: Vector3 = hit.get("position", Vector3.ZERO)
 		var normal: Vector3 = hit.get("normal", Vector3.UP)
 		_spawn_impact(pos, normal)
 
+func _debug_print(text: String) -> void:
+	"""Print debug text to label if available, otherwise to console"""
+	if _debug_label:
+		_debug_label.text = text
+	else:
+		print(text)
+
 func _can_perform_backstab_against_target(target: Object) -> bool:
 	var vagrant: Node3D = _get_owner_player()
 	if vagrant == null:
 		if debug_logging:
-			print("Backstab check failed: vagrant is null")
+			_debug_print("Backstab check failed: vagrant is null")
 		return false
 	
-	var t3d := target as Node3D
-	if t3d == null:
+	# Find the actual target node (NetworkedPlayer or enemy root) for proper transform
+	var target_node: Node3D = null
+	var target_np: NetworkedPlayer = null
+	
+	# For players, find the NetworkedPlayer node
+	if _is_player(target):
+		var receiver := _find_damage_receiver(target)
+		if receiver is NetworkedPlayer:
+			target_np = receiver as NetworkedPlayer
+			target_node = receiver as Node3D
+		elif receiver is Node3D:
+			target_node = receiver as Node3D
+	
+	# Fallback: try to use target directly if it's a Node3D
+	if target_node == null:
+		target_node = target as Node3D
+	
+	if target_node == null:
 		if debug_logging:
-			print("Backstab check failed: target is not Node3D")
+			_debug_print("Backstab check failed: target is not Node3D")
 		return false
 	
-	var vagrant_pos: Vector3 = vagrant.global_transform.origin
-	var target_pos: Vector3 = t3d.global_transform.origin
+	# Get attacker's NetworkedPlayer if applicable
+	var vagrant_np: NetworkedPlayer = null
+	if vagrant is NetworkedPlayer:
+		vagrant_np = vagrant as NetworkedPlayer
+	else:
+		# Try to find NetworkedPlayer in parent hierarchy
+		var node = vagrant as Node
+		while node and not vagrant_np:
+			if node is NetworkedPlayer:
+				vagrant_np = node as NetworkedPlayer
+				break
+			node = node.get_parent()
+	
+	# Get positions - use pawn_body for players (middle of hull), otherwise use node position
+	var vagrant_pos: Vector3
+	if vagrant_np and vagrant_np.pawn_body:
+		vagrant_pos = vagrant_np.pawn_body.global_position
+	else:
+		vagrant_pos = vagrant.global_transform.origin
+	
+	var target_pos: Vector3
+	if target_np and target_np.pawn_body:
+		# Use pawn_body position for players (middle of hull)
+		target_pos = target_np.pawn_body.global_position
+	else:
+		target_pos = target_node.global_transform.origin
 	
 	var to_target: Vector3 = target_pos - vagrant_pos
 	to_target.y = 0.0
 	if to_target.length() == 0.0:
 		if debug_logging:
-			print("Backstab check failed: target too close")
+			_debug_print("Backstab check failed: target too close")
 		return false
 	to_target = to_target.normalized()
 	
-	var vagrant_fwd: Vector3 = -vagrant.global_transform.basis.z
+	# Get attacker's forward direction
+	# For NetworkedPlayer, use pawn_horizontal_view transform, otherwise use camera or body
+	var vagrant_fwd: Vector3
+	if vagrant_np and vagrant_np.pawn_horizontal_view:
+		# Use the actual node transform to ensure correct direction
+		vagrant_fwd = -vagrant_np.pawn_horizontal_view.global_transform.basis.z
+	elif _camera:
+		vagrant_fwd = -_camera.global_transform.basis.z
+	else:
+		vagrant_fwd = -vagrant.global_transform.basis.z
+	
 	vagrant_fwd.y = 0.0
 	vagrant_fwd = vagrant_fwd.normalized()
 	
-	var tgt_fwd: Vector3 = -t3d.global_transform.basis.z
+	# Get target's forward direction
+	# For NetworkedPlayer, use pawn_horizontal_view transform
+	var tgt_fwd: Vector3
+	if target_np and target_np.pawn_horizontal_view:
+		# Use the actual node transform to ensure correct direction
+		tgt_fwd = -target_np.pawn_horizontal_view.global_transform.basis.z
+	else:
+		# Fallback: use target node's transform
+		tgt_fwd = -target_node.global_transform.basis.z
+	
 	tgt_fwd.y = 0.0
 	if tgt_fwd.length() == 0.0:
 		if debug_logging:
-			print("Backstab check failed: target has no forward direction")
+			_debug_print("Backstab check failed: target has no forward direction")
 		return false
 	tgt_fwd = tgt_fwd.normalized()
 	
+	# Rule 1: Attacker must be behind the victim (based on middle of players' hulls)
+	# The direction from attacker to target should align with target's forward direction
+	# dot(to_target, tgt_fwd) > 0 means attacker is behind target
 	var behind := to_target.dot(tgt_fwd) > 0.0
-	var facing := to_target.dot(vagrant_fwd) > 0.5
-	var no_facestab := tgt_fwd.dot(vagrant_fwd) > -0.3
+	
+	# Rule 2: Attacker must be aiming no more than 60 degrees away from the victim
+	# The angle between attacker's forward and direction to target should be <= 60 degrees
+	# cos(60°) = 0.5, so dot(vagrant_fwd, to_target) > 0.5 means within 60 degrees
+	var aiming_at_target := vagrant_fwd.dot(to_target) > 0.5
+	
+	# Rule 3: Attacker must be facing approximately the same direction as victim
+	# Can be as much as ~107.5 degrees off, but no more
+	# cos(107.5°) ≈ -0.292, so dot(tgt_fwd, vagrant_fwd) > -0.292 means within ~107.5 degrees
+	# This replaces the "no facestab" check with a proper "same direction" check
+	var same_direction := tgt_fwd.dot(vagrant_fwd) > -0.292
 	
 	if debug_logging:
-		print("Backstab geometric check - behind: %s facing: %s no_facestab: %s" % [behind, facing, no_facestab])
-	return behind and facing and no_facestab
+		var behind_dot = to_target.dot(tgt_fwd)
+		var aiming_dot = vagrant_fwd.dot(to_target)
+		var direction_dot = tgt_fwd.dot(vagrant_fwd)
+		var behind_angle = rad_to_deg(acos(clamp(behind_dot, -1.0, 1.0)))
+		var aiming_angle = rad_to_deg(acos(clamp(aiming_dot, -1.0, 1.0)))
+		var direction_angle = rad_to_deg(acos(clamp(direction_dot, -1.0, 1.0)))
+		
+		var debug_text = "Backstab Check:\n"
+		debug_text += "1. Behind: %s (dot: %.3f, angle: %.1f°)\n" % [behind, behind_dot, behind_angle]
+		debug_text += "2. Aiming: %s (dot: %.3f, angle: %.1f°)\n" % [aiming_at_target, aiming_dot, aiming_angle]
+		debug_text += "3. Same Dir: %s (dot: %.3f, angle: %.1f°)\n" % [same_direction, direction_dot, direction_angle]
+		debug_text += "Result: %s" % [behind and aiming_at_target and same_direction]
+		
+		if _debug_label:
+			_debug_label.text = debug_text
+		else:
+			print(debug_text)
+	
+	return behind and aiming_at_target and same_direction
 
 func _get_owner_player() -> Node3D:
 	# Use manually set player node if available
@@ -353,14 +617,38 @@ func _check_backstab_ready() -> bool:
 		return false
 	
 	# Check if target can be backstabbed
-	if not target.has_method("take_damage"):
+	# For players, we need to check the damage receiver, not just the collider
+	var can_be_backstabbed: bool = false
+	if _is_player(target):
+		# For players, check if the damage receiver can take damage
+		var receiver := _find_damage_receiver(target)
+		if receiver and receiver.has_method("take_damage"):
+			can_be_backstabbed = true
+	else:
+		# For enemies, check the collider directly
+		if target.has_method("take_damage"):
+			can_be_backstabbed = true
+	
+	if not can_be_backstabbed:
 		return false
 	
-	# Check geometric backstab conditions
+	# Check geometric backstab conditions (works for both players and enemies)
+	# This is the main check - it should work for players now that we use transform basis
 	var can_geometric_backstab = _can_perform_backstab_against_target(target)
 	var can_npc_backstab = _is_npc_undetected_backstab(target)
 	
-	return can_geometric_backstab or can_npc_backstab
+	var result = can_geometric_backstab or can_npc_backstab
+	
+	if debug_logging:
+		var is_player_target = _is_player(target)
+		var debug_text = "Backstab Ready Check:\n"
+		debug_text += "Target is player: %s\n" % [is_player_target]
+		debug_text += "Geometric backstab: %s\n" % [can_geometric_backstab]
+		debug_text += "NPC backstab: %s\n" % [can_npc_backstab]
+		debug_text += "Result: %s" % [result]
+		_debug_print(debug_text)
+	
+	return result
 
 
 func _apply_backstab_speed_boost() -> void:
@@ -481,6 +769,44 @@ func _is_npc_undetected_backstab(target: Object) -> bool:
 	if debug_logging:
 		print("NPC undetected backstab check failed: target is not BaseEnemy")
 	return false
+
+func _is_player(target: Object) -> bool:
+	"""Check if the target is a player (NetworkedPlayer or in player groups)"""
+	# Check if target is directly a NetworkedPlayer
+	if target is NetworkedPlayer:
+		return true
+	
+	# Check if target is in player groups
+	var node := target as Node
+	if node:
+		if node.is_in_group("player") or node.is_in_group("players"):
+			return true
+		
+		# Walk up the tree to find NetworkedPlayer or player group membership
+		var parent := node.get_parent()
+		while parent:
+			if parent is NetworkedPlayer:
+				return true
+			if parent.is_in_group("player") or parent.is_in_group("players"):
+				return true
+			parent = parent.get_parent()
+	
+	return false
+
+func _get_networked_player_for_attacker() -> NetworkedPlayer:
+	"""Get the NetworkedPlayer instance for the attacker (player wielding this knife)"""
+	var owner_node := _get_owner_player()
+	if not owner_node:
+		return null
+	
+	# Walk up the tree to find NetworkedPlayer
+	var node := owner_node as Node
+	while node:
+		if node is NetworkedPlayer:
+			return node as NetworkedPlayer
+		node = node.get_parent()
+	
+	return null
 
 # ===== THROWABLE KNIFE SYSTEM =====
 
@@ -630,3 +956,12 @@ func get_throwable_knives_count() -> int:
 ## Get max throwable knives
 func get_max_throwable_knives() -> int:
 	return max_throw_knives
+
+# ===== PARRY COMPONENT INTEGRATION =====
+
+func _find_parry_component() -> ParryComponent:
+	"""Find ParryComponent in children"""
+	for child in get_children():
+		if child is ParryComponent:
+			return child as ParryComponent
+	return null

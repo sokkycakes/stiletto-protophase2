@@ -1,15 +1,15 @@
 extends Node
 class_name BaseGameMaster
 
-# Base GameMaster - fallback for maps without custom logic
-# This should be registered as an autoload singleton in project.godot
+# Base GameMaster - simple gamemode for singleplayer testing
+# Can be added directly to any scene for quick testing
 # Provides barebones character selection and player spawning
 
 signal player_ready
 signal player_spawned(player: Node)
 
 # Character selection scene (created in editor)
-@export var character_select_ui_scene: PackedScene = preload("res://scenes/ui/character_select.tscn")
+@export var character_select_ui_scene: PackedScene = preload("res://scenes/ui/character_selectv2.tscn")
 
 # Available characters - configured in editor
 @export var available_characters: Array = []
@@ -23,7 +23,6 @@ var selected_character = null
 var spawn_position: Vector3 = Vector3.ZERO
 var spawn_rotation: Vector3 = Vector3.ZERO
 var last_character_id: String = ""  # Track last selected character for respawning
-var last_processed_scene_path: String = ""  # Track which scene we last processed
 var _active_character_select_ui: Node = null
 
 func _ready():
@@ -34,61 +33,17 @@ func _ready():
 		available_characters = [
 			_create_character_def("vagrant", "Vagrant", "res://resource/entities/player/ss_player_vagrant.tscn"),
 			_create_character_def("base", "Base", "res://resource/entities/player/ss_player_base.tscn"),
+			_create_character_def("collier", "Collier", "res://resource/entities/player/ss_player_collier.tscn"),
 		]
 	
-	# Connect to scene change detection
-	get_tree().node_added.connect(_on_node_added_to_tree)
-	
-	# Check for scene on first frame (this runs after scene is loaded)
-	call_deferred("check_current_scene")
-
-func _on_node_added_to_tree(node: Node):
-	# Check if the root scene changed (indicates a scene load)
-	if node == get_tree().current_scene:
-		# New scene was loaded, check it after it's fully set up
-		call_deferred("check_current_scene")
-
-func check_current_scene():
-	# Only activate for scenes in the maps folder
-	var current_scene_path = get_tree().current_scene.scene_file_path
-	if not current_scene_path.begins_with("res://maps/"):
-		print("[BaseGameMaster] Skipping - not a map scene: ", current_scene_path)
-		last_processed_scene_path = ""  # Reset when not in a map
-		return
-	
-	# Check if this is actually a new scene load (not just a duplicate call)
-	# If the active_player is invalid, it means the scene was reloaded
-	if current_scene_path == last_processed_scene_path and has_active_player():
-		# Same scene and player still exists, don't process again
-		print("[BaseGameMaster] Scene already processed with active player: ", current_scene_path)
-		return
-	
-	# New scene load or reload detected
-	print("[BaseGameMaster] Map scene loaded: ", current_scene_path)
-	last_processed_scene_path = current_scene_path
-	active_player = null  # Clear player reference for fresh load
-	
-	# Check if the current scene has a custom GameMaster or player
-	if not _scene_has_custom_gamemaster():
 		# Check if scene already has a player spawned
 		if _scene_has_player():
 			print("[BaseGameMaster] Scene already has a player, skipping character selection")
 			return
 		
-		print("[BaseGameMaster] No custom GameMaster found in scene, activating fallback mode")
-		# Show character selection for every map load/reload
-		# Delay slightly to let scene fully load
-		call_deferred("_start_character_selection")
-
-
-func _scene_has_custom_gamemaster() -> bool:
-	# Check if the current scene or any nodes have the gamemaster group
-	# But exclude ourselves
-	var gamemasters = get_tree().get_nodes_in_group("gamemaster")
-	for gm in gamemasters:
-		if gm != self:  # Don't count ourselves
-			return true
-	return false
+	# Start character selection after scene is fully loaded
+	print("[BaseGameMaster] Starting character selection")
+	call_deferred("_start_character_selection")
 
 func _scene_has_player() -> bool:
 	# Check if scene already has a player in the player group
@@ -103,8 +58,10 @@ func _start_character_selection():
 	_show_character_select()
 
 func _find_spawn_point():
-	# Look for a spawn point in the scene
-	var spawn_points = get_tree().get_nodes_in_group("spawn_point")
+	# Look for a spawn point in the scene (check both group names for compatibility)
+	var spawn_points = get_tree().get_nodes_in_group("spawn_points")
+	if spawn_points.is_empty():
+		spawn_points = get_tree().get_nodes_in_group("spawn_point")
 	
 	if spawn_points.size() > 0:
 		var spawn = spawn_points[0]
@@ -146,8 +103,9 @@ func _show_character_select():
 		
 		# Add to scene tree and show
 		get_tree().root.add_child(ui_instance)
-	# Remember this UI so we can close it after a selection
-	_active_character_select_ui = ui_instance
+		
+		# Remember this UI so we can close it after a selection
+		_active_character_select_ui = ui_instance
 		
 		# Connect to selection signal
 		if ui_instance.has_signal("character_selected"):
@@ -168,11 +126,11 @@ func _on_character_selected(character_id: String):
 		if char_def.id == character_id and char_def.is_valid():
 			selected_character = char_def
 			last_character_id = character_id  # Save for respawning
-            # Close the character select UI as soon as a selection is made
-            if is_instance_valid(_active_character_select_ui):
-                # Use a Deferred close to ensure UI cleanup logic runs (e.g., mouse unlocking)
-                _active_character_select_ui.call_deferred("_close_ui")
-                _active_character_select_ui = null
+			# Close the character select UI as soon as a selection is made
+			if is_instance_valid(_active_character_select_ui):
+				# Use a Deferred close to ensure UI cleanup logic runs (e.g., mouse unlocking)
+				_active_character_select_ui.call_deferred("_close_ui")
+				_active_character_select_ui = null
 			_spawn_player()
 			return
 	

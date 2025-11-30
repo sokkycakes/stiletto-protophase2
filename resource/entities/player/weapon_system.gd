@@ -67,6 +67,9 @@ var target_bullets: int = 0
 # New export variable
 @export var gun_start_marker: Node3D
 
+# Melee attack reference
+@export var hook_melee_attack: HookMeleeAttack
+
 # Audio player pool for weapon sounds
 var audio_players: Array[AudioStreamPlayer] = []
 
@@ -121,6 +124,8 @@ func _input(event):
 		bigshot()
 	elif event.is_action_pressed("reload"):
 		reload()
+	elif event.is_action_pressed("melee"):
+		perform_melee_attack()
 
 func shoot():
 	# Raycast/hitscan shot - uses 1 bullet
@@ -359,6 +364,13 @@ func _on_reload_timer_timeout():
 
 func _on_reload_loop_timer_timeout():
 	load_bullet()
+
+func perform_melee_attack() -> void:
+	"""Perform the hook melee attack"""
+	if hook_melee_attack and hook_melee_attack.has_method("perform_attack"):
+		hook_melee_attack.perform_attack()
+	else:
+		print("WeaponSystem: Hook melee attack not available")
 
 # Getter functions for UI
 func get_current_ammo() -> int:

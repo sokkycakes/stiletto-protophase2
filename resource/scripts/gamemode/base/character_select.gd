@@ -5,7 +5,7 @@ signal character_selected(character_id: String)
 
 @onready var panel: PanelContainer = $Panel
 @onready var title_label: Label = $Panel/VBoxContainer/Title
-@onready var character_list: VBoxContainer = $Panel/VBoxContainer/CharacterList
+@onready var character_list: Container = $Panel/VBoxContainer/CharacterList
 @onready var confirm_button: Button = $Panel/VBoxContainer/Buttons/ConfirmButton
 @onready var skip_button: Button = $Panel/VBoxContainer/Buttons/SkipButton
 @onready var selection_audio: AudioStreamPlayer = $SelectionAudioPlayer
@@ -72,7 +72,7 @@ func _create_character_buttons():
 			continue
 		
 		button.text = display_name
-		button.custom_minimum_size = Vector2(0, 50)
+		button.custom_minimum_size = Vector2(150, 50)  # Minimum width: 150, Minimum height: 50
 		button.pressed.connect(_on_character_button_pressed.bind(char_id))
 		
 		# Add description if available

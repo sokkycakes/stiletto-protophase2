@@ -116,6 +116,45 @@ func join_game(address: String, player_name: String, port: int = DEFAULT_PORT) -
 
 ## Disconnect from current game
 func disconnect_from_game() -> void:
+	# Prevent double cleanup
+	if not is_connected and not is_hosting and current_game_path == "":
+		print("[MultiplayerManager] Already disconnected, skipping cleanup")
+		return
+	
+	# Use call_deferred to handle async cleanup safely
+	call_deferred("_disconnect_from_game_async")
+
+## Internal async version of disconnect_from_game
+func _disconnect_from_game_async() -> void:
+	print("[MultiplayerManager] Disconnecting from game...")
+	
+	# Release mouse capture immediately
+	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+	
+	# Clean up game world if we're in one
+	if current_game_path != "":
+		var current_scene = get_tree().current_scene
+		if current_scene and is_instance_valid(current_scene):
+			# Check if current scene is a GameWorld or has game world logic
+			var game_world: GameWorld = null
+			if current_scene is GameWorld:
+				game_world = current_scene as GameWorld
+			else:
+				game_world = get_tree().get_first_node_in_group("game_world") as GameWorld
+			
+			if game_world and is_instance_valid(game_world):
+				print("[MultiplayerManager] Cleaning up game world before disconnect")
+				# Clean up all players first (synchronous cleanup)
+				game_world.cleanup_all_players()
+				# Wait a frame for cleanup to complete
+				await get_tree().process_frame
+		
+		# Also clean up current_game_scene if it exists
+		if current_game_scene and is_instance_valid(current_game_scene):
+			current_game_scene.queue_free()
+			current_game_scene = null
+	
+	# Close multiplayer connection (do this after cleanup to prevent RPC issues)
 	if multiplayer.multiplayer_peer:
 		multiplayer.multiplayer_peer.close()
 		multiplayer.multiplayer_peer = null
@@ -130,15 +169,21 @@ func disconnect_from_game() -> void:
 	_stop_server_broadcast()
 	_stop_server_discovery()
 	
-	# Return to main menu
-	if current_game_scene:
-		current_game_scene.queue_free()
-		current_game_scene = null
-	
-	get_tree().change_scene_to_file("res://scenes/mp_framework/main_menu.tscn")
-	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+	# Reset game state
 	current_game_path = ""
 	current_game_scene = null
+	
+	# Clean up GameRulesManager state if it exists
+	if GameRulesManager:
+		GameRulesManager.match_active = false
+		GameRulesManager.match_paused = false
+		if GameRulesManager.game_paused:
+			GameRulesManager.game_paused = false
+			GameRulesManager.pause_menu_visibility_changed.emit(false)
+	
+	# Return to main menu
+	get_tree().change_scene_to_file("res://scenes/mp_framework/main_menu.tscn")
+	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 
 ## Return players to the lobby without shutting down the session
 func return_to_lobby() -> void:
@@ -187,10 +232,27 @@ func get_player_info(peer_id: int) -> Dictionary:
 
 @rpc("authority", "call_local", "reliable")
 func start_game_for_all(scene_path: String) -> void:
+	# Ensure we're not in a game world before starting
+	if current_game_path != "":
+		var current_scene = get_tree().current_scene
+		if current_scene:
+			var game_world: GameWorld = null
+			if current_scene is GameWorld:
+				game_world = current_scene as GameWorld
+			else:
+				game_world = get_tree().get_first_node_in_group("game_world") as GameWorld
+			
+			if game_world:
+				print("[MultiplayerManager] Cleaning up existing game world before starting new game")
+				game_world.cleanup_all_players()
+				await get_tree().process_frame
+	
 	current_game_path = scene_path
 	game_scene = load(scene_path)
 	if game_scene:
 		get_tree().change_scene_to_packed(game_scene)
+		# Wait for scene to be ready
+		await get_tree().process_frame
 		current_game_scene = get_tree().current_scene
 		game_started.emit()
 		match_state_changed.emit(true)
@@ -267,14 +329,26 @@ func _on_peer_connected(id: int) -> void:
 func _on_peer_disconnected(id: int) -> void:
 	print("Peer disconnected: ", id)
 	
+	# If the host (peer_id == 1) disconnects and we're the host, clean up the server
+	if id == 1 and is_hosting:
+		print("[MultiplayerManager] Host disconnected from their own server - cleaning up")
+		# Only disconnect if we're still connected (prevent double cleanup)
+		if is_connected or current_game_path != "":
+			disconnect_from_game()
+		return
+	
+	# Only process client disconnections if we still have a valid multiplayer peer
+	if not multiplayer.has_multiplayer_peer():
+		return
+	
 	if id in connected_players:
 		var player_info = connected_players[id]
 		connected_players.erase(id)
 		print("Player left: ", player_info.get("name", "Unknown"))
 		player_disconnected.emit(id)
 		
-		# Update all clients with new player list
-		if is_hosting:
+		# Update all clients with new player list (only if we still have multiplayer peer)
+		if is_hosting and multiplayer.has_multiplayer_peer():
 			sync_player_list.rpc(connected_players)
 
 func _on_connected_to_server() -> void:
@@ -434,6 +508,40 @@ func _handle_server_broadcast(server_info: Dictionary) -> void:
 
 func _change_to_lobby_scene(reset_match_state: bool = true) -> void:
 	pending_local_lobby = false
+	
+	# Release mouse capture immediately to prevent input issues
+	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+	
+	# Clean up game world and all player instances before changing scenes
+	if current_game_path != "" or reset_match_state:
+		var current_scene = get_tree().current_scene
+		if current_scene:
+			# Check if current scene is a GameWorld or has game world logic
+			var game_world: GameWorld = null
+			if current_scene is GameWorld:
+				game_world = current_scene as GameWorld
+			else:
+				game_world = get_tree().get_first_node_in_group("game_world") as GameWorld
+			
+			if game_world:
+				print("[MultiplayerManager] Cleaning up game world and players before returning to lobby")
+				game_world.cleanup_all_players()
+				
+				# Wait a frame to ensure cleanup completes
+				await get_tree().process_frame
+	
+	# Clear character selections from all players when returning to lobby
+	# This ensures character select UI will be shown again for the next game
+	if reset_match_state:
+		for peer_id in connected_players:
+			if connected_players[peer_id].has("character_path"):
+				connected_players[peer_id].erase("character_path")
+				print("[MultiplayerManager] Cleared character_path for peer %d" % peer_id)
+		
+		# Sync cleared player list to all clients
+		if is_hosting and multiplayer.has_multiplayer_peer():
+			sync_player_list.rpc(connected_players)
+	
 	if GameRulesManager:
 		if GameRulesManager.game_paused:
 			GameRulesManager.game_paused = false
@@ -442,10 +550,17 @@ func _change_to_lobby_scene(reset_match_state: bool = true) -> void:
 			GameRulesManager.match_active = false
 			GameRulesManager.match_paused = false
 	
-	get_tree().change_scene_to_file("res://scenes/mp_framework/lobby.tscn")
-	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+	# Reset game path before scene change
 	if reset_match_state:
 		current_game_path = ""
+		current_game_scene = null
+	
+	# Change scene - this will automatically free the old scene
+	get_tree().change_scene_to_file("res://scenes/mp_framework/lobby.tscn")
+	
+	# Wait for scene to be ready
+	await get_tree().process_frame
+	
 	current_game_scene = get_tree().current_scene
 	lobby_ready.emit()
 	returned_to_lobby.emit()

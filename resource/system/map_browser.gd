@@ -24,8 +24,36 @@ func populate_map_list() -> void:
 	map_list.clear()
 	maps.clear()
 	
-	# Dynamically scan the maps folder at runtime
-	var dir := DirAccess.open("res://maps")
+	# Use ResourceLoader.list_directory (Godot 4.4+) for PCK compatibility in exported builds
+	# Check engine version - ResourceLoader.list_directory was added in 4.4
+	var version_info = Engine.get_version_info()
+	var use_resource_loader = version_info.major >= 4 and version_info.minor >= 4
+	
+	if use_resource_loader:
+		_populate_with_resource_loader("res://maps")
+	else:
+		_populate_with_dir_access("res://maps")
+
+
+func _populate_with_resource_loader(directory_path: String) -> void:
+	# Use ResourceLoader.list_directory for PCK compatibility (Godot 4.4+)
+	var files: PackedStringArray = ResourceLoader.list_directory(directory_path)
+	
+	for file_name in files:
+		# Check if it's a .tscn file
+		if file_name.ends_with(".tscn"):
+			var map_name: String = file_name.get_basename()
+			var map_path: String = directory_path + "/" + file_name
+			
+			# Verify the scene file exists and is valid
+			if ResourceLoader.exists(map_path):
+				maps.append({"name": map_name, "path": map_path})
+				map_list.add_item(map_name)
+
+
+func _populate_with_dir_access(directory_path: String) -> void:
+	# Fallback to DirAccess for older versions or editor
+	var dir := DirAccess.open(directory_path)
 	if dir:
 		dir.list_dir_begin()
 		var file_name := dir.get_next()
@@ -33,7 +61,7 @@ func populate_map_list() -> void:
 			# Check if it's a .tscn file (not a directory)
 			if not dir.current_is_dir() and file_name.ends_with(".tscn"):
 				var map_name: String = file_name.get_basename()
-				var map_path: String = "res://maps/" + file_name
+				var map_path: String = directory_path + "/" + file_name
 				maps.append({"name": map_name, "path": map_path})
 				map_list.add_item(map_name)
 			file_name = dir.get_next()

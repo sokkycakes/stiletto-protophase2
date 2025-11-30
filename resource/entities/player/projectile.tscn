@@ -1,24 +1,75 @@
-[gd_scene load_steps=5 format=3 uid="uid://btwgc82jallc3"]
+[gd_scene load_steps=15 format=3 uid="uid://btwgc82jallc3"]
 
 [ext_resource type="Script" uid="uid://ta0qmg8iquxy" path="res://resource/entities/player/projectile.gd" id="1_projectile"]
 [ext_resource type="Material" uid="uid://1nvrnylcajfg" path="res://addons/prototype_mini_bundle/M_prototype_red.tres" id="2_kf17x"]
+[ext_resource type="Shader" uid="uid://chte40u8vejbe" path="res://addons/GPUTrail-main/shaders/trail.gdshader" id="3_abllw"]
+[ext_resource type="Shader" uid="uid://chhqh64xmu4sh" path="res://addons/GPUTrail-main/shaders/trail_draw_pass.gdshader" id="4_gauyf"]
+[ext_resource type="Script" uid="uid://dpb1gu2rixhrk" path="res://addons/GPUTrail-main/GPUTrail3D.gd" id="5_se2pq"]
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_bvrcp"]
 material = ExtResource("2_kf17x")
-top_radius = 0.152
+top_radius = 0.092
+bottom_radius = 0.19
+height = 0.7
 radial_segments = 4
 rings = 1
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_projectile"]
 radius = 0.15
 
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_abllw"]
+shader = ExtResource("3_abllw")
+
+[sub_resource type="Gradient" id="Gradient_gauyf"]
+colors = PackedColorArray(0.847656, 0.675476, 0, 1, 0.85, 0.68, 0, 0)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_se2pq"]
+gradient = SubResource("Gradient_gauyf")
+
+[sub_resource type="Curve" id="Curve_bf45n"]
+bake_resolution = 16
+_data = [Vector2(0, 0.109589), 0.0, 0.0356165, 0, 1, Vector2(1, 0.145205), 0.0356165, 0.0, 1, 0]
+point_count = 2
+
+[sub_resource type="CurveTexture" id="CurveTexture_17u6k"]
+curve = SubResource("Curve_bf45n")
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_ap8gw"]
+resource_local_to_scene = true
+render_priority = 0
+shader = ExtResource("4_gauyf")
+shader_parameter/uv_offset = Vector2(0, 0)
+shader_parameter/color_ramp = SubResource("GradientTexture1D_se2pq")
+shader_parameter/curve = SubResource("CurveTexture_17u6k")
+shader_parameter/emmission_transform = Projection(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)
+shader_parameter/flags = 40
+
+[sub_resource type="QuadMesh" id="QuadMesh_nwe0l"]
+material = SubResource("ShaderMaterial_ap8gw")
+
 [node name="Projectile" type="Area3D"]
 script = ExtResource("1_projectile")
 speed = 100.0
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 0, 0)
+transform = Transform3D(0.761766, 0, 0, 0, -3.32979e-08, 0.761766, 0, -0.761766, -3.32979e-08, 0, 0, 0)
 mesh = SubResource("CylinderMesh_bvrcp")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 shape = SubResource("SphereShape3D_projectile")
+
+[node name="GPUTrail3D" type="GPUParticles3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.267559)
+amount = 33
+lifetime = 33.0
+explosiveness = 1.0
+fixed_fps = 60
+process_material = SubResource("ShaderMaterial_abllw")
+draw_pass_1 = SubResource("QuadMesh_nwe0l")
+script = ExtResource("5_se2pq")
+length = 33
+length_seconds = 0.55
+color_ramp = SubResource("GradientTexture1D_se2pq")
+curve = SubResource("CurveTexture_17u6k")
+_defaults_have_been_set = true
+metadata/_custom_type_script = "uid://dpb1gu2rixhrk"
