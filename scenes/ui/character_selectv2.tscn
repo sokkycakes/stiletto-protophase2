@@ -1,13 +1,20 @@
-[gd_scene load_steps=3 format=3 uid="uid://bbq1d1nwmjvn6"]
+[gd_scene load_steps=6 format=3 uid="uid://bbq1d1nwmjvn6"]
 
 [ext_resource type="Script" uid="uid://ei544nu1vriv" path="res://resource/scripts/gamemode/base/character_select.gd" id="1_ptmln"]
+[ext_resource type="FontFile" uid="uid://dhj8nspajgm8t" path="res://assets/ui/Helvetica Black Regular.otf" id="2_uatq1"]
 
 [sub_resource type="StyleBoxFlat" id="SubResource_PanelStyle"]
-bg_color = Color(0.1, 0.1, 0.15, 0.95)
-corner_radius_top_left = 10
-corner_radius_top_right = 10
-corner_radius_bottom_right = 10
-corner_radius_bottom_left = 10
+bg_color = Color(0.863281, 0.863281, 0.863281, 0.95)
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_uatq1"]
+content_margin_left = 14.0
+content_margin_top = 6.0
+
+[sub_resource type="LabelSettings" id="LabelSettings_1geyx"]
+font = ExtResource("2_uatq1")
+font_size = 19
+font_color = Color(0.285156, 0.285156, 0.285156, 1)
+outline_color = Color(0.285156, 0.285156, 0.285156, 1)
 
 [node name="CharacterSelect" type="Control"]
 layout_mode = 3
@@ -47,8 +54,9 @@ theme_override_constants/separation = 20
 
 [node name="Title" type="Label" parent="Panel/VBoxContainer"]
 layout_mode = 2
+theme_override_styles/normal = SubResource("StyleBoxEmpty_uatq1")
 text = "Select Character"
-horizontal_alignment = 1
+label_settings = SubResource("LabelSettings_1geyx")
 vertical_alignment = 1
 
 [node name="CharacterList" type="HBoxContainer" parent="Panel/VBoxContainer"]
@@ -72,5 +80,10 @@ text = "Confirm"
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Skip (Use First)"
+
+[node name="SpectateButton" type="Button" parent="Panel/VBoxContainer/Buttons"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Spectate"
 
 [node name="SelectionAudioPlayer" type="AudioStreamPlayer" parent="."]

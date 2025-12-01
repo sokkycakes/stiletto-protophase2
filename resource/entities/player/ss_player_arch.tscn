@@ -1,0 +1,1131 @@
+[gd_scene load_steps=57 format=3 uid="uid://cqdugx2pfpawy"]
+
+[ext_resource type="Script" uid="uid://b8548jsvjq2xi" path="res://addons/GoldGdt/src/GoldGdt_Pawn.gd" id="1_q8hym"]
+[ext_resource type="Texture2D" uid="uid://pttrbdbpfhei" path="res://assets/ui/huddeco-quickinfo.png" id="2_2k0r2"]
+[ext_resource type="Texture2D" uid="uid://bli5hed5pkjip" path="res://assets/ui/ammopip.png" id="3_vnmvb"]
+[ext_resource type="Texture2D" uid="uid://dnm1pv32eivk8" path="res://assets/ui/ammodeco-white.png" id="4_5g387"]
+[ext_resource type="FontFile" uid="uid://cuxa5noqja2ow" path="res://assets/ui/IosevkaStiletto-ExtendedLight.ttf" id="5_t5l8a"]
+[ext_resource type="Script" uid="uid://cnjcvbcitkf4q" path="res://resource/entities/player/speedometer.gd" id="6_4i7tw"]
+[ext_resource type="Texture2D" uid="uid://cskw882fffi36" path="res://addons/grappling_hook_3d/example/hook_availible.png" id="7_3gcpd"]
+[ext_resource type="Script" uid="uid://hdhqo1agrmi2" path="res://addons/grappling_hook_3d/src/charge_indicatorv2.gd" id="8_ptm0r"]
+[ext_resource type="Script" uid="uid://bin6n1tblnjm4" path="res://resource/scripts/player/ammo_indicator_v2.gd" id="9_mnltp"]
+[ext_resource type="Script" uid="uid://bjckdo3hpcpnp" path="res://resource/scripts/player/crosshair_accuracy.gd" id="10_svl86"]
+[ext_resource type="PackedScene" uid="uid://upoffslexyvo" path="res://scenes/ui/hp.tscn" id="11_rvbyi"]
+[ext_resource type="Texture2D" uid="uid://db4ev8cd668xc" path="res://assets/ui/dashring.png" id="12_6poo4"]
+[ext_resource type="Texture2D" uid="uid://cavblxs3242pk" path="res://assets/ui/huddeco-ring.png" id="13_n1uew"]
+[ext_resource type="Texture2D" uid="uid://ejhifqj5u008" path="res://assets/ui/huddeco-ring2.png" id="14_mnpnr"]
+[ext_resource type="Texture2D" uid="uid://b6b431skkevau" path="res://assets/ui/huddeco-bcenter.png" id="15_3c0h4"]
+[ext_resource type="FontFile" uid="uid://dlo8tyh0vtt2f" path="res://assets/ui/IosevkaStiletto-ExtendedMedium.ttf" id="16_7tlc7"]
+[ext_resource type="FontFile" uid="uid://dhj8nspajgm8t" path="res://assets/ui/Helvetica Black Regular.otf" id="17_bgl18"]
+[ext_resource type="Script" uid="uid://dxe4j77d60noj" path="res://addons/controller_visualizer/controller_visualizer.gd" id="18_dgc2l"]
+[ext_resource type="Script" uid="uid://deqk52egnd0bu" path="res://addons/GoldGdt/src/GoldGdt_DebugUI.gd" id="19_6xvii"]
+[ext_resource type="Script" uid="uid://b0jvghkrvkrm" path="res://addons/GoldGdt/src/GoldGdt_Controls.gd" id="20_rsadi"]
+[ext_resource type="Resource" uid="uid://c770d2068in3p" path="res://addons/GoldGdt/Default.tres" id="21_aqkpe"]
+[ext_resource type="Script" uid="uid://csey84npedtrn" path="res://addons/GoldGdt/src/GoldGdt_View.gd" id="22_lusyq"]
+[ext_resource type="Script" uid="uid://btwg0qf5dwemu" path="res://addons/GoldGdt/src/GoldGdt_Move.gd" id="23_h7qv4"]
+[ext_resource type="Script" uid="uid://dcb5tvbgw87hn" path="res://addons/GoldGdt/src/GoldGdt_Body.gd" id="24_01ubv"]
+[ext_resource type="PackedScene" uid="uid://w4c063ol3oeq" path="res://addons/GoldGdt/FootstepManager.tscn" id="25_b1k4x"]
+[ext_resource type="AudioStream" uid="uid://c5m5rhtnv21ml" path="res://assets/player/sound/footsteps/step.wav" id="26_khpy0"]
+[ext_resource type="AudioStream" uid="uid://bsggcctk3rvhk" path="res://assets/player/sound/footsteps/step3.wav" id="27_oskfv"]
+[ext_resource type="AudioStream" uid="uid://cfhn162snc45k" path="res://assets/player/sound/footsteps/step4.wav" id="28_8bblr"]
+[ext_resource type="AudioStream" uid="uid://cyuxpbdv2dj8u" path="res://assets/player/sound/hardlanding.ogg" id="29_ujwf3"]
+[ext_resource type="Script" uid="uid://cv828fvg40vnc" path="res://resource/scripts/player/wall_movement.gd" id="30_dnogv"]
+[ext_resource type="Script" uid="uid://c77sg1frmiydi" path="res://resource/entities/player/player_state.gd" id="31_sq3j8"]
+[ext_resource type="AudioStream" uid="uid://e83b30q24do8" path="res://assets/player/sound/playerdeath.ogg" id="32_0eivo"]
+[ext_resource type="AudioStream" uid="uid://bxsawdwvkt87p" path="res://assets/snd/player/sound_player_pl_pain2.wav" id="33_v8uef"]
+[ext_resource type="Script" uid="uid://d1jfc1437h3db" path="res://resource/entities/player/player_health.gd" id="34_mi25j"]
+[ext_resource type="Script" uid="uid://7s50gitcs8s0" path="res://assets/player/model/ss_player_collier/player/player_model_compass.gd" id="35_vl0pp"]
+[ext_resource type="ArrayMesh" uid="uid://byhjit1o8tsuh" path="res://assets/player/model/ss_player_arch/archstiletto_proto_axe.res" id="36_pm3a8"]
+[ext_resource type="ArrayMesh" uid="uid://boqi8g238bvjf" path="res://assets/player/model/ss_player_arch/archstiletto_proto1_player.res" id="37_awp58"]
+[ext_resource type="PackedScene" uid="uid://fhq4dg77kclt" path="res://assets/player/model/ss_player_collier/player/compass.tscn" id="38_eu1vy"]
+[ext_resource type="Script" uid="uid://drur6ejin23t2" path="res://addons/GoldGdt/src/GoldGdt_Camera.gd" id="39_fw70g"]
+[ext_resource type="Script" uid="uid://dmy2w5b50d86e" path="res://resource/entities/player/viewmodel_lag.gd" id="40_3mw4q"]
+[ext_resource type="Script" uid="uid://bg56ctm5mt6dw" path="res://scripts/weapons/NetworkedWeaponManager.gd" id="41_40hfx"]
+[ext_resource type="Script" uid="uid://d216xa36hqv7q" path="res://resource/scripts/player/kickback_modulev2.gd" id="47_iyvmv"]
+[ext_resource type="AudioStream" uid="uid://lkt1vkbk8ry8" path="res://assets/player/sound/airdodge.ogg" id="48_8mabv"]
+[ext_resource type="Curve" uid="uid://h0itkc0q0aqu" path="res://resource/entities/player/airdash-decaycurvev1.tres" id="49_c0nse"]
+[ext_resource type="AudioStream" uid="uid://bbayvirb1r66q" path="res://assets/snd/player/airstall.wav" id="50_xo7ba"]
+[ext_resource type="AudioStream" uid="uid://b8buayac52x1c" path="res://assets/player/sound/kickbackv3.ogg" id="51_wnuth"]
+
+[sub_resource type="SystemFont" id="SystemFont_afy4n"]
+font_names = PackedStringArray("Noto Mono")
+
+[sub_resource type="LabelSettings" id="LabelSettings_elt2d"]
+font = SubResource("SystemFont_afy4n")
+
+[sub_resource type="LabelSettings" id="LabelSettings_bskcs"]
+font = ExtResource("5_t5l8a")
+outline_size = 8
+outline_color = Color(0.539063, 0.539063, 0.539063, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_tinvq"]
+bg_color = Color(0, 0, 0, 1)
+border_color = Color(1, 1, 1, 1)
+corner_radius_top_right = 32
+corner_radius_bottom_right = 32
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bupn1"]
+bg_color = Color(0, 0, 0, 1)
+border_width_left = 6
+border_width_top = 6
+border_width_right = 6
+border_width_bottom = 6
+border_color = Color(1, 1, 1, 1)
+corner_radius_top_right = 32
+corner_radius_bottom_right = 32
+
+[sub_resource type="LabelSettings" id="LabelSettings_ksme8"]
+font = ExtResource("16_7tlc7")
+outline_size = 8
+outline_color = Color(0.144531, 0.144531, 0.144531, 1)
+
+[sub_resource type="FontVariation" id="FontVariation_08xcy"]
+base_font = ExtResource("17_bgl18")
+variation_transform = Transform2D(1, 0.225, 0, 1, 0, 0)
+
+[sub_resource type="LabelSettings" id="LabelSettings_5pek3"]
+font = SubResource("FontVariation_08xcy")
+font_size = 25
+outline_size = 7
+outline_color = Color(0.191406, 0.191406, 0.191406, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_j7pn1"]
+size = Vector3(0.813, 1.829, 0.813)
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_u4rs7"]
+custom_solver_bias = 1.0
+margin = 0.25
+radius = 0.15
+
+[node name="ss_player2" type="Node3D" node_paths=PackedStringArray("View", "Camera")]
+script = ExtResource("1_q8hym")
+View = NodePath("View Control")
+Camera = NodePath("Interpolated Camera")
+
+[node name="HUD" type="CanvasLayer" parent="."]
+layer = -1
+
+[node name="Control" type="Control" parent="HUD"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="TopLeft" type="Control" parent="HUD/Control"]
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="backstab_debug" type="Label" parent="HUD/Control/TopLeft"]
+visible = false
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 23.0
+text = "backstabdebug"
+label_settings = SubResource("LabelSettings_elt2d")
+
+[node name="TopRight" type="Control" parent="HUD/Control"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -40.0
+offset_bottom = 40.0
+grow_horizontal = 0
+
+[node name="BottomLeft" type="Control" parent="HUD/Control"]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_top = -40.0
+offset_right = 40.0
+grow_vertical = 0
+
+[node name="BottomRight" type="Control" parent="HUD/Control"]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -40.0
+offset_top = -40.0
+grow_horizontal = 0
+grow_vertical = 0
+
+[node name="Center" type="Control" parent="HUD/Control"]
+texture_filter = 6
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="TextureRect" type="TextureRect" parent="HUD/Control/Center"]
+modulate = Color(0.492188, 0.492188, 0.492188, 1)
+texture_filter = 6
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -40.2416
+offset_top = -28.0
+offset_right = 39.7584
+offset_bottom = 52.0
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(0.675, 0.675)
+pivot_offset = Vector2(40, 40)
+texture = ExtResource("2_2k0r2")
+expand_mode = 4
+stretch_mode = 5
+
+[node name="shadowborder" type="Control" parent="HUD/Control/Center"]
+visible = false
+anchors_preset = 0
+offset_left = 25.5566
+offset_top = 20.0
+offset_right = 65.5566
+offset_bottom = 60.0
+
+[node name="TextureRect" type="TextureRect" parent="HUD/Control/Center/shadowborder"]
+modulate = Color(0, 0, 0, 1)
+layout_mode = 0
+offset_left = 13.4434
+offset_right = 27.4434
+offset_bottom = 14.0
+texture = ExtResource("3_vnmvb")
+expand_mode = 4
+
+[node name="TextureRect10" type="TextureRect" parent="HUD/Control/Center/shadowborder"]
+modulate = Color(0, 0, 0, 1)
+layout_mode = 0
+offset_left = 13.4434
+offset_top = -1.0
+offset_right = 27.4434
+offset_bottom = 13.0
+scale = Vector2(1.07, 1.07)
+texture = ExtResource("3_vnmvb")
+expand_mode = 4
+
+[node name="TextureRect2" type="TextureRect" parent="HUD/Control/Center/shadowborder"]
+modulate = Color(0, 0, 0, 1)
+layout_mode = 0
+offset_left = 22.4434
+offset_top = 6.0
+offset_right = 36.4434
+offset_bottom = 20.0
+texture = ExtResource("3_vnmvb")
+expand_mode = 4
+
+[node name="TextureRect9" type="TextureRect" parent="HUD/Control/Center/shadowborder"]
+modulate = Color(0, 0, 0, 1)
+layout_mode = 0
+offset_left = 23.4434
+offset_top = 6.0
+offset_right = 37.4434
+offset_bottom = 20.0
+scale = Vector2(1.045, 1.045)
+texture = ExtResource("3_vnmvb")
+expand_mode = 4
+
+[node name="TextureRect3" type="TextureRect" parent="HUD/Control/Center/shadowborder"]
+modulate = Color(0, 0, 0, 1)
+layout_mode = 0
+offset_left = 13.0
+offset_top = 11.0
+offset_right = 27.0
+offset_bottom = 25.0
+texture = ExtResource("3_vnmvb")
+expand_mode = 4
+
+[node name="TextureRect7" type="TextureRect" parent="HUD/Control/Center/shadowborder"]
+modulate = Color(0, 0, 0, 1)
+layout_mode = 0
+offset_left = 14.4434
+offset_top = 12.0
+offset_right = 28.4434
+offset_bottom = 26.0
+texture = ExtResource("3_vnmvb")
+expand_mode = 4
+
+[node name="TextureRect4" type="TextureRect" parent="HUD/Control/Center/shadowborder"]
+modulate = Color(0, 0, 0, 1)
+layout_mode = 0
+offset_left = 4.44336
+offset_top = 15.0
+offset_right = 19.4434
+offset_bottom = 29.0
+texture = ExtResource("3_vnmvb")
+expand_mode = 4
+
+[node name="TextureRect5" type="TextureRect" parent="HUD/Control/Center/shadowborder"]
+modulate = Color(0, 0, 0, 1)
+layout_mode = 0
+offset_left = 14.4434
+offset_top = 23.0
+offset_right = 29.4434
+offset_bottom = 38.0
+scale = Vector2(0.935, 0.935)
+texture = ExtResource("3_vnmvb")
+expand_mode = 4
+
+[node name="TextureRect8" type="TextureRect" parent="HUD/Control/Center/shadowborder"]
+modulate = Color(0, 0, 0, 1)
+layout_mode = 0
+offset_left = 15.4434
+offset_top = 23.0
+offset_right = 30.4434
+offset_bottom = 38.0
+scale = Vector2(0.975, 0.975)
+texture = ExtResource("3_vnmvb")
+expand_mode = 4
+
+[node name="TextureRect6" type="TextureRect" parent="HUD/Control/Center/shadowborder"]
+modulate = Color(0, 0, 0, 1)
+layout_mode = 0
+offset_left = 3.44339
+offset_top = 26.0
+offset_right = 18.4434
+offset_bottom = 41.0
+scale = Vector2(0.95, 0.95)
+texture = ExtResource("3_vnmvb")
+expand_mode = 4
+
+[node name="TextureRect11" type="TextureRect" parent="HUD/Control/Center/shadowborder"]
+modulate = Color(0, 0, 0, 1)
+layout_mode = 0
+offset_left = 2.44339
+offset_top = 28.0
+offset_right = 17.4434
+offset_bottom = 43.0
+scale = Vector2(0.95, 0.95)
+texture = ExtResource("3_vnmvb")
+expand_mode = 4
+
+[node name="whitefill" type="Control" parent="HUD/Control/Center"]
+visible = false
+anchors_preset = 0
+offset_left = 25.5566
+offset_top = 20.0
+offset_right = 65.5566
+offset_bottom = 60.0
+
+[node name="TextureRect" type="TextureRect" parent="HUD/Control/Center/whitefill"]
+layout_mode = 0
+offset_left = 15.4434
+offset_top = 3.0
+offset_right = 25.4434
+offset_bottom = 13.0
+texture = ExtResource("4_5g387")
+expand_mode = 4
+
+[node name="TextureRect2" type="TextureRect" parent="HUD/Control/Center/whitefill"]
+layout_mode = 0
+offset_left = 23.4434
+offset_top = 8.0
+offset_right = 33.4434
+offset_bottom = 18.0
+texture = ExtResource("4_5g387")
+expand_mode = 4
+
+[node name="TextureRect3" type="TextureRect" parent="HUD/Control/Center/whitefill"]
+layout_mode = 0
+offset_left = 15.4434
+offset_top = 13.0
+offset_right = 25.4434
+offset_bottom = 23.0
+texture = ExtResource("4_5g387")
+expand_mode = 4
+
+[node name="TextureRect7" type="TextureRect" parent="HUD/Control/Center/whitefill"]
+layout_mode = 0
+offset_left = 18.4434
+offset_top = 8.0
+offset_right = 28.4434
+offset_bottom = 18.0
+texture = ExtResource("4_5g387")
+expand_mode = 4
+
+[node name="TextureRect4" type="TextureRect" parent="HUD/Control/Center/whitefill"]
+layout_mode = 0
+offset_left = 7.44336
+offset_top = 18.0
+offset_right = 17.4434
+offset_bottom = 28.0
+texture = ExtResource("4_5g387")
+expand_mode = 4
+
+[node name="TextureRect5" type="TextureRect" parent="HUD/Control/Center/whitefill"]
+layout_mode = 0
+offset_left = 15.4434
+offset_top = 24.0
+offset_right = 25.4434
+offset_bottom = 34.0
+texture = ExtResource("4_5g387")
+expand_mode = 4
+
+[node name="TextureRect6" type="TextureRect" parent="HUD/Control/Center/whitefill"]
+layout_mode = 0
+offset_left = 5.44336
+offset_top = 28.0
+offset_right = 15.4434
+offset_bottom = 38.0
+texture = ExtResource("4_5g387")
+expand_mode = 4
+
+[node name="TextureRect8" type="TextureRect" parent="HUD/Control/Center/whitefill"]
+layout_mode = 0
+offset_left = 9.44336
+offset_top = 23.0
+offset_right = 19.4434
+offset_bottom = 33.0
+texture = ExtResource("4_5g387")
+expand_mode = 4
+
+[node name="TextureRect9" type="TextureRect" parent="HUD/Control/Center/whitefill"]
+layout_mode = 0
+offset_left = 13.4434
+offset_top = 18.0
+offset_right = 23.4434
+offset_bottom = 28.0
+scale = Vector2(0.79, 0.79)
+texture = ExtResource("4_5g387")
+expand_mode = 4
+
+[node name="speedometer" type="Label" parent="HUD/Control/Center"]
+modulate = Color(1, 1, 1, 0.552)
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -20.0
+offset_top = 197.0
+offset_right = 20.0
+offset_bottom = 220.0
+grow_horizontal = 2
+grow_vertical = 0
+label_settings = SubResource("LabelSettings_bskcs")
+horizontal_alignment = 1
+script = ExtResource("6_4i7tw")
+
+[node name="AspectRatioContainer" type="AspectRatioContainer" parent="HUD/Control/Center"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="crosshairTex" type="TextureRect" parent="HUD/Control/Center"]
+visible = false
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+mouse_filter = 2
+texture = ExtResource("7_3gcpd")
+
+[node name="ChargeIndicator" type="Control" parent="HUD/Control/Center"]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+grow_horizontal = 2
+grow_vertical = 2
+rotation = 0.516637
+script = ExtResource("8_ptm0r")
+
+[node name="Charge1" type="TextureRect" parent="HUD/Control/Center/ChargeIndicator"]
+custom_minimum_size = Vector2(2, 0)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -21.5859
+offset_top = 11.113
+offset_right = 106.414
+offset_bottom = 139.113
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(0.075, 0.075)
+size_flags_horizontal = 3
+texture = ExtResource("3_vnmvb")
+
+[node name="Charge2" type="TextureRect" parent="HUD/Control/Center/ChargeIndicator"]
+custom_minimum_size = Vector2(2, 0)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -16.7647
+offset_top = 17.575
+offset_right = 111.235
+offset_bottom = 145.575
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(0.075, 0.075)
+size_flags_horizontal = 3
+texture = ExtResource("3_vnmvb")
+stretch_mode = 4
+
+[node name="Charge3" type="TextureRect" parent="HUD/Control/Center/ChargeIndicator"]
+custom_minimum_size = Vector2(2, 0)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -8.35978
+offset_top = 19.7006
+offset_right = 119.64
+offset_bottom = 147.701
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(0.075, 0.075)
+size_flags_horizontal = 3
+texture = ExtResource("3_vnmvb")
+stretch_mode = 4
+
+[node name="PanelContainer" type="PanelContainer" parent="HUD/Control/Center/ChargeIndicator"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = -137.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="AmmoIndicator" type="Control" parent="HUD/Control/Center"]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -6.44335
+offset_top = -9.0
+offset_right = 173.557
+offset_bottom = 31.0
+grow_horizontal = 2
+grow_vertical = 2
+rotation = 0.0444726
+scale = Vector2(2, 2)
+script = ExtResource("9_mnltp")
+ammo_pip_paths = Array[NodePath]([NodePath("Charge1"), NodePath("Charge2"), NodePath("Charge3"), NodePath("Charge4"), NodePath("Charge5"), NodePath("Charge6")])
+empty_alpha = 0.19
+
+[node name="Charge1" type="TextureRect" parent="HUD/Control/Center/AmmoIndicator"]
+modulate = Color(0, 0, 0, 1)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -75.37
+offset_top = -11.1417
+offset_right = -71.57
+offset_bottom = -7.34165
+grow_horizontal = 2
+grow_vertical = 2
+rotation = -1.29699
+scale = Vector2(0.81, 0.81)
+size_flags_horizontal = 3
+texture = ExtResource("3_vnmvb")
+expand_mode = 4
+
+[node name="Charge2" type="TextureRect" parent="HUD/Control/Center/AmmoIndicator"]
+modulate = Color(0, 0, 0, 1)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -71.2628
+offset_top = -8.82196
+offset_right = -67.4628
+offset_bottom = -5.02196
+grow_horizontal = 2
+grow_vertical = 2
+rotation = -1.29699
+scale = Vector2(0.81, 0.81)
+size_flags_horizontal = 3
+texture = ExtResource("3_vnmvb")
+expand_mode = 4
+
+[node name="Charge3" type="TextureRect" parent="HUD/Control/Center/AmmoIndicator"]
+modulate = Color(0, 0, 0, 1)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -75.1477
+offset_top = -6.1466
+offset_right = -71.3477
+offset_bottom = -2.3466
+grow_horizontal = 2
+grow_vertical = 2
+rotation = -1.29699
+scale = Vector2(0.81, 0.81)
+size_flags_horizontal = 3
+texture = ExtResource("3_vnmvb")
+expand_mode = 4
+
+[node name="Charge4" type="TextureRect" parent="HUD/Control/Center/AmmoIndicator"]
+modulate = Color(0, 0, 0, 1)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -77.6675
+offset_top = -6.53497
+offset_right = -73.8675
+offset_bottom = -2.73497
+grow_horizontal = 2
+grow_vertical = 2
+rotation = 0.453265
+scale = Vector2(0.81, 0.81)
+size_flags_horizontal = 3
+texture = ExtResource("3_vnmvb")
+expand_mode = 4
+
+[node name="Charge5" type="TextureRect" parent="HUD/Control/Center/AmmoIndicator"]
+modulate = Color(0, 0, 0, 1)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -73.5381
+offset_top = -3.71576
+offset_right = -69.7381
+offset_bottom = 0.08424
+grow_horizontal = 2
+grow_vertical = 2
+rotation = 0.453265
+scale = Vector2(0.81, 0.81)
+size_flags_horizontal = 3
+texture = ExtResource("3_vnmvb")
+expand_mode = 4
+
+[node name="Charge6" type="TextureRect" parent="HUD/Control/Center/AmmoIndicator"]
+modulate = Color(0, 0, 0, 1)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -78.4442
+offset_top = -1.49545
+offset_right = -74.6442
+offset_bottom = 2.30456
+grow_horizontal = 2
+grow_vertical = 2
+rotation = 0.453265
+scale = Vector2(0.81, 0.81)
+size_flags_horizontal = 3
+texture = ExtResource("3_vnmvb")
+expand_mode = 4
+
+[node name="PanelContainer" type="PanelContainer" parent="HUD/Control/Center/AmmoIndicator"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = -137.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="crosshairDynamic" type="Control" parent="HUD/Control/Center"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -128.0
+offset_top = -128.0
+offset_right = 128.0
+offset_bottom = 128.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("10_svl86")
+
+[node name="HP" parent="HUD/Control/Center" instance=ExtResource("11_rvbyi")]
+texture_filter = 6
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -13.32
+offset_top = 18.87
+offset_right = 6.68
+offset_bottom = 38.87
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(1.181, 1.181)
+shake_intensity = 5.0
+manual_player_state = NodePath("../../../../Body/PlayerState")
+
+[node name="shadow" parent="HUD/Control/Center/HP" index="0"]
+offset_left = 0.559967
+offset_top = -1.513
+offset_right = 0.559996
+offset_bottom = -1.513
+scale = Vector2(0.93, 0.93)
+pivot_offset = Vector2(16.925, 18.65)
+
+[node name="huddeco-dashring" type="TextureRect" parent="HUD/Control"]
+visible = false
+modulate = Color(0.339844, 0.339844, 0.339844, 0.603922)
+texture_filter = 6
+custom_minimum_size = Vector2(760, 0)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("12_6poo4")
+expand_mode = 5
+
+[node name="huddeco-ring1" type="TextureRect" parent="HUD/Control"]
+modulate = Color(1, 1, 1, 0.0823529)
+self_modulate = Color(0.101563, 0.101563, 0.101563, 1)
+texture_filter = 6
+custom_minimum_size = Vector2(893.96, 0)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("13_n1uew")
+expand_mode = 5
+
+[node name="huddeco-ring2" type="TextureRect" parent="HUD/Control"]
+modulate = Color(0.17, 0.17, 0.17, 0.164706)
+show_behind_parent = true
+texture_filter = 6
+custom_minimum_size = Vector2(893.485, 0)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("14_mnpnr")
+expand_mode = 5
+
+[node name="huddeco-bcenter" type="TextureRect" parent="HUD/Control"]
+modulate = Color(1, 1, 1, 0.282353)
+texture_filter = 6
+custom_minimum_size = Vector2(650, 0)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -322.0
+offset_top = -325.0
+offset_right = 328.0
+offset_bottom = 325.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("15_3c0h4")
+expand_mode = 5
+
+[node name="Control2" type="Panel" parent="HUD/Control"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -691.0
+offset_top = 353.535
+offset_right = -285.93
+offset_bottom = 402.045
+grow_horizontal = 2
+grow_vertical = 2
+rotation = -0.523598
+theme_override_styles/panel = SubResource("StyleBoxFlat_tinvq")
+
+[node name="Control" type="Panel" parent="HUD/Control"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -689.0
+offset_top = 357.535
+offset_right = -289.0
+offset_bottom = 397.535
+grow_horizontal = 2
+grow_vertical = 2
+rotation = -0.523598
+theme_override_styles/panel = SubResource("StyleBoxFlat_bupn1")
+
+[node name="killCounter" type="Control" parent="HUD/Control"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -408.0
+offset_top = 196.535
+offset_right = -368.0
+offset_bottom = 236.535
+grow_horizontal = 2
+grow_vertical = 2
+rotation = -0.495907
+
+[node name="killLabel" type="Label" parent="HUD/Control/killCounter"]
+layout_mode = 0
+offset_left = 27.4631
+offset_top = -25.5444
+offset_right = 75.4631
+offset_bottom = -2.54441
+text = "kills"
+label_settings = SubResource("LabelSettings_ksme8")
+
+[node name="killLabelCount" type="Label" parent="HUD/Control/killCounter"]
+layout_mode = 0
+offset_left = 10.9533
+offset_top = 0.769603
+offset_right = 61.9533
+offset_bottom = 32.5404
+text = "0"
+label_settings = SubResource("LabelSettings_5pek3")
+horizontal_alignment = 2
+
+[node name="CanvasLayer" type="CanvasLayer" parent="HUD"]
+script = ExtResource("18_dgc2l")
+
+[node name="Debug UI" type="Control" parent="." node_paths=PackedStringArray("Controls", "View", "Body", "GameInfo", "ControlsInfo", "ViewInfo", "BodyInfo")]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_stretch_ratio = 0.0
+mouse_filter = 2
+script = ExtResource("19_6xvii")
+Controls = NodePath("../User Input")
+View = NodePath("../View Control")
+Body = NodePath("../Body")
+GameInfo = NodePath("Game/Info")
+ControlsInfo = NodePath("Controls/Info")
+ViewInfo = NodePath("View Control/Info")
+BodyInfo = NodePath("Body/Info")
+
+[node name="Game" type="Control" parent="Debug UI"]
+anchors_preset = 0
+offset_left = 8.0
+offset_right = 48.0
+offset_bottom = 40.0
+mouse_filter = 2
+
+[node name="Title" type="Label" parent="Debug UI/Game"]
+layout_mode = 2
+offset_right = 40.0
+offset_bottom = 23.0
+theme_override_font_sizes/font_size = 20
+text = "Game"
+
+[node name="Info" type="Label" parent="Debug UI/Game"]
+layout_mode = 2
+offset_top = 28.0
+offset_right = 129.0
+offset_bottom = 85.0
+theme_override_font_sizes/font_size = 12
+text = "Rendering FPS: #
+Physics Tick Rate: #
+Physics Frame Time: #"
+
+[node name="Controls" type="Control" parent="Debug UI"]
+anchors_preset = 0
+offset_left = 8.0
+offset_top = 95.0
+offset_right = 48.0
+offset_bottom = 135.0
+mouse_filter = 2
+
+[node name="Title" type="Label" parent="Debug UI/Controls"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Controls"
+
+[node name="Info" type="Label" parent="Debug UI/Controls"]
+layout_mode = 0
+offset_top = 28.0
+offset_right = 135.0
+offset_bottom = 145.0
+theme_override_font_sizes/font_size = 12
+text = "Movement Input: (#, #)
+Wish Direction: (#, #, #)
+Wish Speed: #
+Jump Pressed: ?
+Duck Pressed: ?"
+
+[node name="View Control" type="Control" parent="Debug UI"]
+anchors_preset = 0
+offset_left = 8.0
+offset_top = 232.0
+offset_right = 48.0
+offset_bottom = 272.0
+mouse_filter = 2
+
+[node name="Title" type="Label" parent="Debug UI/View Control"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "View Control"
+
+[node name="Info" type="Label" parent="Debug UI/View Control"]
+layout_mode = 0
+offset_top = 28.0
+offset_right = 114.0
+offset_bottom = 65.0
+theme_override_font_sizes/font_size = 12
+text = "View Angles: (#, #, #)
+View Offset: #"
+
+[node name="Body" type="Control" parent="Debug UI"]
+anchors_preset = 0
+offset_left = 8.0
+offset_top = 309.0
+offset_right = 48.0
+offset_bottom = 349.0
+mouse_filter = 2
+
+[node name="Title" type="Label" parent="Debug UI/Body"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Body
+"
+
+[node name="Info" type="Label" parent="Debug UI/Body"]
+layout_mode = 0
+offset_top = 28.0
+offset_right = 59.0
+offset_bottom = 65.0
+theme_override_font_sizes/font_size = 12
+text = "Velocity: (#, #, #)
+Speed: # m/s (# u/s)
+Ducking: ?
+Ducked: ?"
+
+[node name="Attribution" type="RichTextLabel" parent="Debug UI"]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 9.0
+offset_top = -28.0
+offset_right = 262.0
+offset_bottom = -5.0
+grow_vertical = 0
+theme_override_font_sizes/normal_font_size = 14
+bbcode_enabled = true
+text = "GoldGdt Character Controller
+Copyright (c) 2024 ratmarrow
+"
+fit_content = true
+
+[node name="User Input" type="Node" parent="." node_paths=PackedStringArray("Body", "Move", "View")]
+script = ExtResource("20_rsadi")
+Parameters = ExtResource("21_aqkpe")
+Body = NodePath("../Body")
+Move = NodePath("../Move Functions")
+View = NodePath("../View Control")
+
+[node name="View Control" type="Node" parent="." node_paths=PackedStringArray("Body", "horizontal_view", "vertical_view", "camera_mount")]
+script = ExtResource("22_lusyq")
+Parameters = ExtResource("21_aqkpe")
+Body = NodePath("../Body")
+horizontal_view = NodePath("../Body/Horizontal View")
+vertical_view = NodePath("../Body/Horizontal View/Vertical View")
+camera_mount = NodePath("../Body/Horizontal View/Vertical View/Camera Mount")
+
+[node name="Move Functions" type="Node" parent="." node_paths=PackedStringArray("Body")]
+script = ExtResource("23_h7qv4")
+Parameters = ExtResource("21_aqkpe")
+Body = NodePath("../Body")
+
+[node name="Body" type="CharacterBody3D" parent="." node_paths=PackedStringArray("View", "collision_hull", "duck_timer")]
+collision_layer = 2
+collision_mask = 5
+floor_constant_speed = true
+script = ExtResource("24_01ubv")
+Parameters = ExtResource("21_aqkpe")
+View = NodePath("../View Control")
+collision_hull = NodePath("Collision Hull")
+duck_timer = NodePath("Duck Timer")
+
+[node name="Collision Hull" type="CollisionShape3D" parent="Body"]
+shape = SubResource("BoxShape3D_j7pn1")
+
+[node name="Duck Timer" type="Timer" parent="Body"]
+
+[node name="Horizontal View" type="Node3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.711, 0)
+
+[node name="Vertical View" type="Node3D" parent="Body/Horizontal View"]
+
+[node name="Camera Mount" type="Marker3D" parent="Body/Horizontal View/Vertical View"]
+visible = false
+gizmo_extents = 0.5
+
+[node name="FootstepManager" parent="Body" instance=ExtResource("25_b1k4x")]
+step_interval_walk = 2.0
+step_interval_run = 3.075
+volume_variation_db = 0.95
+pitch_variation = 0.115
+footstep_sounds = Array[AudioStream]([ExtResource("26_khpy0"), ExtResource("27_oskfv")])
+land_sound = ExtResource("28_8bblr")
+hard_land_sound = ExtResource("29_ujwf3")
+hard_landing_airtime_threshold = 1.6
+player_path = NodePath("..")
+camera_path = NodePath("../../Interpolated Camera/Arm/Arm Anchor/Camera")
+shake_duration = 0.2
+
+[node name="WallJumpModule" type="Node3D" parent="Body"]
+script = ExtResource("30_dnogv")
+wall_jump_force = 30.0
+
+[node name="PlayerState" type="Node" parent="Body"]
+unique_name_in_owner = true
+script = ExtResource("31_sq3j8")
+death_camera_roll = -75.0
+death_sound = ExtResource("32_0eivo")
+death_timescale_duration = 1.8
+death_audio_bus = "death"
+pain_sounds = Array[AudioStream]([ExtResource("33_v8uef")])
+health_node_path = NodePath("Health")
+
+[node name="Health" type="Node" parent="Body/PlayerState"]
+script = ExtResource("34_mi25j")
+
+[node name="PlayerModel" type="Node3D" parent="Body"]
+transform = Transform3D(0.285, 0, 0, 0, 0.285, 0, 0, 0, 0.285, 0, -0.910052, 0)
+script = ExtResource("35_vl0pp")
+metadata/run = true
+
+[node name="arch" type="MeshInstance3D" parent="Body/PlayerModel"]
+mesh = ExtResource("37_awp58")
+
+[node name="weapon" type="MeshInstance3D" parent="Body/PlayerModel/arch"]
+transform = Transform3D(-0.0670292, -0.310174, 0.948314, -0.953133, 0.300953, 0.0310656, -0.295033, -0.901787, -0.315809, 2.43242, 2.28331, 1.64687)
+mesh = ExtResource("36_pm3a8")
+skeleton = NodePath("../..")
+
+[node name="compass" parent="Body" instance=ExtResource("38_eu1vy")]
+transform = Transform3D(-3.95636e-15, 7.54979e-08, 1, -1, -4.37114e-08, -6.56243e-16, 4.37114e-08, -1, 7.54979e-08, -0.000407696, 1.26334, 0.0113742)
+layers = 2
+skeleton = NodePath("../../Interpolated Camera/Arm/Arm Anchor/Camera")
+
+[node name="Interpolated Camera" type="Node3D" parent="." node_paths=PackedStringArray("target", "camera_arm", "camera_anchor", "camera")]
+script = ExtResource("39_fw70g")
+Parameters = ExtResource("21_aqkpe")
+target = NodePath("../Body/Horizontal View/Vertical View/Camera Mount")
+camera_arm = NodePath("Arm")
+camera_anchor = NodePath("Arm/Arm Anchor")
+camera = NodePath("Arm/Arm Anchor/Camera")
+
+[node name="Arm" type="SpringArm3D" parent="Interpolated Camera"]
+shape = SubResource("SphereShape3D_u4rs7")
+spring_length = 0.0
+margin = 0.1
+
+[node name="Arm Anchor" type="Node3D" parent="Interpolated Camera/Arm"]
+editor_description = "
+"
+
+[node name="Camera" type="Camera3D" parent="Interpolated Camera/Arm/Arm Anchor"]
+transform = Transform3D(1.0014, 0, 0, 0, 1.0014, 0, 0, 0, 1.0014, -0.000407696, -0.0071907, 0.0215712)
+cull_mask = 4294967295
+near = 0.001
+script = ExtResource("40_3mw4q")
+
+[node name="Hook Raycast" type="RayCast3D" parent="Interpolated Camera/Arm/Arm Anchor/Camera"]
+
+[node name="Gun Raycast" type="RayCast3D" parent="Interpolated Camera/Arm/Arm Anchor/Camera"]
+
+[node name="WeaponManager" type="Node3D" parent="Interpolated Camera/Arm/Arm Anchor/Camera" node_paths=PackedStringArray("camera")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.175713, -0.0987661, -0.538904)
+script = ExtResource("41_40hfx")
+camera = NodePath("..")
+ammo_indicator_path = NodePath("../../../../../HUD/Control/Center/AmmoIndicator")
+
+[node name="HookRopeStart" type="Marker3D" parent="Interpolated Camera/Arm/Arm Anchor/Camera"]
+transform = Transform3D(0.193021, 0.476234, 3.81445, -0.350946, 0.669893, -2.32394, -0.924805, -0.154815, 1.67802, -0.198825, -0.102318, -0.553146)
+
+[node name="Kickback" type="Node3D" parent="."]
+script = ExtResource("47_iyvmv")
+wallKickbackMultiplier = 3.6
+airDodgeSound = ExtResource("48_8mabv")
+airDodgeDecayDuration = 0.4
+airDodgeDecayCurve = ExtResource("49_c0nse")
+airDodgeDecayAccelerationFactor = 1.7
+airStallSound = ExtResource("50_xo7ba")
+stallCameraTiltAngle = -2.0
+kickbackSound = ExtResource("51_wnuth")
+audio_bus = "sfx"
+
+[editable path="HUD/Control/Center/HP"]

@@ -218,6 +218,14 @@ func shoot() -> void:
 			_swing_in_progress = false
 			return
 		
+		# Don't damage the attacker (prevent self-harm)
+		if _is_attacker(receiver):
+			if debug_logging:
+				print("[VagrantKnife] Ignoring hit on attacker (self): %s" % [receiver.name])
+			emit_signal("fired")
+			_swing_in_progress = false
+			return
+		
 		# Check for backstab against players
 		var is_backstab: bool = _can_perform_backstab_against_target(target)
 		var player_dmg: float = 1.0
@@ -336,9 +344,26 @@ func _do_swing_trace(start: Vector3, end: Vector3) -> Dictionary:
 	
 	var space_state = get_world_3d().direct_space_state
 	
+	# Build exclusion list: exclude self and attacker's body
+	var exclude_list: Array = [self]
+	var attacker_np := _get_networked_player_for_attacker()
+	if attacker_np:
+		# Exclude attacker's body and all collision shapes
+		var attacker_body = attacker_np.get_node_or_null("Body")
+		if attacker_body:
+			exclude_list.append(attacker_body)
+			# Recursively find all CollisionObject3D children
+			var nodes_to_process: Array = [attacker_body]
+			while nodes_to_process.size() > 0:
+				var n: Node = nodes_to_process.pop_back()
+				for child in n.get_children():
+					nodes_to_process.append(child)
+					if child is CollisionObject3D:
+						exclude_list.append(child)
+	
 	# Step 1: Try raycast first (TF2's UTIL_TraceLine)
 	var ray_query = PhysicsRayQueryParameters3D.create(start, end)
-	ray_query.exclude = [self]
+	ray_query.exclude = exclude_list
 	ray_query.collide_with_areas = collide_with_areas
 	ray_query.collide_with_bodies = collide_with_bodies
 	
@@ -356,7 +381,7 @@ func _do_swing_trace(start: Vector3, end: Vector3) -> Dictionary:
 	hull_query.shape = box_shape
 	hull_query.collide_with_areas = collide_with_areas
 	hull_query.collide_with_bodies = collide_with_bodies
-	hull_query.exclude = [self]
+	hull_query.exclude = exclude_list
 	
 	# Sample points along the sweep path (more samples = more accurate but slower)
 	var step_count = 6
@@ -414,6 +439,12 @@ func _apply_damage(target: Object, amount, hit: Dictionary) -> void:
 	# amount can be int (for enemies) or float (for players)
 	var receiver := _find_damage_receiver(target)
 	if not receiver:
+		return
+	
+	# Don't damage the attacker (prevent self-harm)
+	if _is_attacker(receiver):
+		if debug_logging:
+			print("[VagrantKnife] Ignoring damage on attacker (self): %s" % [receiver.name])
 		return
 	
 	if receiver.has_method("take_damage"):
@@ -807,6 +838,35 @@ func _get_networked_player_for_attacker() -> NetworkedPlayer:
 		node = node.get_parent()
 	
 	return null
+
+func _is_attacker(receiver: Object) -> bool:
+	"""Check if the receiver is the attacker (prevent self-harm)"""
+	if not receiver:
+		return false
+	
+	# Get attacker's NetworkedPlayer
+	var attacker_np := _get_networked_player_for_attacker()
+	if not attacker_np:
+		return false
+	
+	var attacker_peer_id := attacker_np.peer_id
+	
+	# Check by NetworkedPlayer peer_id
+	if receiver is NetworkedPlayer:
+		var receiver_np := receiver as NetworkedPlayer
+		if receiver_np.peer_id == attacker_peer_id and attacker_peer_id >= 0:
+			return true
+	
+	# Check if receiver is part of attacker's hierarchy
+	var receiver_node := receiver as Node
+	if receiver_node:
+		var node := receiver_node
+		while node:
+			if node == attacker_np:
+				return true
+			node = node.get_parent()
+	
+	return false
 
 # ===== THROWABLE KNIFE SYSTEM =====
 

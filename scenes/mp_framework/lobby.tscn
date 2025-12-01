@@ -126,6 +126,27 @@ text = "Map Selection:"
 [node name="MapOption" type="OptionButton" parent="HBoxContainer/RightPanel/GameSettingsPanel/VBoxContainer"]
 layout_mode = 2
 
+[node name="sessionCodeContainer" type="HBoxContainer" parent="HBoxContainer/RightPanel/GameSettingsPanel/VBoxContainer"]
+layout_mode = 2
+
+[node name="sessionLabel" type="Label" parent="HBoxContainer/RightPanel/GameSettingsPanel/VBoxContainer/sessionCodeContainer"]
+layout_mode = 2
+text = "Session Code:"
+
+[node name="codeLabel" type="Label" parent="HBoxContainer/RightPanel/GameSettingsPanel/VBoxContainer/sessionCodeContainer"]
+layout_mode = 2
+text = "---"
+horizontal_alignment = 3
+vertical_alignment = 1
+
+[node name="sessionCodeButtonContainer" type="HBoxContainer" parent="HBoxContainer/RightPanel/GameSettingsPanel/VBoxContainer"]
+layout_mode = 2
+alignment = 1
+
+[node name="Button" type="Button" parent="HBoxContainer/RightPanel/GameSettingsPanel/VBoxContainer/sessionCodeButtonContainer"]
+layout_mode = 2
+text = "Copy Code"
+
 [node name="ChatPanel" type="Panel" parent="HBoxContainer/RightPanel"]
 layout_mode = 2
 size_flags_vertical = 3

@@ -120,11 +120,27 @@ func end_match() -> void:
 	if not MultiplayerManager.is_server():
 		return
 	
+	# Prevent multiple calls to end_match
+	if not match_active:
+		print("[GameRulesManager] end_match() called but match is already inactive")
+		return
+	
 	match_active = false
-	match_timer.stop()
+	if match_timer:
+		match_timer.stop()
+	
+	# Safety check - ensure MultiplayerManager is still valid
+	if not MultiplayerManager or not is_instance_valid(MultiplayerManager):
+		push_warning("[GameRulesManager] MultiplayerManager is not valid, cannot end match")
+		return
 	
 	var winner_info = _calculate_winner()
 	print("Match ended. Winner: ", winner_info)
+	
+	# Check if we're still in the tree before sending RPC
+	if not is_inside_tree() or not is_instance_valid(self):
+		push_warning("[GameRulesManager] Node is not valid, cannot send end_match RPC")
+		return
 	
 	end_match_for_all.rpc(winner_info)
 
@@ -198,9 +214,25 @@ func start_match_for_all(mode: GameMode, time_limit_seconds: float, score_limit_
 
 @rpc("authority", "call_local", "reliable")
 func end_match_for_all(winner_info: Dictionary) -> void:
+	# Safety check - ensure node is still valid
+	if not is_inside_tree() or not is_instance_valid(self):
+		push_warning("[GameRulesManager] Node is not valid, cannot process end_match_for_all")
+		return
+	
 	match_active = false
 	if match_timer:
 		match_timer.stop()
+	
+	# Validate winner_info before emitting
+	if not winner_info or not winner_info is Dictionary:
+		push_warning("[GameRulesManager] Invalid winner_info, using default")
+		winner_info = {
+			"type": "none",
+			"peer_id": -1,
+			"team_id": -1,
+			"name": "No Winner",
+			"score": 0
+		}
 	
 	match_ended.emit(winner_info)
 
@@ -244,6 +276,11 @@ func _calculate_winner() -> Dictionary:
 		"score": 0
 	}
 	
+	# Safety check - ensure MultiplayerManager is valid
+	if not MultiplayerManager or not is_instance_valid(MultiplayerManager):
+		push_warning("[GameRulesManager] MultiplayerManager is not valid, cannot calculate winner")
+		return winner_info
+	
 	match current_mode:
 		GameMode.DEATHMATCH, GameMode.DUEL:
 			# Find player with highest score
@@ -251,19 +288,32 @@ func _calculate_winner() -> Dictionary:
 			var winner_peer_id = -1
 			
 			for peer_id in player_stats:
-				if player_stats[peer_id]["score"] > highest_score:
-					highest_score = player_stats[peer_id]["score"]
-					winner_peer_id = peer_id
+				if peer_id in player_stats and "score" in player_stats[peer_id]:
+					var score = player_stats[peer_id]["score"]
+					if score > highest_score:
+						highest_score = score
+						winner_peer_id = peer_id
 			
 			if winner_peer_id != -1:
 				var player_info = MultiplayerManager.get_player_info(winner_peer_id)
-				winner_info = {
-					"type": "player",
-					"peer_id": winner_peer_id,
-					"team_id": -1,
-					"name": player_info.get("name", "Player"),
-					"score": highest_score
-				}
+				# Safety check - ensure player_info is valid
+				if player_info and player_info is Dictionary:
+					winner_info = {
+						"type": "player",
+						"peer_id": winner_peer_id,
+						"team_id": -1,
+						"name": player_info.get("name", "Player"),
+						"score": highest_score
+					}
+				else:
+					# Fallback if player_info is invalid
+					winner_info = {
+						"type": "player",
+						"peer_id": winner_peer_id,
+						"team_id": -1,
+						"name": "Player " + str(winner_peer_id),
+						"score": highest_score
+					}
 		
 		GameMode.TEAM_DEATHMATCH:
 			# Calculate team scores and find winning team

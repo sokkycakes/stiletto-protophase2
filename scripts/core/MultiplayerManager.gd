@@ -12,11 +12,26 @@ const MAX_CLIENTS = 8
 const BROADCAST_PORT = 7001
 const BROADCAST_INTERVAL = 2.0  # Broadcast every 2 seconds
 
+# --- Noray Configuration ---
+# IMPORTANT: Replace "noray.example.com" with your actual Noray server address
+# You can find public Noray servers or host your own at: https://github.com/foxssake/noray
+const NORAY_HOST: String = "tomfol.io"  # Replace with your noray server address
+const NORAY_PORT: int = 8890
+const NORAY_REGISTRAR_PORT: int = 8809
+
 # --- Current State ---
 var is_hosting: bool = false
 var is_connected: bool = false
 var current_lobby_info: Dictionary = {}
 var connected_players: Dictionary = {}
+
+# --- Noray State ---
+var noray_connected: bool = false
+var noray_oid: String = ""  # Open ID (public, shareable)
+var noray_pid: String = ""  # Private ID (internal)
+var noray_registered_port: int = -1
+var pending_noray_connection: bool = false
+var target_host_oid: String = ""  # OID of host we're trying to connect to
 
 # --- LAN Discovery ---
 var broadcast_socket: UDPServer
@@ -49,69 +64,181 @@ func _ready() -> void:
 	multiplayer.connection_failed.connect(_on_connection_failed)
 	multiplayer.server_disconnected.connect(_on_server_disconnected)
 	
+	# Check if Noray autoloads are available
+	var noray_node = get_node_or_null("/root/Noray")
+	var handshake_node = get_node_or_null("/root/PacketHandshake")
+	
+	if not noray_node:
+		push_error("[MultiplayerManager] Noray autoload not found! Please enable the netfox.noray plugin in Project Settings > Plugins")
+		return
+	
+	if not handshake_node:
+		push_error("[MultiplayerManager] PacketHandshake autoload not found! Please enable the netfox.noray plugin in Project Settings > Plugins")
+		return
+	
+	# Connect to Noray
+	_connect_to_noray()
+	
+	# Connect Noray signals (using get_node to avoid compile-time errors)
+	var noray = get_node("/root/Noray")
+	noray.on_connect_to_host.connect(_on_noray_connected)
+	noray.on_disconnect_from_host.connect(_on_noray_disconnected)
+	noray.on_oid.connect(_on_noray_oid_received)
+	noray.on_pid.connect(_on_noray_pid_received)
+	# Route connection signals based on role (host vs client)
+	noray.on_connect_nat.connect(_handle_noray_connect_nat)
+	noray.on_connect_relay.connect(_handle_noray_connect_relay)
+	
 	# Initialize LAN discovery
 	_setup_lan_discovery()
 
 # --- Public API ---
 
-## Host a new game lobby
+## Host a new game lobby with Noray support
 func host_game(player_name: String = "Host", port: int = DEFAULT_PORT) -> bool:
+	# Ensure Noray is connected
+	if not noray_connected:
+		await _connect_to_noray()
+		if not noray_connected:
+			connection_failed.emit("Failed to connect to Noray server")
+			return false
+	
+	# Get Noray node
+	var noray = get_node("/root/Noray")
+	
+	# Register as host with Noray
+	print("[Noray] Registering as host...")
+	var error = noray.register_host()
+	if error != OK:
+		print("[Noray] Failed to register host: ", error)
+		connection_failed.emit("Failed to register with Noray")
+		return false
+	
+	# Wait for OID and PID
+	pending_noray_connection = true
+	await noray.on_oid
+	await noray.on_pid
+	
+	if noray_oid.is_empty() or noray_pid.is_empty():
+		connection_failed.emit("Failed to get Noray IDs")
+		pending_noray_connection = false
+		return false
+	
+	# Register our port with Noray
+	error = await noray.register_remote(NORAY_REGISTRAR_PORT)
+	if error != OK:
+		print("[Noray] Failed to register port: ", error)
+		connection_failed.emit("Failed to register port with Noray")
+		pending_noray_connection = false
+		return false
+	
+	noray_registered_port = noray.local_port
+	if noray_registered_port <= 0:
+		noray_registered_port = port  # Fallback to requested port
+	
+	print("[Noray] Registered port: ", noray_registered_port)
+	
+	# Create ENet server on the registered port
 	var peer = ENetMultiplayerPeer.new()
-	var error = peer.create_server(port, MAX_CLIENTS)
+	error = peer.create_server(noray_registered_port, MAX_CLIENTS)
 	
 	if error != OK:
 		print("Failed to host game: ", error)
-		connection_failed.emit("Failed to start server on port %d" % port)
+		connection_failed.emit("Failed to start server on port %d" % noray_registered_port)
+		pending_noray_connection = false
 		return false
 	
 	multiplayer.multiplayer_peer = peer
 	is_hosting = true
 	is_connected = true
+	pending_noray_connection = false
 	
-	# Add host player
+	# Add host player with Noray OID
 	var host_info = {
 		"name": player_name,
 		"peer_id": 1,
 		"team": 0,
-		"score": 0
+		"score": 0,
+		"noray_oid": noray_oid
 	}
 	connected_players[1] = host_info
 	
-	print("Server started on port ", port)
-	print("[DEBUG] Server hosting initiated. Starting LAN broadcast...")
+	print("Server started on port ", noray_registered_port)
+	print("[Noray] Host OID: ", noray_oid, " (share this for players to join)")
 	
-	# Start broadcasting server info
-	_start_server_broadcast(player_name, port)
+	# Start broadcasting server info (optional - can include OID)
+	_start_server_broadcast(player_name, noray_registered_port)
 	
 	lobby_ready.emit()
 	return true
 
-## Join an existing game
-func join_game(address: String, player_name: String, port: int = DEFAULT_PORT) -> bool:
-	var peer = ENetMultiplayerPeer.new()
-	var error = peer.create_client(address, port)
+## Join an existing game using Noray
+## host_oid: The Open ID of the host (from Noray)
+## player_name: Player's name
+func join_game(host_oid: String, player_name: String, port: int = DEFAULT_PORT) -> bool:
+	# Ensure Noray is connected
+	if not noray_connected:
+		await _connect_to_noray()
+		if not noray_connected:
+			connection_failed.emit("Failed to connect to Noray server")
+			return false
 	
+	# Get Noray node
+	var noray = get_node("/root/Noray")
+	
+	# Register as client with Noray (to get our PID)
+	print("[Noray] Registering as client...")
+	var error = noray.register_host()  # This gets us a PID
 	if error != OK:
-		print("Failed to join game: ", error)
-		connection_failed.emit("Failed to connect to %s:%d" % [address, port])
+		print("[Noray] Failed to register: ", error)
+		connection_failed.emit("Failed to register with Noray")
 		return false
 	
-	multiplayer.multiplayer_peer = peer
-	is_hosting = false
+	# Wait for PID
+	await noray.on_pid
+	if noray_pid.is_empty():
+		connection_failed.emit("Failed to get Noray PID")
+		return false
 	
-	# Store our player info to send once connected
-	# Ensure unique name
+	# Register our port
+	error = await noray.register_remote(NORAY_REGISTRAR_PORT)
+	if error != OK:
+		print("[Noray] Failed to register port: ", error)
+		# Continue anyway, we'll use the requested port
+	
+	noray_registered_port = noray.local_port
+	if noray_registered_port <= 0:
+		noray_registered_port = port
+	
+	# Store target host OID for relay fallback
+	target_host_oid = host_oid
+	
+	# Request connection to host via NAT punchthrough
+	print("[Noray] Requesting NAT connection to host: ", host_oid)
+	pending_noray_connection = true
+	error = noray.connect_nat(host_oid)
+	if error != OK:
+		print("[Noray] Failed to request NAT connection: ", error)
+		# Try relay as fallback
+		error = noray.connect_relay(host_oid)
+		if error != OK:
+			connection_failed.emit("Failed to connect via Noray")
+			pending_noray_connection = false
+			target_host_oid = ""
+			return false
+	
+	# Wait for connection instructions (handled in signal handlers)
+	# The _on_noray_connect_nat or _on_noray_connect_relay will call
+	# _establish_enet_connection() which will complete the join
+	
+	# Store player info
 	var unique_name = player_name
-	if get_local_peer_id() != 1:  # If not host
-		unique_name += " " + str(randi() % 1000)
 	current_lobby_info = {
 		"name": unique_name,
 		"team": 0,
 		"score": 0
 	}
 	
-	print("Attempting to connect to ", address, ":", port)
-	print("[DEBUG] Direct connection attempt. No LAN discovery performed.")
 	return true
 
 ## Disconnect from current game
@@ -164,6 +291,13 @@ func _disconnect_from_game_async() -> void:
 	is_connected = false
 	connected_players.clear()
 	current_lobby_info.clear()
+	
+	# Reset Noray state (but keep connection alive for future games)
+	noray_oid = ""
+	noray_pid = ""
+	noray_registered_port = -1
+	pending_noray_connection = false
+	target_host_oid = ""
 	
 	# Stop LAN broadcasting/discovery
 	_stop_server_broadcast()
@@ -390,7 +524,7 @@ func _setup_lan_discovery() -> void:
 	# Initialize discovery socket for listening to broadcasts
 	discovery_socket = PacketPeerUDP.new()
 	discovery_socket.bind(BROADCAST_PORT)
-	print("[LAN Discovery] Listening for server broadcasts on port ", BROADCAST_PORT)
+	# print("[LAN Discovery] Listening for server broadcasts on port ", BROADCAST_PORT)
 
 ## Start broadcasting server information
 func _start_server_broadcast(server_name: String, port: int) -> void:
@@ -407,7 +541,7 @@ func _start_server_broadcast(server_name: String, port: int) -> void:
 	add_child(broadcast_timer)
 	broadcast_timer.start()
 	
-	print("[LAN Discovery] Started broadcasting server: ", server_name)
+	# print("[LAN Discovery] Started broadcasting server: ", server_name)
 
 ## Stop broadcasting server information
 func _stop_server_broadcast() -> void:
@@ -418,7 +552,7 @@ func _stop_server_broadcast() -> void:
 	if broadcast_socket:
 		broadcast_socket = null
 	
-	print("[LAN Discovery] Stopped broadcasting")
+	# print("[LAN Discovery] Stopped broadcasting")
 
 ## Broadcast server information to LAN
 func _broadcast_server_info(server_name: String, port: int) -> void:
@@ -442,12 +576,12 @@ func _broadcast_server_info(server_name: String, port: int) -> void:
 ## Start discovering servers on LAN
 func start_server_discovery() -> void:
 	discovered_servers.clear()
-	print("[LAN Discovery] Started scanning for local servers...")
+	# print("[LAN Discovery] Started scanning for local servers...")
 
 ## Stop discovering servers
 func _stop_server_discovery() -> void:
 	discovered_servers.clear()
-	print("[LAN Discovery] Stopped scanning for servers")
+	# print("[LAN Discovery] Stopped scanning for servers")
 
 ## Get list of discovered servers
 func get_discovered_servers() -> Array[Dictionary]:
@@ -496,7 +630,7 @@ func _handle_server_broadcast(server_info: Dictionary) -> void:
 		discovered_servers[existing_index] = server_info
 	else:
 		discovered_servers.append(server_info)
-		print("[LAN Discovery] Found server: ", server_info["name"], " at ", server_info["ip"], ":", server_info["port"])
+		# print("[LAN Discovery] Found server: ", server_info["name"], " at ", server_info["ip"], ":", server_info["port"])
 	
 	# Clean up old servers (older than 10 seconds)
 	var current_time = Time.get_unix_time_from_system()
@@ -600,3 +734,256 @@ func join_active_match() -> void:
 		return
 	print("[MultiplayerManager] Client joining active match")
 	start_game_for_all(current_game_path)
+
+# --- Noray Connection Methods ---
+
+## Connect to Noray server
+func _connect_to_noray() -> void:
+	var noray = get_node_or_null("/root/Noray")
+	if not noray:
+		push_error("[MultiplayerManager] Cannot connect to Noray - autoload not available")
+		noray_connected = false
+		return
+	
+	if noray.is_connected_to_host():
+		noray_connected = true
+		return
+	
+	print("[Noray] Connecting to Noray server...")
+	var error = await noray.connect_to_host(NORAY_HOST, NORAY_PORT)
+	if error != OK:
+		print("[Noray] Failed to connect: ", error)
+		noray_connected = false
+	else:
+		noray_connected = true
+		print("[Noray] Connected successfully")
+
+## Handle Noray connection events
+func _on_noray_connected() -> void:
+	noray_connected = true
+	print("[Noray] Connected to Noray server")
+
+func _on_noray_disconnected() -> void:
+	noray_connected = false
+	noray_oid = ""
+	noray_pid = ""
+	noray_registered_port = -1
+	print("[Noray] Disconnected from Noray server")
+
+func _on_noray_oid_received(oid: String) -> void:
+	noray_oid = oid
+	print("[Noray] Received OID: ", oid)
+	# Store OID in player info for sharing
+	if is_hosting and 1 in connected_players:
+		connected_players[1]["noray_oid"] = oid
+
+func _on_noray_pid_received(pid: String) -> void:
+	noray_pid = pid
+	print("[Noray] Received PID: ", pid)
+
+## Route NAT connection signal based on role (host vs client)
+func _handle_noray_connect_nat(address: String, port: int) -> void:
+	if is_hosting:
+		_on_noray_connect_nat_host(address, port)
+	else:
+		_on_noray_connect_nat_client(address, port)
+
+## Route relay connection signal based on role (host vs client)
+func _handle_noray_connect_relay(address: String, port: int) -> void:
+	if is_hosting:
+		_on_noray_connect_relay_host(address, port)
+	else:
+		_on_noray_connect_relay_client(address, port)
+
+## Client: Handle NAT connection instructions
+func _on_noray_connect_nat_client(address: String, port: int) -> void:
+	print("[Noray] Client: NAT connection instructions: ", address, ":", port)
+	_establish_enet_connection(address, port, false)
+
+## Client: Handle relay connection instructions
+func _on_noray_connect_relay_client(address: String, port: int) -> void:
+	print("[Noray] Client: Relay connection instructions: ", address, ":", port)
+	_establish_enet_connection(address, port, true)
+
+## Host: Handle incoming NAT connection
+func _on_noray_connect_nat_host(address: String, port: int) -> void:
+	if not is_hosting:
+		return  # Only host should handle this
+	
+	print("[Noray] Host: NAT connection from ", address, ":", port)
+	var peer = multiplayer.multiplayer_peer as ENetMultiplayerPeer
+	if not peer:
+		push_error("[Noray] Host: No ENet peer available")
+		return
+	
+	var handshake = get_node_or_null("/root/PacketHandshake")
+	if not handshake:
+		push_error("[Noray] Host: PacketHandshake not available")
+		return
+	
+	# Host uses over_enet, not over_packet_peer (as per documentation)
+	var err = await handshake.over_enet(peer.host, address, port)
+	if err != OK:
+		print("[Noray] Host: Handshake failed: ", err)
+	else:
+		print("[Noray] Host: Handshake successful with ", address, ":", port)
+
+## Host: Handle incoming relay connection
+func _on_noray_connect_relay_host(address: String, port: int) -> void:
+	if not is_hosting:
+		return  # Only host should handle this
+	
+	print("[Noray] Host: Relay connection from ", address, ":", port)
+	var peer = multiplayer.multiplayer_peer as ENetMultiplayerPeer
+	if not peer:
+		push_error("[Noray] Host: No ENet peer available")
+		return
+	
+	var handshake = get_node_or_null("/root/PacketHandshake")
+	if not handshake:
+		push_error("[Noray] Host: PacketHandshake not available")
+		return
+	
+	# According to documentation, host should use over_enet for BOTH NAT and relay
+	# The handshake goes through the relay server which forwards it
+	var err = await handshake.over_enet(peer.host, address, port)
+	if err != OK:
+		print("[Noray] Host: Relay handshake failed: ", err)
+	else:
+		print("[Noray] Host: Relay handshake successful with ", address, ":", port)
+
+## Establish ENet connection after Noray handshake
+func _establish_enet_connection(address: String, port: int, use_relay: bool = false) -> void:
+	print("[Noray] Establishing ENet connection to ", address, ":", port, " (relay: ", use_relay, ")")
+	
+	# According to documentation, handshake should be performed for BOTH NAT and relay
+	# For relay, the handshake goes through the relay server which forwards it
+	var udp_peer = PacketPeerUDP.new()
+	var noray = get_node("/root/Noray")
+	udp_peer.bind(noray.local_port)
+	udp_peer.set_dest_address(address, port)
+	
+	print("[Noray] Performing UDP handshake... (relay: ", use_relay, ")")
+	var handshake = get_node_or_null("/root/PacketHandshake")
+	if not handshake:
+		push_error("[MultiplayerManager] PacketHandshake autoload not available")
+		udp_peer.close()
+		connection_failed.emit("PacketHandshake not available")
+		pending_noray_connection = false
+		target_host_oid = ""
+		return
+	
+	var handshake_result = await handshake.over_packet_peer(udp_peer, 8.0, 0.1)
+	udp_peer.close()
+	
+	# For NAT connections, if handshake fails, try relay as fallback
+	if not use_relay:
+		if handshake_result != OK and handshake_result != ERR_BUSY:
+			print("[Noray] NAT handshake failed: ", handshake_result)
+			# Try relay as fallback
+			if not target_host_oid.is_empty():
+				print("[Noray] Attempting relay fallback...")
+				var relay_error = noray.connect_relay(target_host_oid)
+				if relay_error == OK:
+					return  # Will be handled by relay signal
+				else:
+					connection_failed.emit("Handshake failed and relay unavailable")
+					pending_noray_connection = false
+					target_host_oid = ""
+					return
+	else:
+		# For relay, handshake might fail but we can still try to connect
+		# The relay server forwards packets, so handshake might work differently
+		if handshake_result != OK and handshake_result != ERR_BUSY:
+			print("[Noray] Relay handshake result: ", handshake_result, " (continuing anyway)")
+	
+	# Create ENet client
+	# CRITICAL: Must specify local_port as the last parameter
+	# This is the only port noray recognizes, and failing to specify it will result in broken connectivity
+	# Use noray.local_port (already retrieved above)
+	var peer = ENetMultiplayerPeer.new()
+	var local_port_to_use = noray.local_port
+	
+	if local_port_to_use <= 0:
+		print("[Noray] Warning: local_port is invalid (", local_port_to_use, "), using registered port: ", noray_registered_port)
+		local_port_to_use = noray_registered_port
+	
+	if local_port_to_use <= 0:
+		push_error("[Noray] No valid local port available for ENet client")
+		connection_failed.emit("No valid local port registered with Noray")
+		pending_noray_connection = false
+		target_host_oid = ""
+		return
+	
+	print("[Noray] Creating ENet client: address=", address, " port=", port, " local_port=", local_port_to_use, " relay=", use_relay)
+	print("[Noray] Client info - registered_port: ", noray_registered_port, ", noray.local_port: ", noray.local_port)
+	
+	# Create ENet client
+	# For relay, we still need to specify the local port so Noray can route traffic correctly
+	var error = peer.create_client(address, port, 0, 0, 0, local_port_to_use)
+	
+	if error != OK:
+		print("[Noray] Failed to create ENet client: ", error)
+		connection_failed.emit("Failed to create client connection to %s:%d (error: %d)" % [address, port, error])
+		pending_noray_connection = false
+		target_host_oid = ""
+		return
+	
+	multiplayer.multiplayer_peer = peer
+	is_hosting = false
+	
+	print("[Noray] ENet client created, waiting for connection to ", address, ":", port)
+	
+	# Wait for connection to establish
+	# ENet connections are asynchronous - poll and check status
+	var connection_timeout = 20.0  # 20 second timeout (longer for relay)
+	var elapsed = 0.0
+	var poll_interval = 0.1  # Poll 10 times per second
+	var last_status = -1
+	var status_log_interval = 2.0  # Log status every 2 seconds
+	var last_status_log = 0.0
+	
+	while elapsed < connection_timeout:
+		# Poll the peer to process connection
+		peer.poll()
+		
+		# Check connection status
+		var status = peer.get_connection_status()
+		
+		# Log status changes or periodically for debugging
+		if status != last_status:
+			print("[Noray] Connection status changed: ", status, " (elapsed: ", elapsed, "s)")
+			last_status = status
+		elif elapsed - last_status_log >= status_log_interval:
+			print("[Noray] Connection status: ", status, " (elapsed: ", elapsed, "s, connecting to ", address, ":", port, ")")
+			last_status_log = elapsed
+		
+		if status == MultiplayerPeer.CONNECTION_CONNECTED:
+			print("[Noray] Successfully connected to ", address, ":", port)
+			pending_noray_connection = false
+			target_host_oid = ""
+			# The connected_to_server signal will be handled by _on_connected_to_server
+			return
+		elif status == MultiplayerPeer.CONNECTION_DISCONNECTED:
+			# Only treat as error if we've been trying for a bit
+			# Initial state might be disconnected before connecting starts
+			if elapsed > 1.0:  # After 1 second
+				print("[Noray] Connection disconnected to ", address, ":", port, " after ", elapsed, "s")
+				connection_failed.emit("Connection failed to %s:%d" % [address, port])
+				pending_noray_connection = false
+				target_host_oid = ""
+				multiplayer.multiplayer_peer = null
+				peer.close()
+				return
+		
+		await get_tree().create_timer(poll_interval).timeout
+		elapsed += poll_interval
+	
+	# Timeout reached
+	var final_status = peer.get_connection_status()
+	print("[Noray] Connection timeout to ", address, ":", port, " (status: ", final_status, ", elapsed: ", elapsed, "s)")
+	connection_failed.emit("Connection timeout to %s:%d (status: %d)" % [address, port, final_status])
+	pending_noray_connection = false
+	target_host_oid = ""
+	multiplayer.multiplayer_peer = null
+	peer.close()

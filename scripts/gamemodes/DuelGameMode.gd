@@ -38,6 +38,14 @@ var clock_label: Label = null
 var round_timer: Timer
 var round_time_remaining: float = 0.0
 
+# --- Spectator System ---
+var duelist_peer_ids: Array[int] = []  # The first 2 players who will duel
+var spectator_peer_ids: Array[int] = []  # All other players who are spectating
+var spectators: Dictionary = {}  # peer_id -> SpectatorPlayer instance
+
+# --- Character Select UI Tracking ---
+var active_character_select_ui: CharacterSelect = null  # Track the active character select UI
+
 # --- Duel Scoring System ---
 var player_scores: Dictionary = {}  # peer_id -> score (tracked by gamemode)
 var kill_log: Array[Dictionary] = []  # Array of {killer_id, victim_id, timestamp}
@@ -57,13 +65,21 @@ func initialize(world: GameWorld, definition: GameModeDefinition) -> void:
 		if not GameRulesManager.player_scored.is_connected(_on_game_rules_kill):
 			GameRulesManager.player_scored.connect(_on_game_rules_kill)
 	
+	# Initialize player roles for all currently connected players
+	_initialize_player_roles()
+	
 	# Initialize waiting phase system (deferred to ensure we're in tree)
 	call_deferred("_initialize_waiting_phase")
 	
-	# Show character select for local player (deferred to ensure we're in tree)
-	call_deferred("_show_character_select_for_local_player")
-	
-	_enforce_player_limit()
+	# Show character select for local player if they are a duelist
+	# Note: On clients, this will wait for role sync via _sync_player_role
+	# On server, roles are already assigned in _initialize_player_roles
+	if MultiplayerManager and not MultiplayerManager.is_server():
+		# Client: wait a moment for role sync, then check
+		call_deferred("_delayed_character_select_check")
+	else:
+		# Server or offline: show immediately (roles already assigned)
+		call_deferred("_show_character_select_for_local_player")
 	
 	# Connect to player spawn events
 	if game_world:
@@ -81,27 +97,226 @@ func _exit_tree() -> void:
 		if GameRulesManager.player_scored.is_connected(_on_game_rules_kill):
 			GameRulesManager.player_scored.disconnect(_on_game_rules_kill)
 
-func _on_player_connected(_peer_id: int, _info: Dictionary) -> void:
-	_enforce_player_limit()
+# --- Spectator System ---
 
-func _on_player_disconnected(_peer_id: int) -> void:
-	_enforce_player_limit()
+func _initialize_player_roles() -> void:
+	"""Initialize player roles for all currently connected players"""
+	if not MultiplayerManager:
+		# Offline mode - single player is duelist
+		duelist_peer_ids.append(1)
+		return
+	
+	if not MultiplayerManager.is_server():
+		return
+	
+	var connected_players = MultiplayerManager.get_connected_players()
+	var peer_ids: Array = connected_players.keys()
+	peer_ids.sort()  # Sort to ensure consistent ordering
+	
+	for peer_id in peer_ids:
+		_assign_player_role(peer_id)
 
-func _enforce_player_limit() -> void:
+func _on_player_connected(peer_id: int, _info: Dictionary) -> void:
+	_assign_player_role(peer_id)
+
+func _on_player_disconnected(peer_id: int) -> void:
+	_handle_player_disconnected(peer_id)
+
+func _assign_player_role(peer_id: int) -> void:
+	"""Assign a newly connected player as either a duelist or spectator"""
 	if not MultiplayerManager or not MultiplayerManager.is_server():
 		return
 	
-	var players := MultiplayerManager.get_connected_players()
-	if players.size() <= mode_definition.max_players:
+	# If we already assigned this player, skip
+	if peer_id in duelist_peer_ids or peer_id in spectator_peer_ids:
 		return
 	
-	var peer_ids: Array = players.keys()
-	peer_ids.sort()
+	# First 2 players become duelists, rest become spectators
+	if duelist_peer_ids.size() < mode_definition.max_players:
+		duelist_peer_ids.append(peer_id)
+		print("[DuelGameMode] Player %d assigned as DUELIST (%d/%d)" % [peer_id, duelist_peer_ids.size(), mode_definition.max_players])
+		# Sync role to all clients
+		if MultiplayerManager:
+			_sync_player_role.rpc(peer_id, true)
+	else:
+		spectator_peer_ids.append(peer_id)
+		print("[DuelGameMode] Player %d assigned as SPECTATOR" % peer_id)
+		# Sync role to all clients
+		if MultiplayerManager:
+			_sync_player_role.rpc(peer_id, false)
+		# Spawn spectator immediately
+		call_deferred("_spawn_spectator", peer_id)
+
+func _handle_player_disconnected(peer_id: int) -> void:
+	"""Handle player disconnection - potentially promote a spectator to duelist"""
+	# Remove from duelist list
+	if peer_id in duelist_peer_ids:
+		duelist_peer_ids.erase(peer_id)
+		print("[DuelGameMode] Duelist %d disconnected" % peer_id)
+		
+		# Promote first spectator to duelist if match not active
+		if duel_state == DuelState.WAITING_FOR_PLAYERS and spectator_peer_ids.size() > 0:
+			var promoted_peer_id = spectator_peer_ids[0]
+			spectator_peer_ids.remove_at(0)
+			duelist_peer_ids.append(promoted_peer_id)
+			print("[DuelGameMode] Promoted spectator %d to duelist" % promoted_peer_id)
+			
+			# Clean up spectator instance for promoted player
+			if promoted_peer_id in spectators:
+				var spectator = spectators[promoted_peer_id]
+				if spectator and is_instance_valid(spectator):
+					spectator.queue_free()
+				spectators.erase(promoted_peer_id)
+			
+			# Sync promotion to all clients
+			if MultiplayerManager and MultiplayerManager.is_server():
+				_sync_player_role.rpc(promoted_peer_id, true)
+				# Trigger character select for the promoted player
+				_trigger_character_select_for_peer.rpc_id(promoted_peer_id)
 	
-	for i in range(mode_definition.max_players, peer_ids.size()):
-		var peer_id: int = peer_ids[i]
-		if MultiplayerManager.has_method("_remove_player_from_game"):
-			MultiplayerManager._remove_player_from_game(peer_id)
+	# Remove from spectator list
+	if peer_id in spectator_peer_ids:
+		spectator_peer_ids.erase(peer_id)
+		print("[DuelGameMode] Spectator %d disconnected" % peer_id)
+	
+	# Clean up spectator instance
+	if peer_id in spectators:
+		var spectator = spectators[peer_id]
+		if spectator and is_instance_valid(spectator):
+			spectator.queue_free()
+		spectators.erase(peer_id)
+	
+	# Clean up spawned players tracking
+	if peer_id in spawned_players:
+		spawned_players.erase(peer_id)
+	
+	# Clean up scores
+	if peer_id in player_scores:
+		player_scores.erase(peer_id)
+
+@rpc("authority", "call_local", "reliable")
+func _sync_player_role(peer_id: int, is_duelist: bool) -> void:
+	"""Sync player role assignment to all clients"""
+	if is_duelist:
+		if peer_id not in duelist_peer_ids:
+			duelist_peer_ids.append(peer_id)
+		if peer_id in spectator_peer_ids:
+			spectator_peer_ids.erase(peer_id)
+	else:
+		if peer_id not in spectator_peer_ids:
+			spectator_peer_ids.append(peer_id)
+		if peer_id in duelist_peer_ids:
+			duelist_peer_ids.erase(peer_id)
+	
+	print("[DuelGameMode] Role synced - Player %d is %s" % [peer_id, "DUELIST" if is_duelist else "SPECTATOR"])
+	
+	# If this is the local player
+	if MultiplayerManager and peer_id == MultiplayerManager.get_local_peer_id():
+		if not is_duelist:
+			# They're a spectator - spawn spectator and ensure no character select is shown
+			call_deferred("_spawn_local_spectator")
+			# Close any character select UI that might be open
+			_close_character_select_ui()
+		else:
+			# They're a duelist - if character select hasn't been shown yet, show it now
+			# But only if they haven't already selected a character
+			if not player_character_selections.has(peer_id):
+				var player_info = MultiplayerManager.get_player_info(peer_id)
+				if not player_info.has("character_path") or str(player_info.get("character_path", "")) == "":
+					call_deferred("_show_character_select_for_local_player")
+
+@rpc("authority", "call_remote", "reliable")
+func _trigger_character_select_for_peer() -> void:
+	"""Trigger character selection UI for a promoted duelist"""
+	_show_character_select_for_local_player()
+
+func _spawn_spectator(peer_id: int) -> void:
+	"""Spawn a spectator player instance"""
+	if peer_id in spectators:
+		return  # Already spawned
+	
+	if not game_world:
+		return
+	
+	var player_info = {}
+	if MultiplayerManager:
+		player_info = MultiplayerManager.get_player_info(peer_id)
+	var player_name = player_info.get("name", "Spectator " + str(peer_id))
+	
+	# Create spectator instance
+	var spectator = SpectatorPlayer.new()
+	spectator.name = "Spectator_" + str(peer_id)
+	spectator.initialize_spectator(peer_id, player_name)
+	spectator.game_world = game_world
+	
+	# Set spawn position (use center of map or a good spectator view point)
+	var spawn_pos = Vector3(0, 10, 0)  # Default elevated position
+	if game_world.spawn_points.size() > 0:
+		# Position spectator above the first spawn point
+		spawn_pos = game_world.spawn_points[0].global_position + Vector3(0, 8, 8)
+	spectator.set_spawn_position(spawn_pos)
+	
+	# Add to scene
+	if game_world.players_container:
+		game_world.players_container.add_child(spectator)
+	else:
+		game_world.add_child(spectator)
+	
+	spectators[peer_id] = spectator
+	print("[DuelGameMode] Spawned spectator for player %d at %s" % [peer_id, spawn_pos])
+
+func _spawn_local_spectator() -> void:
+	"""Spawn spectator for the local player (called on client)"""
+	if not MultiplayerManager:
+		return
+	
+	var local_peer_id = MultiplayerManager.get_local_peer_id()
+	if local_peer_id in spectators:
+		return
+	
+	_spawn_spectator(local_peer_id)
+
+func is_player_spectator(peer_id: int) -> bool:
+	"""Check if a player is assigned as a spectator"""
+	return peer_id in spectator_peer_ids
+
+func is_player_duelist(peer_id: int) -> bool:
+	"""Check if a player is assigned as a duelist"""
+	return peer_id in duelist_peer_ids
+
+func get_duelists() -> Array[int]:
+	"""Get list of duelist peer IDs"""
+	return duelist_peer_ids
+
+func get_spectators() -> Array[int]:
+	"""Get list of spectator peer IDs"""
+	return spectator_peer_ids
+
+func _delayed_character_select_check() -> void:
+	"""Wait for role sync on clients before showing character select"""
+	# Wait a frame for role sync RPC to arrive
+	await get_tree().process_frame
+	await get_tree().process_frame  # Wait one more frame to be safe
+	
+	# Now check if we should show character select
+	_show_character_select_for_local_player()
+
+func _close_character_select_ui() -> void:
+	"""Close any open character select UI"""
+	if active_character_select_ui and is_instance_valid(active_character_select_ui):
+		print("[DuelGameMode] Closing tracked character select UI")
+		active_character_select_ui.queue_free()
+		active_character_select_ui = null
+	
+	if not game_world:
+		return
+	
+	# Also find and close any CharacterSelect nodes in game_world (safety check)
+	for child in game_world.get_children():
+		if child is CharacterSelect:
+			print("[DuelGameMode] Closing character select UI found in game_world")
+			child.queue_free()
+
 
 func _show_character_select_for_local_player() -> void:
 	print("[DuelGameMode] _show_character_select_for_local_player called")
@@ -120,6 +335,17 @@ func _show_character_select_for_local_player() -> void:
 	if not is_offline:
 		local_peer_id = MultiplayerManager.get_local_peer_id()
 		print("[DuelGameMode] Local peer ID: ", local_peer_id)
+		
+		# CRITICAL: Check if this player is a spectator - spectators should NEVER see character select
+		# This check must happen first, before any other logic
+		if is_player_spectator(local_peer_id):
+			print("[DuelGameMode] Local player is a spectator, skipping character select (forced spectator)")
+			return
+		
+		# Double-check: if not a duelist, don't show character select
+		if not is_player_duelist(local_peer_id):
+			print("[DuelGameMode] Local player is not a duelist, skipping character select")
+			return
 		
 		# If this peer already has a character selected, skip showing character select again
 		if player_character_selections.has(local_peer_id):
@@ -142,6 +368,9 @@ func _show_character_select_for_local_player() -> void:
 		print("[DuelGameMode] WARNING: No characters available in mode definition!")
 		return
 	
+	# Close any existing character select UI first
+	_close_character_select_ui()
+	
 	# Instantiate character select UI using mode definition's scene
 	var char_select_scene = mode_definition.character_select_ui_scene
 	if not char_select_scene:
@@ -155,12 +384,19 @@ func _show_character_select_for_local_player() -> void:
 	
 	print("[DuelGameMode] Character select UI instantiated successfully")
 	
+	# Track the character select UI instance
+	active_character_select_ui = char_select
+	
 	# Set available characters
 	char_select.set_characters(character_definitions)
 	
 	# Connect to selection signal
 	if not char_select.character_selected.is_connected(_on_character_selected):
 		char_select.character_selected.connect(_on_character_selected.bind(local_peer_id))
+	
+	# Connect to spectate signal
+	if not char_select.spectate_selected.is_connected(_on_spectate_selected):
+		char_select.spectate_selected.connect(_on_spectate_selected.bind(local_peer_id))
 	
 	# Add to scene tree (on top)
 	game_world.add_child(char_select)
@@ -171,6 +407,9 @@ func _show_character_select_for_local_player() -> void:
 func _on_character_selected(character_id: String, peer_id: int) -> void:
 	if not mode_definition:
 		return
+	
+	# Close character select UI immediately when character is selected
+	_close_character_select_ui()
 	
 	var scene_path := _get_character_scene_path(character_id)
 	if scene_path.is_empty():
@@ -189,6 +428,69 @@ func _on_character_selected(character_id: String, peer_id: int) -> void:
 	else:
 		# Send selection to host for validation/spawn
 		request_spawn_with_character.rpc_id(1, peer_id, character_id)
+
+func _on_spectate_selected(peer_id: int) -> void:
+	"""Handle when a player chooses to spectate instead of selecting a character"""
+	print("[DuelGameMode] Player %d chose to spectate" % peer_id)
+	
+	# Close character select UI immediately
+	_close_character_select_ui()
+	
+	# Only server can assign roles
+	if not MultiplayerManager or not MultiplayerManager.is_server():
+		# Client: request to become spectator
+		request_spectate.rpc_id(1, peer_id)
+		return
+	
+	# Server: assign as spectator
+	_assign_as_spectator(peer_id)
+
+@rpc("any_peer", "call_remote", "reliable")
+func request_spectate(peer_id: int) -> void:
+	"""Client requests to become a spectator"""
+	if not MultiplayerManager.is_server():
+		return
+	
+	_assign_as_spectator(peer_id)
+
+func _assign_as_spectator(peer_id: int) -> void:
+	"""Assign a player as a spectator (server only)"""
+	if not MultiplayerManager or not MultiplayerManager.is_server():
+		return
+	
+	# If they're already a duelist, swap them with a spectator if possible
+	if peer_id in duelist_peer_ids:
+		# Remove from duelist list
+		duelist_peer_ids.erase(peer_id)
+		
+		# If there's a spectator waiting, promote them
+		if spectator_peer_ids.size() > 0:
+			var promoted_peer_id = spectator_peer_ids[0]
+			spectator_peer_ids.remove_at(0)
+			duelist_peer_ids.append(promoted_peer_id)
+			
+			# Clean up promoted player's spectator instance
+			if promoted_peer_id in spectators:
+				var spectator = spectators[promoted_peer_id]
+				if spectator and is_instance_valid(spectator):
+					spectator.queue_free()
+				spectators.erase(promoted_peer_id)
+			
+			# Sync promotion
+			_sync_player_role.rpc(promoted_peer_id, true)
+			_trigger_character_select_for_peer.rpc_id(promoted_peer_id)
+	
+	# Add to spectator list if not already there
+	if peer_id not in spectator_peer_ids:
+		spectator_peer_ids.append(peer_id)
+	
+	# Sync role change
+	_sync_player_role.rpc(peer_id, false)
+	
+	# Spawn spectator
+	call_deferred("_spawn_spectator", peer_id)
+	
+	print("[DuelGameMode] Player %d assigned as spectator (by choice)" % peer_id)
 
 func _process_character_selection(peer_id: int, character_id: String, scene_path: String) -> void:
 	player_character_selections[peer_id] = character_id
@@ -242,6 +544,11 @@ func request_spawn_with_character(peer_id: int, character_id: String) -> void:
 
 @rpc("authority", "call_local", "reliable")
 func _spawn_player_with_character(peer_id: int, scene_path: String) -> void:
+	# Only spawn duelists as actual players
+	if is_player_spectator(peer_id):
+		print("[DuelGameMode] Skipping player spawn for spectator %d" % peer_id)
+		return
+	
 	# Ensure local player info reflects the chosen character (only in online mode)
 	if MultiplayerManager:
 		if MultiplayerManager.connected_players.has(peer_id):
@@ -417,6 +724,10 @@ func _check_player_spawns() -> void:
 func _on_player_spawned(peer_id: int) -> void:
 	"""Called when a player has been spawned"""
 	if peer_id in spawned_players:
+		return
+	
+	# Only track duelists as spawned players
+	if not is_player_duelist(peer_id):
 		return
 	
 	spawned_players.append(peer_id)
@@ -927,6 +1238,12 @@ func _update_scoreboard() -> void:
 			local_score = score
 		else:
 			opp_score = score
+	
+	# For spectators, show the scores of both duelists
+	if is_player_spectator(local_peer_id):
+		if player_ids.size() >= 2:
+			local_score = player_scores.get(player_ids[0], 0)
+			opp_score = player_scores.get(player_ids[1], 0)
 	
 	# Update labels - left is local player, right is opponent
 	local_score_label.text = str(local_score)

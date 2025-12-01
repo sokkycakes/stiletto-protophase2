@@ -16,6 +16,10 @@ class_name LobbyMenu
 @onready var time_limit_container: Control = $HBoxContainer/RightPanel/GameSettingsPanel/VBoxContainer/TimeLimitContainer
 @onready var map_option: OptionButton = $HBoxContainer/RightPanel/GameSettingsPanel/VBoxContainer/MapOption
 
+# --- Session Code UI ---
+@onready var code_label: Label = $HBoxContainer/RightPanel/GameSettingsPanel/VBoxContainer/sessionCodeContainer/codeLabel
+@onready var copy_code_button: Button = $HBoxContainer/RightPanel/GameSettingsPanel/VBoxContainer/sessionCodeButtonContainer/Button
+
 # --- Chat UI ---
 @onready var chat_display: RichTextLabel = $HBoxContainer/RightPanel/ChatPanel/VBoxContainer/ChatDisplay
 @onready var chat_input: LineEdit = $HBoxContainer/RightPanel/ChatPanel/VBoxContainer/ChatInput
@@ -59,6 +63,7 @@ func _ready() -> void:
 	start_game_button.pressed.connect(_on_start_game_pressed)
 	leave_game_button.pressed.connect(_on_leave_game_pressed)
 	chat_input.text_submitted.connect(_on_chat_submitted)
+	copy_code_button.pressed.connect(_on_copy_code_pressed)
 	
 	# Only hosts can change map selection
 	if is_host:
@@ -73,6 +78,7 @@ func _ready() -> void:
 		MultiplayerManager.game_started.connect(_on_game_started)
 		MultiplayerManager.returned_to_lobby.connect(_on_returned_to_lobby)
 		MultiplayerManager.match_state_changed.connect(_on_match_state_changed)
+		MultiplayerManager.lobby_ready.connect(_on_lobby_ready)
 		match_active = MultiplayerManager.current_game_path != ""
 	else:
 		match_active = false
@@ -91,6 +97,12 @@ func _ready() -> void:
 	
 	# Update UI state
 	_update_ui_state()
+	
+	# Update session code display
+	_update_session_code()
+	
+	# Set up periodic check for session code (in case it arrives after lobby loads)
+	_setup_session_code_check()
 
 func _initialize_settings() -> void:
 	# Ensure we have a valid map index
@@ -286,11 +298,15 @@ func _refresh_players_list() -> void:
 		if TeamManager:
 			var team_info = TeamManager.get_team_info(team_id)
 			players_list.set_item_custom_bg_color(players_list.get_item_count() - 1, team_info.color)
+	
+	# Update session code when players list refreshes (in case host OID becomes available)
+	_update_session_code()
 
 func _on_player_connected(_peer_id: int, player_info: Dictionary) -> void:
 	print("Player connected to lobby: ", player_info.name)
 	_refresh_players_list()
 	_update_ui_state()
+	_update_session_code()  # Update in case host OID was just synced
 	
 	# Add chat message
 	_add_chat_message("System", player_info.name + " joined the lobby", Color.GREEN)
@@ -435,6 +451,10 @@ func _on_match_state_changed(active: bool) -> void:
 	match_active = active
 	_update_ui_state()
 
+func _on_lobby_ready() -> void:
+	# Update session code when lobby becomes ready (OID should be available)
+	_update_session_code()
+
 # --- Input Handling ---
 
 func _input(event: InputEvent) -> void:
@@ -469,6 +489,61 @@ func _on_player_item_selected(index: int) -> void:
 		var peer_id = player_keys[index]
 		var player_info = connected_players[peer_id]
 		print("Selected player: ", player_info)
+
+# --- Session Code Management ---
+
+func _update_session_code() -> void:
+	if not MultiplayerManager:
+		code_label.text = "---"
+		return
+	
+	var session_code: String = "---"
+	
+	if is_host:
+		# Host: use our own OID
+		if MultiplayerManager.noray_oid:
+			session_code = MultiplayerManager.noray_oid
+	else:
+		# Client: get host's OID from connected players
+		var players = MultiplayerManager.get_connected_players()
+		if 1 in players:  # Host is always peer_id 1
+			var host_info = players[1]
+			if host_info.has("noray_oid") and host_info["noray_oid"]:
+				session_code = host_info["noray_oid"]
+	
+	code_label.text = session_code
+
+func _on_copy_code_pressed() -> void:
+	var code = code_label.text
+	if code and code != "---":
+		DisplayServer.clipboard_set(code)
+		_add_chat_message("System", "Session code copied to clipboard: %s" % code, Color.CYAN)
+	else:
+		_add_chat_message("System", "No session code available", Color.RED)
+
+func _setup_session_code_check() -> void:
+	# Periodically check for session code (especially for clients waiting for host OID)
+	# This ensures the code appears even if it arrives after the lobby loads
+	if not is_host:
+		# For clients, check every second until we have the code
+		var timer = Timer.new()
+		timer.wait_time = 1.0
+		timer.timeout.connect(_check_session_code_available)
+		timer.add_to_group("session_code_timer")
+		add_child(timer)
+		timer.start()
+
+func _check_session_code_available() -> void:
+	# Only check if we don't have a code yet
+	if code_label.text == "---":
+		var old_code = code_label.text
+		_update_session_code()
+		# If we found the code, stop checking
+		if code_label.text != "---" and code_label.text != old_code:
+			# Stop the timer
+			var timers = get_tree().get_nodes_in_group("session_code_timer")
+			for timer in timers:
+				timer.queue_free()
 
 # --- Utility Functions ---
 

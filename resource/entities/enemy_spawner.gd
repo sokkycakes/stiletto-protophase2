@@ -1,10 +1,10 @@
 extends Node3D
 
-@export var enemy_scene: PackedScene = preload("res://scenes/enemy/base_enemy.tscn")
+@export var enemy_scene: PackedScene
 
 # Explicit scene references for composition (optional; falls back to enemy_scene)
-@export var knight_scene: PackedScene = preload("res://scenes/enemy/quake/knight.tscn")
-@export var archer_scene: PackedScene = preload("res://scenes/enemies/ArcherEnemy.tscn")
+@export var knight_scene: PackedScene
+@export var archer_scene: PackedScene
 
 # Wave/area composition controls (configured by GameMaster)
 @export var force_knights_only: bool = false

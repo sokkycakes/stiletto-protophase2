@@ -2,12 +2,14 @@ extends Control
 class_name CharacterSelect
 
 signal character_selected(character_id: String)
+signal spectate_selected()
 
 @onready var panel: PanelContainer = $Panel
 @onready var title_label: Label = $Panel/VBoxContainer/Title
 @onready var character_list: Container = $Panel/VBoxContainer/CharacterList
 @onready var confirm_button: Button = $Panel/VBoxContainer/Buttons/ConfirmButton
 @onready var skip_button: Button = $Panel/VBoxContainer/Buttons/SkipButton
+@onready var spectate_button: Button = $Panel/VBoxContainer/Buttons.get_node_or_null("SpectateButton")
 @onready var selection_audio: AudioStreamPlayer = $SelectionAudioPlayer
 
 # Path to character selection sounds folder
@@ -27,6 +29,8 @@ func _ready():
 	# Connect buttons
 	confirm_button.pressed.connect(_on_confirm_pressed)
 	skip_button.pressed.connect(_on_skip_pressed)
+	if spectate_button:
+		spectate_button.pressed.connect(_on_spectate_pressed)
 	
 	# Create character buttons
 	if characters.size() > 0:
@@ -127,6 +131,10 @@ func _on_skip_pressed():
 		if first_char.has_method("id"):
 			selected_character_id = first_char.id
 		character_selected.emit(selected_character_id)
+	_close_ui()
+
+func _on_spectate_pressed():
+	spectate_selected.emit()
 	_close_ui()
 
 func _close_ui():

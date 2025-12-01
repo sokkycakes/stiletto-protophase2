@@ -91,8 +91,12 @@ func _ready() -> void:
 		_spawn_all_players()
 
 	# Start the match
-	if MultiplayerManager.is_server():
+	if MultiplayerManager and MultiplayerManager.is_server():
 		await get_tree().create_timer(2.0).timeout  # Give time for all players to load
+		_start_match_with_map_config()
+	elif not MultiplayerManager:
+		# Offline mode - start match after a delay
+		await get_tree().create_timer(2.0).timeout
 		_start_match_with_map_config()
 
 func _input(event: InputEvent) -> void:
@@ -354,6 +358,13 @@ func _spawn_player(peer_id: int) -> void:
 	if peer_id in players:
 		return  # Already spawned
 	
+	# Check if this player should be a spectator in Duel mode
+	if _is_duel_mode() and active_game_mode_logic:
+		if active_game_mode_logic.has_method("is_player_spectator"):
+			if active_game_mode_logic.is_player_spectator(peer_id):
+				print("[GameWorld] Skipping player spawn for spectator %d - DuelGameMode handles spectators" % peer_id)
+				return
+	
 	var player_info = MultiplayerManager.get_player_info(peer_id)
 	var player_name = player_info.get("name", "Player " + str(peer_id))
 	var team_id = player_info.get("team", 0)
@@ -456,7 +467,7 @@ func _cleanup_local_player_ui() -> void:
 			local_player.health_changed.disconnect(_on_local_player_health_changed)
 		if local_player.weapon_manager and local_player.weapon_manager.ammo_changed.is_connected(_on_local_player_ammo_changed):
 			local_player.weapon_manager.ammo_changed.disconnect(_on_local_player_ammo_changed)
-# Guard UI cleanup to avoid null dereferences in scenes without these widgets
+	# Guard UI cleanup to avoid null dereferences in scenes without these widgets
 	if health_bar:
 		health_bar.value = 0.0
 	if health_label:

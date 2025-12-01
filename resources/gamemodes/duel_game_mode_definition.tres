@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://c0tmvgbom2o05" path="res://scripts/core/GameModeDefinition.gd" id="1_gamemode"]
 [ext_resource type="PackedScene" uid="uid://duelmodetscn" path="res://scenes/gamemodes/duel_mode_logic.tscn" id="2_logic"]
-[ext_resource type="PackedScene" uid="uid://b0detle3gh4di" path="res://scenes/ui/character_select.tscn" id="3_charselect"]
+[ext_resource type="PackedScene" uid="uid://bbq1d1nwmjvn6" path="res://scenes/ui/character_selectv2.tscn" id="3_charselect"]
 [ext_resource type="Script" uid="uid://c5k8m3n7v2p1o" path="res://resource/scripts/gamemode/base/character_definition.gd" id="4_chardef"]
 
 [sub_resource type="Resource" id="vagrant_char"]

@@ -115,8 +115,8 @@ func _on_host_pressed() -> void:
 	# Show status
 	_show_status("Starting server...")
 	
-	# Start hosting
-	var success = MultiplayerManager.host_game(player_name, default_port)
+	# Start hosting (async function)
+	var success = await MultiplayerManager.host_game(player_name, default_port)
 	
 	if not success:
 		_hide_status()
@@ -127,52 +127,45 @@ func _on_join_pressed() -> void:
 	
 	_update_player_name()
 	
-	# Start server discovery
-	MultiplayerManager.start_server_discovery()
-	refresh_timer.start()
-	
-	# Show join dialog with server browser
-	if port_input:
-		port_input.text = str(default_port)
+	# Show join dialog for host OID entry
 	if address_input:
-		address_input.text = "127.0.0.1"
-	_refresh_server_list()
+		address_input.visible = true
+		address_input.placeholder_text = "Enter host code (OID)"
+		address_input.text = ""
+		# Connect text change to validate code in real-time
+		if not address_input.text_changed.is_connected(_on_join_code_input_changed):
+			address_input.text_changed.connect(_on_join_code_input_changed)
+	if port_input:
+		port_input.visible = false
+	if server_browser:
+		server_browser.visible = false
+	if refresh_button:
+		refresh_button.visible = false
+	if direct_connect_button:
+		direct_connect_button.visible = false
+	
 	join_dialog.popup_centered()
+	# Don't disable OK button; let validation enable/disable it as user types
+	if join_dialog.get_ok_button():
+		join_dialog.get_ok_button().disabled = true
 
 func _on_join_confirmed() -> void:
-	# Stop server discovery
-	refresh_timer.stop()
+	var host_oid: String = ""
+	if address_input:
+		host_oid = address_input.text.strip_edges()
 	
-	var address: String
-	var port: int
-	
-	# Check if a server is selected from the browser
-	if server_browser:
-		var selected_items = server_browser.get_selected_items()
-		if selected_items.size() > 0:
-			var selected_server = discovered_servers[selected_items[0]]
-			address = selected_server["ip"]
-			port = selected_server["port"]
-		else:
-			# Use manual input
-			address = address_input.text.strip_edges() if address_input else "127.0.0.1"
-			port = int(port_input.text) if port_input else default_port
-			
-			if address.is_empty():
-				address = "127.0.0.1"
-			
-			if port <= 0:
-				port = default_port
-	else:
-		# Fallback to default values
-		address = "127.0.0.1"
-		port = default_port
+	# Validate OID (Noray OIDs can vary in length, but typically 5-6 characters)
+	# For now, accept any non-empty string
+	if host_oid.is_empty():
+		_hide_status()
+		_show_error_dialog("Please enter a valid host code.")
+		return
 	
 	# Show status
-	_show_status("Connecting to " + address + ":" + str(port) + "...")
+	_show_status("Connecting to host " + host_oid + "...")
 	
-	# Attempt to join
-	var success = MultiplayerManager.join_game(address, player_name, port)
+	# Attempt to join using Noray OID (async function)
+	var success = await MultiplayerManager.join_game(host_oid, player_name)
 	
 	if not success:
 		_hide_status()
@@ -207,26 +200,31 @@ func _on_cancel_pressed() -> void:
 
 func _on_lobby_ready() -> void:
 	print("Lobby ready, transitioning to lobby scene")
+	
+	# If hosting, display the OID before transitioning
+	if MultiplayerManager.is_hosting and MultiplayerManager.noray_oid:
+		var oid = MultiplayerManager.noray_oid
+		status_panel.visible = true
+		status_label.text = "Session code: %s\n(Share this code for others to join)" % oid
+		# Wait a moment to show the code, then transition
+		await get_tree().create_timer(3.0).timeout
+	
 	_hide_status()
 	
-	# Transition to lobby/game
-	if MultiplayerManager.is_hosting:
-		get_tree().change_scene_to_file("res://scenes/mp_framework/lobby.tscn")
-	else:
-		get_tree().change_scene_to_file("res://scenes/mp_framework/lobby.tscn")
+	# Transition to lobby scene
+	get_tree().change_scene_to_file("res://scenes/mp_framework/lobby.tscn")
 
 func _on_connection_failed(error: String) -> void:
 	print("Connection failed: ", error)
 	_hide_status()
-	
-	# Show error dialog
+	_show_error_dialog(error)
+
+func _show_error_dialog(message: String) -> void:
 	var error_dialog = AcceptDialog.new()
-	error_dialog.title = "Connection Failed"
-	error_dialog.dialog_text = error
+	error_dialog.title = "Error"
+	error_dialog.dialog_text = message
 	add_child(error_dialog)
 	error_dialog.popup_centered()
-	
-	# Clean up dialog after closing
 	error_dialog.confirmed.connect(error_dialog.queue_free)
 
 # --- UI State Management ---
@@ -272,18 +270,9 @@ func _validate_port(port_text: String) -> bool:
 	return port >= 1024 and port <= 65535
 
 func _validate_address(address: String) -> bool:
-	if address.is_empty():
-		return true  # Will default to localhost
-	
-	# Basic IP address validation
-	if address == "localhost" or address == "127.0.0.1":
-		return true
-	
-	# Simple IP address regex
-	var regex = RegEx.new()
-	regex.compile("^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$")
-	
-	return regex.search(address) != null
+	# Validate host OID - accept any non-empty string
+	var trimmed: String = address.strip_edges()
+	return not trimmed.is_empty()
 
 # --- Input Validation ---
 
@@ -300,9 +289,19 @@ func _on_port_input_text_changed(new_text: String) -> void:
 		join_dialog.get_ok_button().disabled = not is_valid
 
 func _on_address_input_text_changed(new_text: String) -> void:
-	# Validate address in real-time
-	var is_valid = _validate_address(new_text.strip_edges())
-	if join_dialog.visible:
+	# Validate host OID in real-time and enable/disable OK button
+	# Noray OIDs can vary in length, accept any non-empty string
+	var trimmed: String = new_text.strip_edges()
+	var is_valid: bool = not trimmed.is_empty()
+	if join_dialog.visible and join_dialog.get_ok_button():
+		join_dialog.get_ok_button().disabled = not is_valid
+
+func _on_join_code_input_changed(new_text: String) -> void:
+	# Validate host OID in real-time and enable/disable OK button
+	# Noray OIDs can vary in length, accept any non-empty string
+	var trimmed: String = new_text.strip_edges()
+	var is_valid: bool = not trimmed.is_empty()
+	if join_dialog and join_dialog.get_ok_button():
 		join_dialog.get_ok_button().disabled = not is_valid
 
 # --- Additional Features ---
@@ -322,11 +321,18 @@ func _input(event: InputEvent) -> void:
 				KEY_F1:
 					# Quick host
 					_update_player_name()
-					MultiplayerManager.host_game(player_name, default_port)
+					await MultiplayerManager.host_game(player_name, default_port)
 				KEY_F2:
-					# Quick join localhost
+					# Quick join using code typed in AddressInput field
 					_update_player_name()
-					MultiplayerManager.join_game("127.0.0.1", player_name, default_port)
+					if address_input:
+						var code := address_input.text.strip_edges()
+						if not code.is_empty():
+							await MultiplayerManager.join_game(code, player_name)
+						else:
+							_show_error_dialog("Enter a host code in the join dialog before pressing F2")
+					else:
+						_show_error_dialog("Open the join dialog and enter a host code before pressing F2")
 
 func _get_version_info() -> String:
 	# Could be used for displaying version information
@@ -366,7 +372,7 @@ func _save_recent_server(address: String, port: int) -> void:
 # --- Server Browser Functions ---
 
 func _on_refresh_servers() -> void:
-	print("[Server Browser] Refreshing server list...")
+	# print("[Server Browser] Refreshing server list...")
 	MultiplayerManager.start_server_discovery()
 	_refresh_server_list()
 
@@ -404,7 +410,7 @@ func _on_show_browser() -> void:
 func _on_server_selected(index: int) -> void:
 	if index >= 0 and index < discovered_servers.size():
 		var server = discovered_servers[index]
-		print("[Server Browser] Selected server: ", server["name"], " at ", server["ip"], ":", server["port"])
+		# print("[Server Browser] Selected server: ", server["name"], " at ", server["ip"], ":", server["port"])
 
 func _on_servers_updated(servers: Array[Dictionary]) -> void:
 	discovered_servers = servers
@@ -431,7 +437,7 @@ func _refresh_server_list() -> void:
 			]
 			server_browser.add_item(server_text)
 	
-	print("[Server Browser] Updated list with ", discovered_servers.size(), " servers")
+	# print("[Server Browser] Updated list with ", discovered_servers.size(), " servers")
 
 func _on_join_dialog_about_to_popup() -> void:
 	# Reset to browser view when dialog opens
