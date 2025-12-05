@@ -5,7 +5,7 @@
 [sub_resource type="LabelSettings" id="LabelSettings_1"]
 font_size = 32
 
-[node name="MainMenu" type="Control"]
+[node name="MainMenu2" type="Control"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -39,7 +39,7 @@ grow_vertical = 2
 
 [node name="Title" type="Label" parent="VBoxContainer"]
 layout_mode = 2
-text = "FPS Multiplayer Template"
+text = "Multiplayer Menu"
 label_settings = SubResource("LabelSettings_1")
 horizontal_alignment = 1
 
@@ -88,14 +88,18 @@ offset_right = -8.0
 offset_bottom = -36.0
 
 [node name="Label" type="Label" parent="JoinDialog/VBoxContainer"]
+visible = false
 layout_mode = 2
 text = "Local Servers:"
 
 [node name="ServerBrowser" type="ItemList" parent="JoinDialog/VBoxContainer"]
+visible = false
+custom_minimum_size = Vector2(0, 150)
 layout_mode = 2
 size_flags_vertical = 3
 
 [node name="HBoxContainer" type="HBoxContainer" parent="JoinDialog/VBoxContainer"]
+visible = false
 layout_mode = 2
 
 [node name="RefreshButton" type="Button" parent="JoinDialog/VBoxContainer/HBoxContainer"]
@@ -111,13 +115,11 @@ layout_mode = 2
 
 [node name="Label2" type="Label" parent="JoinDialog/VBoxContainer"]
 layout_mode = 2
-text = "Direct Connection:"
+text = "Or join by host code (for remote connections):"
 
 [node name="AddressInput" type="LineEdit" parent="JoinDialog/VBoxContainer"]
-visible = false
 layout_mode = 2
-text = "127.0.0.1"
-placeholder_text = "127.0.0.1"
+placeholder_text = "Enter host code (OID) for remote connection"
 
 [node name="PortInput" type="LineEdit" parent="JoinDialog/VBoxContainer"]
 visible = false

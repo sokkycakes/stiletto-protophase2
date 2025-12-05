@@ -102,10 +102,31 @@ func _reload_current_weapon() -> void:
 		current_weapon.start_reload()
 
 func _can_fire_weapon(weapon: BaseWeapon) -> bool:
-	return weapon.ammo_in_clip > 0 and not weapon._reload_timer.time_left > 0
+	# Check ammo first
+	if weapon.ammo_in_clip <= 0:
+		return false
+	
+	# For weapons with reload cancelling (like beaumont's revolver),
+	# allow firing even during reload - the weapon's shoot() method will handle cancelling
+	if weapon.has_method("is_weapon_reloading") and weapon.is_weapon_reloading():
+		# Weapon supports reload cancelling, allow firing
+		return true
+	
+	# For other weapons, check reload timer
+	return not weapon._reload_timer.time_left > 0
 
 func _can_reload_weapon(weapon: BaseWeapon) -> bool:
-	return weapon.ammo_in_clip < weapon.clip_size and not weapon._reload_timer.time_left > 0
+	# Check ammo first
+	if weapon.ammo_in_clip >= weapon.clip_size:
+		return false
+	
+	# For weapons with custom reload system (like beaumont's revolver),
+	# check is_weapon_reloading() method if available
+	if weapon.has_method("is_weapon_reloading") and weapon.is_weapon_reloading():
+		return false
+	
+	# For other weapons, check reload timer
+	return not weapon._reload_timer.time_left > 0
 
 func _switch_weapon(weapon_index: int) -> void:
 	if weapon_index >= 0 and weapon_index < weapons.size():

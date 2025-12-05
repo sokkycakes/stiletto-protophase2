@@ -31,6 +31,9 @@ var match_started: bool = false
 @onready var chat_display: RichTextLabel = $UI/GameHUD/ChatPanel/VBoxContainer/ChatDisplay
 @onready var chat_input: LineEdit = $UI/GameHUD/ChatPanel/VBoxContainer/ChatInput
 
+# Latency debug UI (created programmatically)
+var latency_debug_ui: LatencyDebugUI
+
 # --- Local Player Reference ---
 var local_player: NetworkedPlayer
 
@@ -76,6 +79,9 @@ func _ready() -> void:
 	state_sync = GameWorldStateSync.new()
 	state_sync.name = "StateSync"
 	add_child(state_sync)
+	
+	# Create latency debug UI programmatically
+	_setup_latency_debug_ui()
 
 	# Check if we should delay spawning (e.g., for character selection in game modes)
 	var should_delay_spawn: bool = false
@@ -823,6 +829,52 @@ func _clear_game_mode_logic() -> void:
 		active_game_mode_logic.queue_free()
 		active_game_mode_logic = null
 
+## Setup latency debug UI programmatically
+## This ensures it works on all maps, regardless of their UI structure
+func _setup_latency_debug_ui() -> void:
+	# Check if latency UI already exists (from scene)
+	var existing_ui = get_node_or_null("UI/GameHUD/LatencyDebugUI")
+	if existing_ui:
+		latency_debug_ui = existing_ui as LatencyDebugUI
+		return
+	
+	# Try to find existing UI structure
+	var ui_layer: CanvasLayer = get_node_or_null("UI")
+	var parent_container: Control = null
+	
+	if ui_layer:
+		# Try to find existing GameHUD first
+		parent_container = ui_layer.get_node_or_null("GameHUD")
+		
+		# If no GameHUD, try to find mapui (some maps use this)
+		if not parent_container:
+			parent_container = get_node_or_null("mapui")
+		
+		# If still no container, create a minimal one just for latency UI
+		if not parent_container:
+			parent_container = Control.new()
+			parent_container.name = "LatencyUIContainer"
+			parent_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			ui_layer.add_child(parent_container)
+	else:
+		# Create UI CanvasLayer if it doesn't exist
+		ui_layer = CanvasLayer.new()
+		ui_layer.name = "UI"
+		add_child(ui_layer)
+		
+		# Create minimal container for latency UI
+		parent_container = Control.new()
+		parent_container.name = "LatencyUIContainer"
+		parent_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		ui_layer.add_child(parent_container)
+	
+	# Create latency debug UI
+	latency_debug_ui = LatencyDebugUI.new()
+	latency_debug_ui.name = "LatencyDebugUI"
+	parent_container.add_child(latency_debug_ui)
+	
+	print("[GameWorld] Created latency debug UI programmatically")
+
 ## Clean up all players and game world resources
 ## Call this before changing scenes to ensure proper cleanup
 func cleanup_all_players() -> void:
@@ -884,6 +936,11 @@ func cleanup_all_players() -> void:
 			if state_sync.state_replication_manager.has_method("reset_state"):
 				state_sync.state_replication_manager.reset_state()
 		state_sync = null
+	
+	# Clean up latency debug UI
+	if latency_debug_ui and is_instance_valid(latency_debug_ui):
+		latency_debug_ui.queue_free()
+		latency_debug_ui = null
 	
 	# Reset game state
 	game_active = false

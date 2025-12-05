@@ -1,0 +1,33 @@
+[gd_scene load_steps=10 format=3 uid="uid://lasso_hook_tscn"]
+
+[ext_resource type="Script" path="res://resource/scripts/player/lasso_hook_controller.gd" id="1_lasso"]
+[ext_resource type="PackedScene" uid="uid://dlqm10204rcaq" path="res://addons/grappling_hook_3d/src/hook.tscn" id="2_4won0"]
+[ext_resource type="Texture2D" uid="uid://cskw882fffi36" path="res://addons/grappling_hook_3d/example/hook_availible.png" id="3_14ufa"]
+[ext_resource type="Texture2D" uid="uid://dnx2lsiobb1hn" path="res://addons/grappling_hook_3d/example/hook_not_availible.png" id="4_14pc2"]
+[ext_resource type="PackedScene" uid="uid://bqnv8j8y5g6vq" path="res://scenes/effects/spark_effect.tscn" id="5_62fsg"]
+[ext_resource type="AudioStream" uid="uid://did0j7mr302vk" path="res://assets/player/sound/mechav3.wav" id="6_rqfhk"]
+[ext_resource type="AudioStream" uid="uid://8mxa4vuevh33" path="res://assets/player/sound/clang2.wav" id="7_7tfas"]
+[ext_resource type="AudioStream" uid="uid://cgk361fdegvbf" path="res://assets/player/sound/hook_retract.wav" id="8_8xpxx"]
+[ext_resource type="AudioStream" uid="uid://v71imalbt2mr" path="res://assets/player/sound/hook_bouncev1.wav" id="9_2c4f4"]
+
+[node name="HookController" type="Node3D"]
+script = ExtResource("1_lasso")
+grappling_hook_scene = ExtResource("2_4won0")
+max_distance = 10.0
+lasso_max_distance = 10.0
+hook_speed = 45.0
+pull_speed = 30.0
+retraction_speed_multiplier = 2.0
+jump_pull_height_threshold = 2.97
+crosshair_grapple = ExtResource("3_14ufa")
+crosshair_no_grapple = ExtResource("4_14pc2")
+grapple_min_velocity = 7.0
+spark_scene = ExtResource("5_62fsg")
+goldgdt_view = NodePath("../View Control")
+goldgdt_controls = NodePath("../Move Functions")
+hook_fire_sound = ExtResource("6_rqfhk")
+hook_hit_sound = ExtResource("7_7tfas")
+hook_retract_sound = ExtResource("8_8xpxx")
+hook_bounce_sound = ExtResource("9_2c4f4")
+audio_bus = "sfx"
+

@@ -117,10 +117,13 @@ func _fire_current_weapon_networked() -> void:
 		current_weapon.shoot()
 		return
 	
-	# For projectile weapons, call shoot() directly
+	# For weapons with shoot() method, call it and broadcast visual effects to other clients
 	if current_weapon.has_method("shoot"):
 		print("NetworkedWeaponManager: Calling current_weapon.shoot()")
 		current_weapon.shoot()
+		
+		# Broadcast visual effects to other clients
+		_broadcast_weapon_fire_visuals()
 		return
 	
 	# Generate unique shot ID for prediction tracking
@@ -305,12 +308,34 @@ func _perform_prediction_hitscan(shot_data: Dictionary) -> void:
 		current_weapon._spawn_impact(hit_pos, hit_normal)
 
 func _perform_networked_hitscan(shot_data: Dictionary) -> void:
-	# Server authoritative hitscan with damage
+	# Server authoritative hitscan with lag compensation
 	var origin = shot_data["origin"]
 	var direction = shot_data["direction"]
 	var damage = shot_data["damage"]
 	var max_distance = current_weapon.maximum_distance if current_weapon else 1000.0
 	
+	# Calculate lag compensation time
+	var current_time = Time.get_ticks_msec() / 1000.0
+	var shot_timestamp = shot_data.get("timestamp", current_time)
+	
+	# Calculate latency: time between when shot was fired and now
+	# Add interpolation delay to account for client-side interpolation
+	var latency = current_time - shot_timestamp
+	var interpolation_delay = 0.05  # Client interpolation delay (matches NetworkedPlayer default)
+	var total_lag = latency + interpolation_delay
+	
+	# Clamp lag compensation to reasonable bounds (0 to 200ms)
+	total_lag = clamp(total_lag, 0.0, 0.2)
+	
+	# Calculate target time to rewind to
+	var target_time = current_time - total_lag
+	
+	# Rewind all players (except shooter) to the time when the shot was fired
+	var rewound_players: Array[NetworkedPlayer] = []
+	if total_lag > 0.01:  # Only rewind if lag is significant (>10ms)
+		rewound_players = NetworkedPlayer.rewind_all_players(target_time, player_peer_id)
+	
+	# Perform hitscan with rewound positions
 	var space_state = get_world_3d().direct_space_state
 	var query = PhysicsRayQueryParameters3D.create(origin, origin + direction * max_distance)
 	query.exclude = [self]
@@ -328,9 +353,13 @@ func _perform_networked_hitscan(shot_data: Dictionary) -> void:
 		hit_normal = result.normal
 		hit_target = result.collider
 		
-		# Apply damage on server
+		# Apply damage on server (using rewound positions)
 		if hit_target and hit_target.has_method("take_damage"):
 			hit_target.take_damage(damage, player_peer_id)
+	
+	# Restore all players to their real positions
+	if rewound_players.size() > 0:
+		NetworkedPlayer.restore_all_players(rewound_players)
 	
 	# Broadcast hit effects to all clients
 	sync_weapon_hit.rpc(origin, hit_pos, hit_normal, hit_target != null)
@@ -379,8 +408,10 @@ func sync_weapon_switch(weapon_index: int) -> void:
 	if not is_authority():
 		_switch_weapon(weapon_index)
 
-@rpc("authority", "call_local", "reliable")
+@rpc("any_peer", "call_remote", "reliable")
 func sync_weapon_hit(origin: Vector3, hit_pos: Vector3, hit_normal: Vector3, _did_hit: bool) -> void:
+	# This RPC is called by the shooting player to broadcast visual effects to other clients
+	# Use "call_remote" to avoid double trails (shooter already spawned locally)
 	if current_weapon:
 		current_weapon._spawn_bullet_trail(origin, hit_pos)
 		current_weapon._spawn_impact(hit_pos, hit_normal)
@@ -393,6 +424,52 @@ func sync_weapon_state(weapon_index: int, ammo: int, _is_reloading: bool) -> voi
 		# Update reload state if needed
 
 # --- Helper Methods ---
+
+func _broadcast_weapon_fire_visuals() -> void:
+	"""Broadcast weapon firing visuals (bullet trail, muzzle flash, projectile) to other clients"""
+	if not current_weapon:
+		return
+	
+	var origin = _get_muzzle_position()
+	var direction = _get_fire_direction()
+	
+	# Check if this is a projectile weapon
+	if "projectile_scene" in current_weapon and current_weapon.projectile_scene:
+		var projectile_path = current_weapon.projectile_scene.resource_path
+		if projectile_path != "":
+			# Get owner information for ownership tracking
+			var owner_peer_id = player_peer_id
+			var networked_player = _find_networked_player()
+			if networked_player:
+				owner_peer_id = networked_player.peer_id
+			
+			# Broadcast projectile spawn to other clients
+			spawn_weapon_projectile.rpc(origin, direction, projectile_path, owner_peer_id)
+			print("[NetworkedWeaponManager] Broadcast projectile spawn to other clients")
+	else:
+		# Hitscan weapon - do a raycast to find hit position for visual effects
+		var max_distance = current_weapon.maximum_distance if current_weapon else 1000.0
+		
+		var space_state = get_world_3d().direct_space_state
+		var query = PhysicsRayQueryParameters3D.create(origin, origin + direction * max_distance)
+		query.exclude = [self]
+		query.collide_with_areas = true
+		query.collide_with_bodies = true
+		
+		var result = space_state.intersect_ray(query)
+		
+		var hit_pos = origin + direction * max_distance
+		var hit_normal = Vector3.UP
+		var did_hit = false
+		
+		if result:
+			hit_pos = result.position
+			hit_normal = result.normal
+			did_hit = true
+		
+		# Broadcast visual effects to other clients
+		sync_weapon_hit.rpc(origin, hit_pos, hit_normal, did_hit)
+		print("[NetworkedWeaponManager] Broadcast hitscan visuals to other clients")
 
 func _execute_confirmed_fire(_shot_data: Dictionary) -> void:
 	# Execute server-confirmed shot for non-authority clients
@@ -464,6 +541,11 @@ func spawn_weapon_projectile(origin: Vector3, direction: Vector3, projectile_pat
 	if proj is Node3D:
 		(proj as Node3D).set_as_top_level(true)
 		(proj as Node3D).global_position = origin
+	
+	# Mark as visual-only since this is a remote copy (original deals damage)
+	if "is_visual_only" in proj:
+		proj.is_visual_only = true
+		print("[NetworkedWeaponManager] Projectile marked as visual-only (remote copy)")
 	
 	# Initialize projectile with owner info if it supports initialize()
 	if proj.has_method("initialize"):

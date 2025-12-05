@@ -1,7 +1,8 @@
-[gd_scene load_steps=7 format=3 uid="uid://bw4kfl0d4xr8q"]
+[gd_scene load_steps=8 format=3 uid="uid://bw4kfl0d4xr8q"]
 
 [ext_resource type="Script" uid="uid://e2i2bsrkkqx5" path="res://scripts/core/GameWorld.gd" id="1_2e5jn"]
 [ext_resource type="Script" uid="uid://dbu01l7o8ls25" path="res://scripts/core/SpawnPoint.gd" id="2_k3x8m"]
+[ext_resource type="Script" path="res://scripts/ui/LatencyDebugUI.gd" id="3_latency"]
 
 [sub_resource type="Environment" id="Environment_1"]
 background_mode = 1
@@ -194,6 +195,30 @@ offset_bottom = 50.0
 grow_horizontal = 2
 text = "05:00"
 horizontal_alignment = 1
+
+[node name="LatencyDebugUI" type="Control" parent="UI/GameHUD"]
+layout_mode = 1
+anchors_preset = 0
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 0.0
+anchor_bottom = 0.0
+offset_left = 20.0
+offset_top = 20.0
+offset_right = 200.0
+offset_bottom = 50.0
+grow_horizontal = 0
+grow_vertical = 0
+script = ExtResource("3_latency")
+
+[node name="LatencyLabel" type="Label" parent="UI/GameHUD/LatencyDebugUI"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "Ping: -- ms"
 
 [node name="Crosshair" type="Control" parent="UI/GameHUD"]
 layout_mode = 1

@@ -5,27 +5,28 @@
 [ext_resource type="PackedScene" uid="uid://bbq1d1nwmjvn6" path="res://scenes/ui/character_selectv2.tscn" id="3_charselect"]
 [ext_resource type="Script" uid="uid://c5k8m3n7v2p1o" path="res://resource/scripts/gamemode/base/character_definition.gd" id="4_chardef"]
 
-[sub_resource type="Resource" id="vagrant_char"]
-script = ExtResource("4_chardef")
-id = "vagrant"
-display_name = "Vagrant"
-scene_path = "res://resource/entities/player/ss_player_vagrant.tscn"
-description = ""
-is_unlocked = true
-
-[sub_resource type="Resource" id="base_char"]
-script = ExtResource("4_chardef")
-id = "base"
-display_name = "Base"
-scene_path = "res://resource/entities/player/ss_player_base.tscn"
-description = ""
-is_unlocked = true
-
 [sub_resource type="Resource" id="collier_char"]
 script = ExtResource("4_chardef")
 id = "collier"
 display_name = "Collier"
 scene_path = "res://resource/entities/player/ss_player_collier.tscn"
+description = ""
+is_unlocked = true
+
+[sub_resource type="Resource" id="Resource_038gu"]
+script = ExtResource("4_chardef")
+id = "beaumont"
+display_name = "Beaumont"
+scene_path = "res://resource/entities/player/ss_player_beaumont.tscn"
+description = ""
+is_unlocked = true
+metadata/_custom_type_script = "uid://c5k8m3n7v2p1o"
+
+[sub_resource type="Resource" id="vagrant_char"]
+script = ExtResource("4_chardef")
+id = "vagrant"
+display_name = "Vagrant"
+scene_path = "res://resource/entities/player/ss_player_vagrant.tscn"
 description = ""
 is_unlocked = true
 
@@ -40,4 +41,4 @@ default_time_limit_minutes = 3.0
 default_score_limit = 5
 logic_scene = ExtResource("2_logic")
 character_select_ui_scene = ExtResource("3_charselect")
-available_characters = Array[ExtResource("4_chardef")]([SubResource("vagrant_char"), SubResource("base_char"), SubResource("collier_char")])
+available_characters = Array[ExtResource("4_chardef")]([SubResource("collier_char"), SubResource("Resource_038gu"), SubResource("vagrant_char")])

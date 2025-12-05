@@ -34,9 +34,7 @@ var pending_noray_connection: bool = false
 var target_host_oid: String = ""  # OID of host we're trying to connect to
 
 # --- LAN Discovery ---
-var broadcast_socket: UDPServer
-var discovery_socket: PacketPeerUDP
-var broadcast_timer: Timer
+var lan_discovery: LanDiscovery
 var discovered_servers: Array[Dictionary] = []
 
 # --- Game State ---
@@ -176,6 +174,12 @@ func host_game(player_name: String = "Host", port: int = DEFAULT_PORT) -> bool:
 ## host_oid: The Open ID of the host (from Noray)
 ## player_name: Player's name
 func join_game(host_oid: String, player_name: String, port: int = DEFAULT_PORT) -> bool:
+	# Check if we're trying to connect to ourselves (same machine)
+	# This happens when both host and client are on the same PC
+	if noray_oid == host_oid:
+		print("[Noray] Detected local connection (same OID), using direct localhost connection")
+		return join_game_direct("127.0.0.1", player_name, port)
+	
 	# Ensure Noray is connected
 	if not noray_connected:
 		await _connect_to_noray()
@@ -239,6 +243,35 @@ func join_game(host_oid: String, player_name: String, port: int = DEFAULT_PORT) 
 		"score": 0
 	}
 	
+	return true
+
+## Join an existing game using direct IP/port (bypasses Noray)
+## address: IP address or hostname of the server
+## player_name: Player's name
+## port: Port number of the server
+func join_game_direct(address: String, player_name: String, port: int = DEFAULT_PORT) -> bool:
+	print("[MultiplayerManager] Joining game directly at ", address, ":", port)
+	
+	var peer = ENetMultiplayerPeer.new()
+	var error = peer.create_client(address, port)
+	
+	if error != OK:
+		print("[MultiplayerManager] Failed to create client: ", error)
+		connection_failed.emit("Failed to connect to %s:%d (error: %d)" % [address, port, error])
+		return false
+	
+	multiplayer.multiplayer_peer = peer
+	is_hosting = false
+	
+	# Store player info
+	var unique_name = player_name
+	current_lobby_info = {
+		"name": unique_name,
+		"team": 0,
+		"score": 0
+	}
+	
+	print("[MultiplayerManager] Connecting to ", address, ":", port)
 	return true
 
 ## Disconnect from current game
@@ -505,6 +538,26 @@ func _on_server_disconnected() -> void:
 
 # --- Utility Methods ---
 
+## Check if an address is local (localhost or local network)
+func _is_local_address(address: String) -> bool:
+	if address == "127.0.0.1" or address == "localhost":
+		return true
+	
+	# Check if it matches any of our local IPs
+	var local_ips = IP.get_local_addresses()
+	for local_ip in local_ips:
+		if address == local_ip:
+			return true
+		# Also check for common local network ranges
+		if address.begins_with("192.168.") and local_ip.begins_with("192.168."):
+			return true
+		if address.begins_with("10.") and local_ip.begins_with("10."):
+			return true
+		if address.begins_with("172.16.") and local_ip.begins_with("172.16."):
+			return true
+	
+	return false
+
 ## Check if we are the server authority
 func is_server() -> bool:
 	return multiplayer.is_server()
@@ -521,124 +574,84 @@ func is_peer_server(peer_id: int) -> bool:
 
 ## Setup LAN discovery system
 func _setup_lan_discovery() -> void:
-	# Initialize discovery socket for listening to broadcasts
-	discovery_socket = PacketPeerUDP.new()
-	discovery_socket.bind(BROADCAST_PORT)
-	# print("[LAN Discovery] Listening for server broadcasts on port ", BROADCAST_PORT)
+	lan_discovery = LanDiscovery.new()
+	lan_discovery.name = "LanDiscovery"
+	lan_discovery.server_list_updated.connect(_on_server_list_updated)
+	lan_discovery.server_found.connect(func(info): server_discovered.emit(info))
+	add_child(lan_discovery)
+
+## Handle server list updates from LanDiscovery
+func _on_server_list_updated(servers: Array[Dictionary]) -> void:
+	# Preserve localhost entry if exists in our manual list?
+	# Actually, let's just trust LanDiscovery + our manual localhost addition if needed.
+	# But LanDiscovery won't find localhost (we filtered it).
+	# So we need to merge LanDiscovery results with our manual localhost entry if we are hosting.
+	
+	# Create a new list based on LanDiscovery results
+	var new_list = servers.duplicate()
+	
+	# If we are hosting, ensure localhost is in the list for ourselves
+	if is_hosting and noray_registered_port > 0:
+		var localhost_entry = {
+			"name": connected_players.get(1, {}).get("name", "Host"),
+			"ip": "127.0.0.1",
+			"port": noray_registered_port,
+			"players": connected_players.size(),
+			"max_players": MAX_CLIENTS,
+			"timestamp": Time.get_unix_time_from_system(),
+			"unique_id": "localhost" # Dummy ID
+		}
+		new_list.append(localhost_entry)
+		
+	discovered_servers = new_list
+	servers_list_updated.emit(discovered_servers)
 
 ## Start broadcasting server information
 func _start_server_broadcast(server_name: String, port: int) -> void:
 	if not is_hosting:
 		return
-	
-	# Setup broadcast socket
-	broadcast_socket = UDPServer.new()
-	
-	# Create broadcast timer
-	broadcast_timer = Timer.new()
-	broadcast_timer.wait_time = BROADCAST_INTERVAL
-	broadcast_timer.timeout.connect(_broadcast_server_info.bind(server_name, port))
-	add_child(broadcast_timer)
-	broadcast_timer.start()
-	
-	# print("[LAN Discovery] Started broadcasting server: ", server_name)
-
-## Stop broadcasting server information
-func _stop_server_broadcast() -> void:
-	if broadcast_timer:
-		broadcast_timer.queue_free()
-		broadcast_timer = null
-	
-	if broadcast_socket:
-		broadcast_socket = null
-	
-	# print("[LAN Discovery] Stopped broadcasting")
-
-## Broadcast server information to LAN
-func _broadcast_server_info(server_name: String, port: int) -> void:
+		
 	var server_info = {
 		"name": server_name,
 		"port": port,
 		"players": connected_players.size(),
-		"max_players": MAX_CLIENTS,
-		"timestamp": Time.get_unix_time_from_system()
+		"max_players": MAX_CLIENTS
 	}
 	
-	var message = JSON.stringify(server_info)
-	var packet = message.to_utf8_buffer()
+	lan_discovery.start_broadcasting(server_info)
 	
-	# Broadcast to local network
-	var broadcast_peer = PacketPeerUDP.new()
-	broadcast_peer.connect_to_host("255.255.255.255", BROADCAST_PORT)
-	broadcast_peer.put_packet(packet)
-	broadcast_peer.close()
+	# Trigger an immediate update to show localhost
+	# Accessing internal for now or just pass empty array and let it rebuild
+	var empty_list: Array[Dictionary] = []
+	_on_server_list_updated(empty_list) # This will add localhost entry
+
+
+## Stop broadcasting server information
+func _stop_server_broadcast() -> void:
+	if lan_discovery:
+		lan_discovery.stop_broadcasting()
+	
+	# Clear list if we stop hosting (remove localhost entry)
+	if is_hosting:
+		var empty_list: Array[Dictionary] = []
+		_on_server_list_updated(empty_list)
+
 
 ## Start discovering servers on LAN
 func start_server_discovery() -> void:
-	discovered_servers.clear()
-	# print("[LAN Discovery] Started scanning for local servers...")
+	lan_discovery.start_listening()
+	print("[LAN Discovery] Started scanning for local servers...")
 
 ## Stop discovering servers
 func _stop_server_discovery() -> void:
-	discovered_servers.clear()
+	lan_discovery.stop_listening()
 	# print("[LAN Discovery] Stopped scanning for servers")
 
 ## Get list of discovered servers
 func get_discovered_servers() -> Array[Dictionary]:
 	return discovered_servers
 
-## Process incoming broadcast packets
-func _process(delta: float) -> void:
-	if not discovery_socket:
-		return
-	
-	# Check for incoming broadcast packets
-	if discovery_socket.get_available_packet_count() > 0:
-		var packet = discovery_socket.get_packet()
-		var message = packet.get_string_from_utf8()
-		
-		var json = JSON.new()
-		var parse_result = json.parse(message)
-		
-		if parse_result == OK:
-			var server_info = json.data
-			if server_info is Dictionary:
-				_handle_server_broadcast(server_info)
 
-## Handle received server broadcast
-func _handle_server_broadcast(server_info: Dictionary) -> void:
-	# Don't add our own server
-	if is_hosting:
-		return
-	
-	# Validate server info
-	if not server_info.has("name") or not server_info.has("port"):
-		return
-	
-	# Add IP address from the packet
-	server_info["ip"] = discovery_socket.get_packet_ip()
-	
-	# Check if server already exists in our list
-	var existing_index = -1
-	for i in range(discovered_servers.size()):
-		if discovered_servers[i]["ip"] == server_info["ip"] and discovered_servers[i]["port"] == server_info["port"]:
-			existing_index = i
-			break
-	
-	# Update existing or add new server
-	if existing_index >= 0:
-		discovered_servers[existing_index] = server_info
-	else:
-		discovered_servers.append(server_info)
-		# print("[LAN Discovery] Found server: ", server_info["name"], " at ", server_info["ip"], ":", server_info["port"])
-	
-	# Clean up old servers (older than 10 seconds)
-	var current_time = Time.get_unix_time_from_system()
-	discovered_servers = discovered_servers.filter(func(server): return current_time - server.get("timestamp", 0) < 10.0)
-	
-	# Emit signals
-	server_discovered.emit(server_info)
-	servers_list_updated.emit(discovered_servers)
 
 func _change_to_lobby_scene(reset_match_state: bool = true) -> void:
 	pending_local_lobby = false
@@ -803,7 +816,13 @@ func _on_noray_connect_nat_client(address: String, port: int) -> void:
 ## Client: Handle relay connection instructions
 func _on_noray_connect_relay_client(address: String, port: int) -> void:
 	print("[Noray] Client: Relay connection instructions: ", address, ":", port)
-	_establish_enet_connection(address, port, true)
+	
+	# Check if this is a local address - if so, connect directly (bypass relay)
+	if _is_local_address(address):
+		print("[Noray] Detected local address, connecting directly (bypassing relay)")
+		_establish_enet_connection(address, port, false)  # Use direct connection, not relay
+	else:
+		_establish_enet_connection(address, port, true)  # Use relay
 
 ## Host: Handle incoming NAT connection
 func _on_noray_connect_nat_host(address: String, port: int) -> void:

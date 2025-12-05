@@ -1,6 +1,6 @@
-[gd_scene load_steps=12 forCat=3 uid="uid://vptnhe5q1cue"]
+[gd_scene load_steps=12 format=3 uid="uid://cgrmiq1frb8io"]
 
-[ext_resource type="Material" path="res://addons/prototype_mini_bundle/M_prototype_dark.tres" id="1_ig7tw"]
+[ext_resource type="Material" uid="uid://dgjiw8udooecr" path="res://addons/prototype_mini_bundle/M_prototype_dark.tres" id="1_ig7tw"]
 [ext_resource type="PackedScene" uid="uid://0vmntyr615js" path="res://addons/prototype_mini_bundle/prop_cube.tscn" id="2_7mycd"]
 [ext_resource type="PackedScene" uid="uid://c5hkhu8upxsf7" path="res://addons/prototype_mini_bundle/prop_cylinder.tscn" id="3_272bh"]
 [ext_resource type="PackedScene" uid="uid://ciuwt2yj4hcu2" path="res://addons/prototype_mini_bundle/prop_prism.tscn" id="4_5vw27"]
@@ -44,7 +44,6 @@ environment = SubResource("Environment_0xm2m")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
 mesh = SubResource("BoxMesh_h2yge")
 metadata/_edit_group_ = true
-layers = 1
 
 [node name="StaticBody3D" type="StaticBody3D" parent="Ground"]
 

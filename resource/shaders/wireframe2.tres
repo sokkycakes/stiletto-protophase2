@@ -1,12 +1,12 @@
 [gd_resource type="ShaderMaterial" load_steps=2 format=3 uid="uid://b118c7ni4rn3l"]
 
-[ext_resource type="Shader" uid="uid://b3ejot0nxeca6" path="res://materials/wireframe.gdshader" id="1_wxfbf"]
+[ext_resource type="Shader" path="res://resource/shaders/wireframe.gdshader" id="1_3ycie"]
 
 [resource]
 render_priority = 0
-shader = ExtResource("1_wxfbf")
-shader_parameter/modelColor = Color(0, 0.483333, 1, 1)
-shader_parameter/wireframeColor = Color(0.19, 0.568, 1, 1)
-shader_parameter/width = 3.027
-shader_parameter/modelOpacity = 0.276
+shader = ExtResource("1_3ycie")
+shader_parameter/modelColor = Color(0.133636, 0.547074, 0.589844, 1)
+shader_parameter/wireframeColor = Color(0, 0.765625, 1, 1)
+shader_parameter/width = 3.857
+shader_parameter/modelOpacity = 0.635
 shader_parameter/filtered = true

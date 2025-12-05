@@ -5,7 +5,7 @@ class_name Projectile
 ## Extend this or use set_owner_info() when spawning to enable ownership checks
 
 @export var speed: float = 80.0
-@export var damage: int = 25
+@export var damage: int = 1  # Reduced from 25 to match 4 HP health system
 @export var lifetime: float = 3.0  # Shorter lifetime for faster projectiles
 @export var impact_particle_scene: PackedScene
 @export var bullet_decal_texture: Texture2D
@@ -17,11 +17,20 @@ var owner_node: Node3D = null
 var owner_peer_id: int = -1
 var owner_exclusions: Array = []  # Array of CollisionObject3D nodes to exclude from raycast
 
+# Prevent double damage from multiple collision handlers in same frame
+var has_hit: bool = false
+
+# If true, this projectile is visual-only (spawned on remote client, doesn't deal damage)
+var is_visual_only: bool = false
+
 var direction: Vector3
 var previous_position: Vector3
 var timer: Timer
 
 func _ready():
+	# Add to projectiles group for airblast detection
+	add_to_group("projectiles")
+	
 	# Set up collision detection
 	body_entered.connect(_on_body_entered)
 	area_entered.connect(_on_area_entered)
@@ -35,6 +44,10 @@ func _ready():
 	timer.start()
 
 func _physics_process(delta):
+	# Guard against multiple hits in same frame
+	if has_hit:
+		return
+	
 	# Continuous collision detection: sweep a ray from last to next position
 	var next_pos = position + direction * speed * delta
 	var space_state = get_world_3d().direct_space_state
@@ -49,6 +62,7 @@ func _physics_process(delta):
 	query.hit_from_inside = true
 	var result = space_state.intersect_ray(query)
 	if result:
+		has_hit = true  # Mark as hit before applying damage
 		var collider = result.collider
 		var hit_pos = result.position
 		var hit_normal = result.normal
@@ -68,8 +82,9 @@ func _physics_process(delta):
 		_spawn_decal(hit_pos, hit_normal)
 		
 		# Find damage receiver and check ownership
+		# Only deal damage if not visual-only (visual-only projectiles are spawned on remote clients)
 		var receiver := _find_damage_receiver(collider)
-		if receiver and not is_owner(receiver):
+		if receiver and not is_owner(receiver) and not is_visual_only:
 			# Hit a damageable entity
 			# Check for NetworkedPlayer first (must use RPC for networked damage)
 			if receiver is NetworkedPlayer:
@@ -82,8 +97,11 @@ func _physics_process(delta):
 				receiver.take_damage(damage)
 				print("Projectile hit damageable entity: ", receiver.name)
 		else:
-			# Hit static geometry or non-damageable object - still spawn decal and destroy
-			print("Projectile hit static geometry: ", collider.name)
+			# Hit static geometry, non-damageable object, or visual-only projectile
+			if is_visual_only:
+				print("Projectile (visual-only) hit: ", collider.name)
+			else:
+				print("Projectile hit static geometry: ", collider.name)
 		
 		# Always destroy on impact (whether it's an entity or static geometry)
 		destroy()
@@ -162,6 +180,10 @@ func is_owner(body: Node) -> bool:
 	return false
 
 func _on_body_entered(body):
+	# Guard against multiple hits in same frame
+	if has_hit:
+		return
+	
 	# Handle collision with bodies
 	# Check ownership before applying damage
 	if is_owner(body):
@@ -169,12 +191,15 @@ func _on_body_entered(body):
 		destroy()
 		return
 	
+	has_hit = true  # Mark as hit before applying damage
+	
 	print("Bigshot projectile hit body: ", body.name)
 	spawn_impact_particle(global_position)
 	
 	# Find damage receiver (might be parent of collider)
+	# Only deal damage if not visual-only (visual-only projectiles are spawned on remote clients)
 	var receiver := _find_damage_receiver(body)
-	if receiver:
+	if receiver and not is_visual_only:
 		# Double-check ownership on the receiver
 		if not is_owner(receiver):
 			# Check for NetworkedPlayer first (must use RPC for networked damage)
@@ -192,6 +217,8 @@ func _on_body_entered(body):
 				print("Applied ", damage, " damage to ", receiver.name)
 		else:
 			print("Bigshot projectile: Ignoring damage to owner")
+	elif is_visual_only:
+		print("Bigshot projectile (visual-only): hit ", body.name)
 	
 	destroy()
 
@@ -205,12 +232,18 @@ func _find_damage_receiver(target: Node) -> Node:
 	return null
 
 func _on_area_entered(area):
+	# Guard against multiple hits in same frame
+	if has_hit:
+		return
+	
 	# Handle collision with areas
 	# Check ownership before applying damage
 	if is_owner(area):
 		print("Projectile: Ignoring collision with owner area")
 		destroy()
 		return
+	
+	has_hit = true  # Mark as hit before applying damage
 	
 	print("Projectile hit area: ", area.name)
 	

@@ -4,8 +4,8 @@ class_name WeaponSystemV1
 # Weapon properties
 @export var max_ammo: int = 6  # 6 bullet mag
 @export var current_ammo: int = 6
-@export var shot_damage: int = 5  # Light damage for raycast shot
-@export var bigshot_damage: int = 25  # Heavy damage for physical projectile
+@export var shot_damage: int = 1  # Light damage for raycast shot (matches 4 HP system)
+@export var bigshot_damage: int = 2  # Heavy damage for physical projectile (matches 4 HP system)
 @export var normal_reload_time: float = 1.5  # Faster reload for normal shots
 @export var bigshot_reload_time: float = 3.0  # Slower reload for bigshot
 @export var shot_fire_rate: float = 0.2  # Faster fire rate for shots

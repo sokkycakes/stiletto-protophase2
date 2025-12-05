@@ -38,6 +38,8 @@ var player_name: String = "Player"
 var is_connecting: bool = false
 var discovered_servers: Array[Dictionary] = []
 var refresh_timer: Timer
+var last_refresh_time: float = 0.0
+var refresh_cooldown: float = 0.1  # Minimum time between refreshes (100ms)
 
 func _ready() -> void:
 	# Connect UI signals
@@ -58,6 +60,7 @@ func _ready() -> void:
 		direct_connect_button.pressed.connect(_on_direct_connect)
 	if server_browser:
 		server_browser.item_selected.connect(_on_server_selected)
+		server_browser.item_activated.connect(_on_server_activated)  # Double-click to connect
 	
 	# Connect to multiplayer manager
 	if MultiplayerManager:
@@ -127,38 +130,96 @@ func _on_join_pressed() -> void:
 	
 	_update_player_name()
 	
-	# Show join dialog for host OID entry
+	# Show both local server browser and Noray OID input
+	# Local server browser section
+	if server_browser:
+		server_browser.visible = true
+	if refresh_button:
+		refresh_button.visible = true
+	if direct_connect_button:
+		direct_connect_button.visible = true
+		direct_connect_button.text = "Direct Connect"
+		# Reset button connections
+		if direct_connect_button.pressed.is_connected(_on_show_browser):
+			direct_connect_button.pressed.disconnect(_on_show_browser)
+		if not direct_connect_button.pressed.is_connected(_on_direct_connect):
+			direct_connect_button.pressed.connect(_on_direct_connect)
+	
+	# Noray OID input section
 	if address_input:
 		address_input.visible = true
-		address_input.placeholder_text = "Enter host code (OID)"
+		address_input.placeholder_text = "Enter host code (OID) for remote connection"
 		address_input.text = ""
 		# Connect text change to validate code in real-time
 		if not address_input.text_changed.is_connected(_on_join_code_input_changed):
 			address_input.text_changed.connect(_on_join_code_input_changed)
 	if port_input:
 		port_input.visible = false
-	if server_browser:
-		server_browser.visible = false
-	if refresh_button:
-		refresh_button.visible = false
-	if direct_connect_button:
-		direct_connect_button.visible = false
+	
+	# If we're hosting, ensure localhost entry is in the list
+	# Note: The broadcast system should handle this, but we check here as a safety measure
+	if MultiplayerManager.is_hosting:
+		print("[Server Browser] We are hosting, checking for localhost entry...")
+	
+	# Start server discovery first
+	MultiplayerManager.start_server_discovery()
+	
+	# Wait a frame for discovery to initialize
+	await get_tree().process_frame
+	
+	# Refresh server list when dialog opens
+	_refresh_server_list()
 	
 	join_dialog.popup_centered()
+	
+	# Refresh again after dialog is shown (in case items were cleared)
+	await get_tree().process_frame
+	print("[Server Browser] Item count after dialog popup: ", server_browser.get_item_count() if server_browser else 0)
+	if server_browser and server_browser.get_item_count() == 0 and not discovered_servers.is_empty():
+		print("[Server Browser] Items were cleared after popup, refreshing again...")
+		_refresh_server_list()
 	# Don't disable OK button; let validation enable/disable it as user types
 	if join_dialog.get_ok_button():
 		join_dialog.get_ok_button().disabled = true
 
 func _on_join_confirmed() -> void:
+	# Check if a server is selected from the browser
+	var selected_server: Dictionary = {}
+	if server_browser:
+		var selected_items = server_browser.get_selected_items()
+		if selected_items.size() > 0 and selected_items[0] < discovered_servers.size():
+			selected_server = discovered_servers[selected_items[0]]
+	
+	# Check if Noray OID is provided
 	var host_oid: String = ""
 	if address_input:
 		host_oid = address_input.text.strip_edges()
 	
-	# Validate OID (Noray OIDs can vary in length, but typically 5-6 characters)
-	# For now, accept any non-empty string
+	# Prioritize local server selection over Noray OID
+	if not selected_server.is_empty():
+		# Join via local server browser (direct connection)
+		var server_ip = selected_server.get("ip", "")
+		var server_port = selected_server.get("port", default_port)
+		
+		if server_ip.is_empty():
+			_hide_status()
+			_show_error_dialog("Invalid server selected.")
+			return
+		
+		# Show status
+		_show_status("Connecting to local server " + server_ip + ":" + str(server_port) + "...")
+		
+		# Attempt to join using direct connection (async function)
+		var success = await MultiplayerManager.join_game_direct(server_ip, player_name, server_port)
+		
+		if not success:
+			_hide_status()
+		return
+	
+	# Fall back to Noray OID if no local server selected
 	if host_oid.is_empty():
 		_hide_status()
-		_show_error_dialog("Please enter a valid host code.")
+		_show_error_dialog("Please select a local server or enter a host code.")
 		return
 	
 	# Show status
@@ -412,34 +473,107 @@ func _on_server_selected(index: int) -> void:
 		var server = discovered_servers[index]
 		# print("[Server Browser] Selected server: ", server["name"], " at ", server["ip"], ":", server["port"])
 
+func _on_server_activated(index: int) -> void:
+	# Double-click on server to connect
+	if index >= 0 and index < discovered_servers.size():
+		var server = discovered_servers[index]
+		print("[Server Browser] Activated server: ", server.get("name", "Unknown"), " at ", server.get("ip", "Unknown"), ":", server.get("port", -1))
+		
+		# Close the dialog
+		join_dialog.hide()
+		
+		# Connect to the server
+		_connect_to_server(server)
+
+func _connect_to_server(server: Dictionary) -> void:
+	var server_ip = server.get("ip", "")
+	var server_port = server.get("port", default_port)
+	
+	# Ensure port is an integer
+	if server_port is float:
+		server_port = int(server_port)
+	
+	if server_ip.is_empty():
+		_hide_status()
+		_show_error_dialog("Invalid server selected.")
+		return
+	
+	# Show status
+	_show_status("Connecting to local server " + server_ip + ":" + str(server_port) + "...")
+	
+	# Attempt to join using direct connection (async function)
+	var success = await MultiplayerManager.join_game_direct(server_ip, player_name, server_port)
+	
+	if not success:
+		_hide_status()
+
 func _on_servers_updated(servers: Array[Dictionary]) -> void:
 	discovered_servers = servers
+	# Throttle refreshes to prevent rapid updates
+	var current_time = Time.get_ticks_msec() / 1000.0
+	if current_time - last_refresh_time < refresh_cooldown:
+		# Skip this refresh, it's too soon
+		return
+	last_refresh_time = current_time
 	_refresh_server_list()
 
 func _refresh_server_list() -> void:
 	if not server_browser:
+		print("[Server Browser] ERROR: server_browser is null!")
+		return
+	
+	if not is_instance_valid(server_browser):
+		print("[Server Browser] ERROR: server_browser is not a valid instance!")
 		return
 		
+	print("[Server Browser] Clearing list (current item count: ", server_browser.get_item_count(), ")")
 	server_browser.clear()
 	discovered_servers = MultiplayerManager.get_discovered_servers()
 	
+	print("[Server Browser] Refreshing list, found ", discovered_servers.size(), " servers")
+	for i in range(discovered_servers.size()):
+		var server = discovered_servers[i]
+		print("[Server Browser] Server ", i, ": ", server.get("name", "Unknown"), " at ", server.get("ip", "Unknown"), ":", server.get("port", -1))
+	
 	if discovered_servers.is_empty():
+		print("[Server Browser] No servers found, adding placeholder")
 		server_browser.add_item("No servers found - Click Refresh to scan")
 		server_browser.set_item_disabled(0, true)
+		print("[Server Browser] Item count after adding placeholder: ", server_browser.get_item_count())
 	else:
-		for server in discovered_servers:
+		print("[Server Browser] Adding ", discovered_servers.size(), " servers to list")
+		for i in range(discovered_servers.size()):
+			var server = discovered_servers[i]
+			# Ensure port is an integer (JSON might parse it as float)
+			var port = server.get("port", 7000)
+			if port is float:
+				port = int(port)
+			
 			var server_text = "%s (%d/%d players) - %s:%d" % [
 				server.get("name", "Unknown Server"),
 				server.get("players", 0),
 				server.get("max_players", 8),
 				server.get("ip", "Unknown"),
-				server.get("port", 7000)
+				port
 			]
-			server_browser.add_item(server_text)
+			print("[Server Browser] Adding server ", i, " to list: ", server_text)
+			var item_index = server_browser.add_item(server_text)
+			print("[Server Browser] Added at index: ", item_index, " (total items now: ", server_browser.get_item_count(), ")")
 	
-	# print("[Server Browser] Updated list with ", discovered_servers.size(), " servers")
+	print("[Server Browser] Final item count: ", server_browser.get_item_count(), " (expected: ", discovered_servers.size() if not discovered_servers.is_empty() else 1, ")")
+	print("[Server Browser] ItemList visible: ", server_browser.visible, ", size: ", server_browser.size, ", position: ", server_browser.position)
+	
+	# Force update the ItemList
+	server_browser.queue_redraw()
+	
+	# Verify items are actually there
+	if server_browser.get_item_count() > 0:
+		print("[Server Browser] First item text: ", server_browser.get_item_text(0))
+		print("[Server Browser] ItemList is_valid: ", is_instance_valid(server_browser), ", in_tree: ", server_browser.is_inside_tree())
 
 func _on_join_dialog_about_to_popup() -> void:
 	# Reset to browser view when dialog opens
+	print("[Server Browser] Join dialog about to popup")
 	_on_show_browser()
-	_refresh_server_list()
+	# Don't refresh here - let it refresh after popup
+	# _refresh_server_list()

@@ -1,0 +1,18 @@
+newmtl prototype_blue
+map_Kd textures/prototype_blue.png
+
+newmtl prototype_dark
+map_Kd textures/prototype_dark.png
+
+newmtl prototype_green
+map_Kd textures/prototype_green.png
+
+newmtl prototype_orange
+map_Kd textures/prototype_orange.png
+
+newmtl prototype_purple
+map_Kd textures/prototype_purple.png
+
+newmtl prototype_red
+map_Kd textures/prototype_red.png
+

@@ -1,0 +1,127 @@
+[gd_scene load_steps=25 format=3 uid="uid://dwj32j2s2rfaa"]
+
+[ext_resource type="Script" uid="uid://cwrmhmqjhgp8m" path="res://resource/entities/player/angel_flechette.gd" id="1_script"]
+[ext_resource type="AudioStream" uid="uid://bm7t3g04fq1ep" path="res://assets/snd/weapon/angel_rifle/sound_physics_metal_sawblade_stick1.wav" id="2_8mbg2"]
+[ext_resource type="Shader" uid="uid://chte40u8vejbe" path="res://addons/GPUTrail-main/shaders/trail.gdshader" id="2_wripb"]
+[ext_resource type="Shader" uid="uid://chhqh64xmu4sh" path="res://addons/GPUTrail-main/shaders/trail_draw_pass.gdshader" id="3_cmcrn"]
+[ext_resource type="AudioStream" uid="uid://biq1s7prynjca" path="res://assets/snd/weapon/angel_rifle/sound_physics_metal_sawblade_stick2.wav" id="3_dviwq"]
+[ext_resource type="Texture2D" uid="uid://crk6pkb7e5rwc" path="res://addons/GPUTrail-main/defaults/texture.tres" id="4_u5oco"]
+[ext_resource type="AudioStream" uid="uid://c4f8njl0enbmy" path="res://assets/snd/weapon/angel_rifle/sound_physics_metal_sawblade_stick3.wav" id="4_vqcyp"]
+[ext_resource type="AudioStream" uid="uid://ckacupkxjkhi6" path="res://assets/snd/weapon/angel_rifle/portal_fizzle2.wav" id="5_ed4qg"]
+[ext_resource type="Script" uid="uid://dpb1gu2rixhrk" path="res://addons/GPUTrail-main/GPUTrail3D.gd" id="5_syaai"]
+[ext_resource type="AudioStream" uid="uid://celjpmy7trknu" path="res://assets/snd/weapon/angel_rifle/angel_flechette_discharge.ogg" id="6_5tlkw"]
+
+[sub_resource type="AudioStreamRandomizer" id="AudioStreamRandomizer_fwukh"]
+random_pitch = 1.15
+random_volume_offset_db = 0.15
+streams_count = 3
+stream_0/stream = ExtResource("2_8mbg2")
+stream_1/stream = ExtResource("3_dviwq")
+stream_2/stream = ExtResource("4_vqcyp")
+
+[sub_resource type="BoxMesh" id="BoxMesh_spike"]
+size = Vector3(0.05, 0.05, 0.8)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_glow"]
+albedo_color = Color(0.2, 0.8, 1, 1)
+emission_enabled = true
+emission = Color(0.1, 0.5, 1, 1)
+emission_energy_multiplier = 2.0
+
+[sub_resource type="BoxMesh" id="BoxMesh_njp7x"]
+size = Vector3(0.16, 0.065, 0.26)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_col"]
+size = Vector3(0.1, 0.1, 0.8)
+
+[sub_resource type="Gradient" id="Gradient_njp7x"]
+colors = PackedColorArray(1, 1, 1, 1, 0.376, 0.6728, 0.8, 0.0156863)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_lxbs3"]
+gradient = SubResource("Gradient_njp7x")
+fill = 1
+fill_from = Vector2(0.512821, 0.457265)
+fill_to = Vector2(0.858974, 0.111111)
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_axfsn"]
+shader = ExtResource("2_wripb")
+
+[sub_resource type="Gradient" id="Gradient_gauyf"]
+colors = PackedColorArray(0.372549, 0.666667, 0.796078, 1, 0.376, 0.6728, 0.8, 0)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_8mbg2"]
+gradient = SubResource("Gradient_gauyf")
+
+[sub_resource type="Curve" id="Curve_bf45n"]
+bake_resolution = 16
+_data = [Vector2(0, 0.109589), 0.0, 0.194589, 0, 1, Vector2(1, 0.304178), 0.194589, 0.0, 1, 0]
+point_count = 2
+
+[sub_resource type="CurveTexture" id="CurveTexture_8mbg2"]
+curve = SubResource("Curve_bf45n")
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_ap8gw"]
+resource_local_to_scene = true
+render_priority = 0
+shader = ExtResource("3_cmcrn")
+shader_parameter/tex = ExtResource("4_u5oco")
+shader_parameter/uv_offset = Vector2(0, 0)
+shader_parameter/color_ramp = SubResource("GradientTexture1D_8mbg2")
+shader_parameter/curve = SubResource("CurveTexture_8mbg2")
+shader_parameter/emmission_transform = Projection(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)
+shader_parameter/flags = 40
+
+[sub_resource type="QuadMesh" id="QuadMesh_vqcyp"]
+material = SubResource("ShaderMaterial_ap8gw")
+
+[node name="AngelFlechette" type="Area3D"]
+collision_layer = 0
+script = ExtResource("1_script")
+impact_sound = SubResource("AudioStreamRandomizer_fwukh")
+destroy_sound = ExtResource("5_ed4qg")
+detonation_sound = ExtResource("6_5tlkw")
+speed = 120.0
+damage = 2
+lifetime = 30.0
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_spike")
+surface_material_override/0 = SubResource("StandardMaterial3D_glow")
+
+[node name="MeshInstance3D2" type="MeshInstance3D" parent="MeshInstance3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.25988)
+mesh = SubResource("BoxMesh_njp7x")
+skeleton = NodePath("../..")
+
+[node name="MeshInstance3D3" type="MeshInstance3D" parent="MeshInstance3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.0914142)
+mesh = SubResource("BoxMesh_njp7x")
+skeleton = NodePath("../..")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("BoxShape3D_col")
+
+[node name="Sprite3D" type="Sprite3D" parent="."]
+transform = Transform3D(1.75272, 0, 0, 0, 1.75272, 0, 0, 0, 1.75272, 0, 0, 0)
+modulate = Color(0.408783, 0.739754, 0.917969, 0.843137)
+billboard = 1
+double_sided = false
+alpha_antialiasing_mode = 1
+texture_filter = 0
+texture = SubResource("GradientTexture2D_lxbs3")
+
+[node name="GPUTrail3D" type="GPUParticles3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.267559)
+amount = 90
+lifetime = 90.0
+explosiveness = 1.0
+fixed_fps = 60
+process_material = SubResource("ShaderMaterial_axfsn")
+draw_pass_1 = SubResource("QuadMesh_vqcyp")
+script = ExtResource("5_syaai")
+length = 90
+length_seconds = 1.5
+color_ramp = SubResource("GradientTexture1D_8mbg2")
+curve = SubResource("CurveTexture_8mbg2")
+_defaults_have_been_set = true
+metadata/_custom_type_script = "uid://dpb1gu2rixhrk"

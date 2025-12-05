@@ -1,0 +1,14 @@
+[remap]
+
+importer="func_godot.map"
+type="Resource"
+uid="uid://d3yhovw2m8cw5"
+path="res://.godot/imported/archstiletto_nucleus.map-edee5c8440ddeaa49986d4bab09192a7.tres"
+
+[deps]
+
+source_file="res://mapsrc/archstiletto_nucleus.map"
+dest_files=["res://.godot/imported/archstiletto_nucleus.map-edee5c8440ddeaa49986d4bab09192a7.tres"]
+
+[params]
+

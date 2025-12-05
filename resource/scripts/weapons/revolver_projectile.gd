@@ -4,7 +4,7 @@ class_name RevolverProjectile
 # --- Revolver-specific projectile properties ----------------------------------
 @export var projectile_scene: PackedScene  # Scene for physical bullet projectile
 @export var projectile_speed: float = 80.0
-@export var projectile_damage: int = 25
+@export var projectile_damage: int = 1  # Reduced from 25 to match 4 HP health system
 
 # --- Audio properties ---------------------------------------------------------
 @export var fire_sound: AudioStream  # Sound played when firing
@@ -64,6 +64,32 @@ func shoot() -> void:
 	# Attempt to fire a single round (projectile-based)
 	print("RevolverProjectile: shoot() called - _can_fire=", _can_fire, " ammo=", ammo_in_clip, " is_reloading=", is_reloading, " _reload_timer.time_left=", _reload_timer.time_left)
 	
+	# RELOAD CANCELLING: If we're reloading, cancel it and allow firing
+	# This must be checked BEFORE _can_fire check so we can cancel reload and set _can_fire = true
+	if is_reloading:
+		print("RevolverProjectile: Cancelling reload to fire")
+		# Cancel all reload timers
+		_reload_timer.stop()
+		reload_loop_timer.stop()
+		if auto_reload_timer.time_left > 0:
+			auto_reload_timer.stop()
+		# Reset reload state
+		is_reloading = false
+		reload_stage = "none"
+		bullets_loaded = 0
+		target_bullets = 0
+		# Allow firing immediately
+		_can_fire = true
+		# Reset reload timer wait time to ensure it's truly stopped
+		_reload_timer.wait_time = 0.0
+		print("RevolverProjectile: Reload cancelled, ready to fire")
+	
+	# BULLET JUMP COOLDOWN: Prevent firing during bullet jump cooldown
+	var bullet_jump_module = _find_bullet_jump_module()
+	if bullet_jump_module and bullet_jump_module.is_bullet_jump_on_cooldown():
+		print("RevolverProjectile: Cannot fire - bullet jump on cooldown")
+		return
+	
 	if not _can_fire:
 		print("RevolverProjectile: Cannot fire - _can_fire is false")
 		return
@@ -72,15 +98,6 @@ func shoot() -> void:
 		if empty_sound:
 			_play_sound(empty_sound)
 		return
-	if is_reloading:
-		print("RevolverProjectile: Cannot fire - reloading")
-		# If we're reloading but user wants to fire, cancel reload
-		_reload_timer.stop()
-		reload_loop_timer.stop()
-		is_reloading = false
-		reload_stage = "none"
-		_can_fire = true
-		print("RevolverProjectile: Cancelled reload to fire")
 	
 	# Ensure reload timer is stopped when firing (weapon manager checks this)
 	_reload_timer.stop()
@@ -264,7 +281,17 @@ func _get_owner_peer_id() -> int:
 	# Use universal ownership utility to find NetworkedPlayer and get peer_id
 	var networked_player = NetworkedProjectileOwnership.get_owner_networked_player(self)
 	if networked_player:
+		print("[RevolverProjectile] Found NetworkedPlayer in hierarchy: ", networked_player.player_name, " (peer_id: ", networked_player.peer_id, ")")
 		return networked_player.peer_id
+	else:
+		# Debug: Walk up the tree to see what we find
+		print("[RevolverProjectile] WARNING: Could not find NetworkedPlayer in parent hierarchy!")
+		var node = self
+		var path = ""
+		while node:
+			path = node.name + " -> " + path
+			node = node.get_parent()
+		print("[RevolverProjectile] Hierarchy: ", path)
 	
 	# Fallback: try to find owner node and get peer_id from it
 	var owner = _get_owner_node()
@@ -365,3 +392,21 @@ func get_bullets_loaded() -> int:
 
 func get_target_bullets() -> int:
 	return target_bullets
+
+func _find_bullet_jump_module() -> Node:
+	"""Find BulletJumpModule in the player hierarchy"""
+	# Walk up the tree to find the player/owner
+	var node = get_parent()
+	while node:
+		# Check if this node has a BulletJump child
+		var bullet_jump = node.get_node_or_null("BulletJump")
+		if bullet_jump and bullet_jump.has_method("is_bullet_jump_on_cooldown"):
+			return bullet_jump
+		
+		# Also check if this node itself is the bullet jump module
+		if node.has_method("is_bullet_jump_on_cooldown"):
+			return node
+		
+		node = node.get_parent()
+	
+	return null

@@ -445,10 +445,61 @@ func _apply_pause_menu_visibility(show: bool) -> void:
 		else:
 			pause_menu_instance.hide()
 	
-	if show:
+	# Check if character select is active - if so, force mouse to visible when hiding
+	if not show and _has_character_select():
 		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
-	else:
-		Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+	# Only manage mouse mode if we're in a game scene
+	# Let UI scenes (lobby, character select) manage their own mouse mode
+	elif _is_game_scene():
+		if show:
+			Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+		else:
+			Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+	# Otherwise, don't touch mouse mode - let the scene handle it
+
+func _is_game_scene() -> bool:
+	var current_scene := get_tree().current_scene
+	if not current_scene:
+		return false
+	
+	var scene_path := current_scene.scene_file_path
+	# Game scenes are not UI scenes, lobby, or character select
+	return not scene_path.begins_with("res://scenes/ui/") and \
+		   not "lobby" in scene_path.to_lower() and \
+		   not _has_character_select()
+
+func _has_character_select() -> bool:
+	# Check if current scene has character select UI
+	var current_scene := get_tree().current_scene
+	if not current_scene:
+		return false
+	
+	# Check for CharacterSelect node by name
+	if current_scene.get_node_or_null("CharacterSelect"):
+		return true
+	
+	# Check for nodes in character_select group
+	if not get_tree().get_nodes_in_group("character_select").is_empty():
+		return true
+	
+	# Search recursively for CharacterSelect class instances
+	var character_select_nodes = _find_nodes_by_class(current_scene)
+	if not character_select_nodes.is_empty():
+		return true
+	
+	return false
+
+func _find_nodes_by_class(node: Node) -> Array:
+	var result: Array = []
+	# Check if node is of the CharacterSelect class
+	if node is CharacterSelect:
+		result.append(node)
+	
+	# Recursively check children
+	for child in node.get_children():
+		result.append_array(_find_nodes_by_class(child))
+	
+	return result
 
 func _set_match_paused(show: bool) -> void:
 	sync_match_pause_state.rpc(show)

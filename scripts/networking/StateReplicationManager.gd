@@ -5,7 +5,7 @@ class_name StateReplicationManager
 ## Handles entity state synchronization with delta compression and priority updates
 
 # --- Configuration ---
-@export var snapshot_rate: float = 20.0  # Snapshots per second (Source uses 20-66)
+@export var snapshot_rate: float = 60.0  # Snapshots per second (Source uses 20-66, competitive uses 60-66)
 @export var max_snapshot_history: int = 64  # Keep last 64 snapshots for delta calculation
 @export var enable_delta_compression: bool = true
 @export var enable_priority_updates: bool = true

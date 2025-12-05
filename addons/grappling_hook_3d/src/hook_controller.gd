@@ -386,6 +386,9 @@ func fire_hook():
 		
 		# Play hook fire sound
 		play_sound(hook_fire_sound)
+		
+		# Broadcast hook fire to other clients for visual sync
+		sync_hook_fire.rpc(get_spawn_position(), grapple_target_point, grapple_target_normal)
 	else:
 		print("Grapple: No target found at screen center. Ray from ", ray_origin, " to ", ray_end)
 
@@ -410,6 +413,9 @@ func process_hook_flying(delta: float):
 		var source_pos = get_spawn_position()
 		var normal = grapple_target_normal if grapple_target_normal != Vector3.ZERO else Vector3.UP
 		current_hook_instance.extend_from_to(source_pos, hook_tip_position, normal)
+		
+		# Broadcast position update to other clients
+		sync_hook_position.rpc(source_pos, hook_tip_position, normal)
 	
 	# Short raycast from hook tip
 	var _world := get_world_3d()
@@ -596,6 +602,9 @@ func process_player_pull(delta: float):
 		var source_pos = get_spawn_position()
 		var normal = grapple_target_normal if grapple_target_normal != Vector3.ZERO else Vector3.UP
 		current_hook_instance.extend_from_to(source_pos, target_pos, normal)
+		
+		# Broadcast position update to other clients
+		sync_hook_position.rpc(source_pos, target_pos, normal)
 	if player_body and player_body is CharacterBody3D:
 		if is_player_stuck_to_wall:
 			var snap_pos = anchor_pos
@@ -658,6 +667,9 @@ func process_hook_retracting(delta: float):
 		var source_pos = get_spawn_position()
 		var normal = grapple_target_normal if grapple_target_normal != Vector3.ZERO else Vector3.UP
 		current_hook_instance.extend_from_to(source_pos, hook_tip_position, normal)
+		
+		# Broadcast position update to other clients
+		sync_hook_position.rpc(source_pos, hook_tip_position, normal)
 	
 	if hook_tip_position.distance_to(retraction_target_pos) < 0.2:
 		destroy_hook()
@@ -712,6 +724,9 @@ func destroy_hook():
 	_awaiting_hold_decision = false
 	_grapple_press_timer = 0.0
 	set_state(GrappleState.IDLE)
+	
+	# Broadcast hook destruction to other clients
+	sync_hook_destroy.rpc()
 
 func is_grapple_target_available() -> bool:
 	var _world := get_world_3d()
@@ -835,3 +850,47 @@ func spawn_spark_effect(position: Vector3, normal: Vector3) -> void:
 		spark.finished.connect(func(): spark.queue_free())
 	else:
 		print("Warning: spark_scene not assigned to HookController")
+
+# --- Multiplayer Visual Sync ---
+# Variables for remote hook visualization (only for other players' hooks)
+var _remote_hook_instance: Node3D = null
+
+# --- Hook Visual Replication RPCs ---
+# These only run on remote clients (call_remote ensures local player doesn't process them)
+
+@rpc("any_peer", "call_remote", "reliable")
+func sync_hook_fire(source_pos: Vector3, target_pos: Vector3, target_normal: Vector3) -> void:
+	"""Spawn hook visual on remote clients when another player fires their hook"""
+	# Clean up any existing remote hook
+	if _remote_hook_instance and is_instance_valid(_remote_hook_instance):
+		_remote_hook_instance.queue_free()
+		_remote_hook_instance = null
+	
+	# Spawn the hook visual for this remote player
+	if grappling_hook_scene:
+		_remote_hook_instance = grappling_hook_scene.instantiate()
+		get_parent().add_child(_remote_hook_instance)
+		_remote_hook_instance.global_position = source_pos
+		
+		# Initial rope visual update
+		if _remote_hook_instance.has_method("extend_from_to"):
+			var normal = target_normal if target_normal != Vector3.ZERO else Vector3.UP
+			_remote_hook_instance.extend_from_to(source_pos, source_pos, normal)
+
+@rpc("any_peer", "call_remote", "unreliable")
+func sync_hook_position(source_pos: Vector3, tip_pos: Vector3, target_normal: Vector3) -> void:
+	"""Update hook rope visual position on remote clients"""
+	if not _remote_hook_instance or not is_instance_valid(_remote_hook_instance):
+		return
+	
+	# Update the rope visual
+	if _remote_hook_instance.has_method("extend_from_to"):
+		var normal = target_normal if target_normal != Vector3.ZERO else Vector3.UP
+		_remote_hook_instance.extend_from_to(source_pos, tip_pos, normal)
+
+@rpc("any_peer", "call_remote", "reliable")
+func sync_hook_destroy() -> void:
+	"""Remove hook visual on remote clients when hook is destroyed"""
+	if _remote_hook_instance and is_instance_valid(_remote_hook_instance):
+		_remote_hook_instance.queue_free()
+		_remote_hook_instance = null

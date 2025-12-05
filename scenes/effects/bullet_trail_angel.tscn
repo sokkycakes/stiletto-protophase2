@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3 uid="uid://bl20vrkjsoji4"]
+
+[ext_resource type="Script" uid="uid://dx0n51ne3j2q2" path="res://scenes/effects/bullet_trail.gd" id="1_jv57r"]
+
+[node name="BulletTrail" type="Node3D"]
+script = ExtResource("1_jv57r")
+trail_duration = 0.4
+trail_color = Color(0.376, 0.6728, 0.8, 0.776471)

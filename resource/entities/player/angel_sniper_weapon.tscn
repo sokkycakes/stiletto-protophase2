@@ -1,0 +1,28 @@
+[gd_scene load_steps=5 format=3 uid="uid://dbewby5ehfcm2"]
+
+[ext_resource type="Script" uid="uid://dcgmehu2jb5bo" path="res://resource/scripts/weapons/angel_sniper.gd" id="1_script"]
+[ext_resource type="PackedScene" uid="uid://dwj32j2s2rfaa" path="res://resource/entities/player/angel_flechette.tscn" id="2_flechette"]
+[ext_resource type="ArrayMesh" uid="uid://bxxrbo0srt2x8" path="res://assets/player/model/ss_player_angel/angel_rifle.res" id="3_c872p"]
+[ext_resource type="PackedScene" uid="uid://p262qaitjp3" path="res://scenes/effects/bullet_impact.tscn" id="3_yj2ei"]
+
+[node name="AngelSniper" type="Node3D"]
+script = ExtResource("1_script")
+flechette_scene = ExtResource("2_flechette")
+airblast_cooldown = 1.5
+airblast_ammo_cost = 3
+clip_size = 3
+ammo_in_clip = 3
+fire_rate = 1.0
+reload_time = 2.5
+bullet_damage = 2
+maximum_distance = 2000.0
+spread_degrees = 0.0
+impact_effect_scene = ExtResource("3_yj2ei")
+muzzle_path = NodePath("Muzzle")
+
+[node name="Muzzle" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(1.47464e-08, -2.94929e-08, 0.337359, -0.337359, -1.47464e-08, 1.47464e-08, 1.47464e-08, -0.337359, -2.94929e-08, 0, 0, 0)
+mesh = ExtResource("3_c872p")

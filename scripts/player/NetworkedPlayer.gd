@@ -31,8 +31,27 @@ var last_position: Vector3 = Vector3.ZERO
 var last_rotation: Vector3 = Vector3.ZERO
 var last_view_yaw: float = 0.0
 var last_view_pitch: float = 0.0
-var position_threshold: float = 0.1
-var rotation_threshold: float = 0.05
+var position_threshold: float = 0.01  # Reduced for smoother slow movements
+var rotation_threshold: float = 0.01  # Reduced for smoother rotations
+
+# --- Time-based Interpolation & Extrapolation (Source Engine style) ---
+@export var interpolation_delay: float = 0.05  # Delay before rendering (seconds) - reduces jitter
+@export var extrapolation_max_time: float = 0.1  # Max time to extrapolate forward (seconds)
+var position_history: Array[Dictionary] = []  # History of position snapshots (client-side for interpolation)
+var max_history_size: int = 32  # Maximum snapshots to keep
+var last_network_update_time: float = 0.0  # Time of last network update
+var last_velocity: Vector3 = Vector3.ZERO  # Last calculated velocity for extrapolation
+var smoothed_velocity: Vector3 = Vector3.ZERO  # Smoothed velocity to reduce jitter
+
+# --- Lag Compensation (Server-side only) ---
+var lag_compensation_history: Array[Dictionary] = []  # Server-side position history for lag compensation
+var max_lag_compensation_history: int = 64  # Keep more history for lag compensation (1 second at 60 Hz)
+var lag_compensation_sample_rate: float = 0.016  # Sample every ~16ms (60 Hz)
+var last_lag_compensation_sample_time: float = 0.0
+var lag_compensation_enabled: bool = true
+var real_position: Vector3 = Vector3.ZERO  # Store real position during rewind
+var real_rotation: Vector3 = Vector3.ZERO
+var is_rewound: bool = false  # Track if this player is currently rewound
 
 # --- Visibility / Layers ---
 # Shared world-model layer used by all player bodies/weapons in the scene assets.
@@ -65,20 +84,10 @@ func _ready() -> void:
 	respawn_timer.timeout.connect(_respawn_player)
 	add_child(respawn_timer)
 	
-	# Create sync timer for smooth network updates
-	sync_timer = Timer.new()
-	sync_timer.wait_time = 1.0 / 20.0  # 20 FPS sync rate
-	sync_timer.timeout.connect(_sync_position)
-	add_child(sync_timer)
-	
 	# Spawn the pawn
 	_spawn_pawn()
-	
-	# Start sync timer
-	if not is_multiplayer_authority():
-		sync_timer.start()
 
-func _physics_process(delta: float) -> void:
+func _physics_process(_delta: float) -> void:
 	if not pawn or not is_alive:
 		return
 	
@@ -88,6 +97,12 @@ func _physics_process(delta: float) -> void:
 	# Authority updates position for networking
 	if _has_local_authority():
 		_check_position_sync()
+		# Server-side: store position history for lag compensation
+		if MultiplayerManager and MultiplayerManager.is_server() and lag_compensation_enabled:
+			_store_lag_compensation_snapshot()
+	# Non-authority: apply time-based interpolation with extrapolation
+	else:
+		_apply_time_based_interpolation(_delta)
 
 # --- Pawn Management ---
 
@@ -187,12 +202,30 @@ func _configure_local_player_model_visibility() -> void:
 	# Re-layer all meshes under the player model root to a local-only layer on THIS client.
 	for child in model_root.get_children():
 		_set_mesh_layer_recursive(child, LOCAL_OWN_MODEL_LAYER)
+	
+	# Also hide the compass (if it exists)
+	_configure_compass_visibility()
 
 func _set_mesh_layer_recursive(node: Node, layer_mask: int) -> void:
 	if node is MeshInstance3D:
 		(node as MeshInstance3D).layers = layer_mask
 	for c in node.get_children():
 		_set_mesh_layer_recursive(c, layer_mask)
+
+func _configure_compass_visibility() -> void:
+	"""Move the compass to a local-only render layer so the player can't see it."""
+	if not pawn:
+		return
+	
+	# Find compass node (typically at Body/compass)
+	var compass := pawn.get_node_or_null("Body/compass") as Node3D
+	if not compass:
+		# Fallback: try to find by name anywhere under the pawn
+		compass = pawn.find_child("compass", true, false) as Node3D
+	
+	if compass:
+		# Re-layer all meshes under the compass to a local-only layer
+		_set_mesh_layer_recursive(compass, LOCAL_OWN_MODEL_LAYER)
 
 func _configure_local_camera_visibility() -> void:
 	"""Configure local player's camera to hide their own world model layer."""
@@ -394,6 +427,38 @@ static func apply_damage_to_player(receiver: NetworkedPlayer, amount: float, att
 	if receiver is NetworkedPlayer:
 		var target_peer_id := receiver.peer_id
 		receiver.apply_damage.rpc(amount, attacker_peer_id, target_peer_id)
+
+# --- Knockback System ---
+
+## Apply knockback impulse to this player's body
+## Similar pattern to apply_damage - must be called via RPC to the authority
+@rpc("any_peer", "call_local", "reliable")
+func apply_knockback(impulse: Vector3, attacker_peer_id: int = -1, target_peer_id: int = -1) -> void:
+	# Validate this is the correct target (same pattern as apply_damage)
+	if target_peer_id >= 0 and peer_id != target_peer_id:
+		push_warning("[NetworkedPlayer] apply_knockback called on wrong instance! Expected peer_id %d, but this is peer_id %d" % [target_peer_id, peer_id])
+		return
+	
+	# Only authority can modify velocity
+	if not is_multiplayer_authority():
+		return
+	
+	if not is_alive:
+		return
+	
+	# Apply impulse to the Body's velocity
+	if pawn_body and pawn_body is CharacterBody3D:
+		pawn_body.velocity += impulse
+
+## Helper method to safely apply knockback to a NetworkedPlayer with validation
+## Use this instead of calling apply_knockback.rpc directly to ensure correct routing
+static func apply_knockback_to_player(receiver: NetworkedPlayer, impulse: Vector3, attacker_peer_id: int = -1) -> void:
+	if not receiver:
+		return
+	
+	var target_peer_id := receiver.peer_id
+	# Send RPC to the authority peer (the player who owns this NetworkedPlayer)
+	receiver.apply_knockback.rpc_id(target_peer_id, impulse, attacker_peer_id, target_peer_id)
 
 func heal(amount: float) -> void:
 	if not is_multiplayer_authority():
@@ -809,34 +874,315 @@ func _check_position_sync() -> void:
 		last_view_pitch = current_view_pitch
 		sync_transform.rpc(current_pos, current_rot, current_view_yaw, current_view_pitch)
 
-func _sync_position() -> void:
+## Time-based interpolation with extrapolation (Source Engine style)
+## Uses a history buffer of snapshots and calculates render time
+## Interpolates between two snapshots based on current time
+## Extrapolates forward if no new snapshot is available
+func _apply_time_based_interpolation(_delta: float) -> void:
 	if is_multiplayer_authority() or not pawn:
 		return
 	
-	# Smooth interpolation for remote players
-	var target_pos = last_position
-	var target_rot = last_rotation
+	# Need at least 2 snapshots for interpolation
+	if position_history.size() < 2:
+		return
 	
+	# Calculate render time (current time minus interpolation delay)
+	var current_time = Time.get_ticks_msec() / 1000.0
+	var render_time = current_time - interpolation_delay
+	
+	# Clean up old history entries
+	_cleanup_old_history(render_time)
+	
+	# Find the two snapshots to interpolate between
+	var older_snapshot: Dictionary = {}
+	var newer_snapshot: Dictionary = {}
+	var found_pair = false
+	
+	for i in range(position_history.size() - 1):
+		var snap1 = position_history[i]
+		var snap2 = position_history[i + 1]
+		
+		if snap1["time"] <= render_time and snap2["time"] >= render_time:
+			older_snapshot = snap1
+			newer_snapshot = snap2
+			found_pair = true
+			break
+	
+	# If we found a pair, interpolate between them
+	if found_pair:
+		var time_gap = newer_snapshot["time"] - older_snapshot["time"]
+		if time_gap > 0.0001:  # Avoid division by zero
+			var t = (render_time - older_snapshot["time"]) / time_gap
+			t = clamp(t, 0.0, 1.0)  # Clamp to valid range
+			
+			# Interpolate position
+			var interp_pos = older_snapshot["position"].lerp(newer_snapshot["position"], t)
+			
+			# Interpolate rotation (use slerp for better rotation interpolation)
+			var interp_rot = older_snapshot["rotation"].lerp(newer_snapshot["rotation"], t)
+			
+			# Interpolate view angles
+			var interp_yaw = lerp_angle(older_snapshot["view_yaw"], newer_snapshot["view_yaw"], t)
+			var interp_pitch = lerp_angle(older_snapshot["view_pitch"], newer_snapshot["view_pitch"], t)
+			
+			# Apply interpolated position
+			if pawn_body:
+				pawn_body.global_position = interp_pos
+				pawn_body.global_rotation = interp_rot
+				global_position = interp_pos
+			else:
+				pawn.global_position = interp_pos
+				pawn.global_rotation = interp_rot
+				global_position = interp_pos
+			
+			# Apply interpolated view angles
+			if pawn_horizontal_view:
+				pawn_horizontal_view.rotation.y = interp_yaw
+				pawn_horizontal_view.orthonormalize()
+			if pawn_vertical_view:
+				pawn_vertical_view.rotation.x = interp_pitch
+				pawn_vertical_view.orthonormalize()
+		else:
+			# Snapshots are too close together, use newer one
+			if pawn_body:
+				pawn_body.global_position = newer_snapshot["position"]
+				pawn_body.global_rotation = newer_snapshot["rotation"]
+				global_position = newer_snapshot["position"]
+			else:
+				pawn.global_position = newer_snapshot["position"]
+				pawn.global_rotation = newer_snapshot["rotation"]
+				global_position = newer_snapshot["position"]
+			
+			if pawn_horizontal_view:
+				pawn_horizontal_view.rotation.y = newer_snapshot["view_yaw"]
+				pawn_horizontal_view.orthonormalize()
+			if pawn_vertical_view:
+				pawn_vertical_view.rotation.x = newer_snapshot["view_pitch"]
+				pawn_vertical_view.orthonormalize()
+	
+	# Extrapolation: if render_time is ahead of newest snapshot
+	elif position_history.size() > 0:
+		var newest_snapshot = position_history[position_history.size() - 1]
+		var time_since_newest = render_time - newest_snapshot["time"]
+		
+		# Only extrapolate if within max time and we have velocity
+		if time_since_newest > 0.0 and time_since_newest <= extrapolation_max_time and last_velocity.length() > 0.01:
+			# Smooth velocity to reduce jitter
+			var smoothing_factor = 0.1
+			smoothed_velocity = smoothed_velocity.lerp(last_velocity, 1.0 - smoothing_factor)
+			
+			# Clamp velocity to reasonable maximum
+			var max_velocity = 50.0
+			if smoothed_velocity.length() > max_velocity:
+				smoothed_velocity = smoothed_velocity.normalized() * max_velocity
+			
+			# Calculate extrapolated position
+			var extrapolated_pos = newest_snapshot["position"] + smoothed_velocity * time_since_newest
+			
+			# Gradually reduce extrapolation as time increases
+			var extrapolation_factor = 1.0 - (time_since_newest / extrapolation_max_time)
+			extrapolation_factor = clamp(extrapolation_factor, 0.0, 1.0)
+			
+			# Blend between newest position and extrapolated position
+			var final_pos = newest_snapshot["position"].lerp(extrapolated_pos, extrapolation_factor)
+			
+			# Apply extrapolated position
+			if pawn_body:
+				pawn_body.global_position = final_pos
+				pawn_body.global_rotation = newest_snapshot["rotation"]
+				global_position = final_pos
+			else:
+				pawn.global_position = final_pos
+				pawn.global_rotation = newest_snapshot["rotation"]
+				global_position = final_pos
+			
+			# Use newest view angles (don't extrapolate rotation)
+			if pawn_horizontal_view:
+				pawn_horizontal_view.rotation.y = newest_snapshot["view_yaw"]
+				pawn_horizontal_view.orthonormalize()
+			if pawn_vertical_view:
+				pawn_vertical_view.rotation.x = newest_snapshot["view_pitch"]
+				pawn_vertical_view.orthonormalize()
+		else:
+			# Too old or no velocity - just use newest snapshot
+			if pawn_body:
+				pawn_body.global_position = newest_snapshot["position"]
+				pawn_body.global_rotation = newest_snapshot["rotation"]
+				global_position = newest_snapshot["position"]
+			else:
+				pawn.global_position = newest_snapshot["position"]
+				pawn.global_rotation = newest_snapshot["rotation"]
+				global_position = newest_snapshot["position"]
+			
+			if pawn_horizontal_view:
+				pawn_horizontal_view.rotation.y = newest_snapshot["view_yaw"]
+				pawn_horizontal_view.orthonormalize()
+			if pawn_vertical_view:
+				pawn_vertical_view.rotation.x = newest_snapshot["view_pitch"]
+				pawn_vertical_view.orthonormalize()
+
+## Clean up old history entries that are too far in the past
+func _cleanup_old_history(render_time: float) -> void:
+	# Remove snapshots that are too old to be useful
+	var cutoff_time = render_time - 1.0  # Keep 1 second of history
+	
+	while position_history.size() > 1:
+		if position_history[0]["time"] < cutoff_time:
+			position_history.pop_front()
+		else:
+			break
+	
+	# Also limit by max size
+	while position_history.size() > max_history_size:
+		position_history.pop_front()
+
+# --- Lag Compensation (Server-side only) ---
+
+## Store position snapshot for lag compensation (server-side only)
+func _store_lag_compensation_snapshot() -> void:
+	if not MultiplayerManager or not MultiplayerManager.is_server():
+		return
+	
+	if not pawn_body and not pawn:
+		return
+	
+	var current_time = Time.get_ticks_msec() / 1000.0
+	
+	# Sample at fixed rate to avoid too many snapshots
+	if current_time - last_lag_compensation_sample_time < lag_compensation_sample_rate:
+		return
+	
+	last_lag_compensation_sample_time = current_time
+	
+	var pos = pawn_body.global_position if pawn_body else pawn.global_position
+	var rot = pawn_body.global_rotation if pawn_body else pawn.global_rotation
+	
+	var snapshot = {
+		"time": current_time,
+		"position": pos,
+		"rotation": rot
+	}
+	
+	lag_compensation_history.append(snapshot)
+	
+	# Clean up old history (keep 1 second)
+	var cutoff_time = current_time - 1.0
+	while lag_compensation_history.size() > 1:
+		if lag_compensation_history[0]["time"] < cutoff_time:
+			lag_compensation_history.pop_front()
+		else:
+			break
+	
+	# Also limit by max size
+	while lag_compensation_history.size() > max_lag_compensation_history:
+		lag_compensation_history.pop_front()
+
+## Rewind this player to a specific time (for lag compensation)
+## Returns true if rewind was successful, false if time is too old
+func rewind_to_time(target_time: float) -> bool:
+	if not MultiplayerManager or not MultiplayerManager.is_server():
+		return false
+	
+	if is_rewound:
+		# Already rewound, don't double-rewind
+		return true
+	
+	if lag_compensation_history.is_empty():
+		return false
+	
+	# Find the closest snapshot to target_time
+	var best_snapshot: Dictionary = {}
+	var best_time_diff: float = INF
+	
+	for snapshot in lag_compensation_history:
+		var time_diff = abs(snapshot["time"] - target_time)
+		if time_diff < best_time_diff:
+			best_time_diff = time_diff
+			best_snapshot = snapshot
+	
+	# Only rewind if we found a snapshot within reasonable time (200ms)
+	if best_time_diff > 0.2:
+		return false
+	
+	# Store real position before rewinding
 	if pawn_body:
-		pawn_body.global_position = pawn_body.global_position.lerp(target_pos, 0.15)
-		pawn_body.global_rotation = pawn_body.global_rotation.lerp(target_rot, 0.15)
-		# Keep wrapper aligned with body for any dependent logic
-		global_position = pawn_body.global_position
+		real_position = pawn_body.global_position
+		real_rotation = pawn_body.global_rotation
+	elif pawn:
+		real_position = pawn.global_position
+		real_rotation = pawn.global_rotation
 	else:
-		pawn.global_position = pawn.global_position.lerp(target_pos, 0.15)
-		pawn.global_rotation = pawn.global_rotation.lerp(target_rot, 0.15)
+		return false
 	
-	if pawn_horizontal_view:
-		var current_yaw = pawn_horizontal_view.rotation.y
-		var new_yaw = lerp_angle(current_yaw, last_view_yaw, 0.2)
-		pawn_horizontal_view.rotation.y = new_yaw
-		pawn_horizontal_view.orthonormalize()
+	# Apply rewound position
+	if pawn_body:
+		pawn_body.global_position = best_snapshot["position"]
+		pawn_body.global_rotation = best_snapshot["rotation"]
+		global_position = best_snapshot["position"]
+	elif pawn:
+		pawn.global_position = best_snapshot["position"]
+		pawn.global_rotation = best_snapshot["rotation"]
+		global_position = best_snapshot["position"]
 	
-	if pawn_vertical_view:
-		var current_pitch = pawn_vertical_view.rotation.x
-		var new_pitch = lerp_angle(current_pitch, last_view_pitch, 0.2)
-		pawn_vertical_view.rotation.x = new_pitch
-		pawn_vertical_view.orthonormalize()
+	is_rewound = true
+	return true
+
+## Restore this player to real position (after lag compensation)
+func restore_from_rewind() -> void:
+	if not is_rewound:
+		return
+	
+	if not MultiplayerManager or not MultiplayerManager.is_server():
+		return
+	
+	# Restore real position
+	if pawn_body:
+		pawn_body.global_position = real_position
+		pawn_body.global_rotation = real_rotation
+		global_position = real_position
+	elif pawn:
+		pawn.global_position = real_position
+		pawn.global_rotation = real_rotation
+		global_position = real_position
+	
+	is_rewound = false
+
+## Static method to rewind all players for lag compensation
+static func rewind_all_players(target_time: float, exclude_peer_id: int = -1) -> Array[NetworkedPlayer]:
+	var rewound_players: Array[NetworkedPlayer] = []
+	
+	# Find all NetworkedPlayer instances in the scene
+	var scene_root = Engine.get_main_loop().current_scene if Engine.get_main_loop() else null
+	if not scene_root:
+		return rewound_players
+	
+	var all_players = scene_root.find_children("*", "NetworkedPlayer", true, false)
+	
+	for player in all_players:
+		if not player is NetworkedPlayer:
+			continue
+		
+		var np = player as NetworkedPlayer
+		
+		# Skip the shooter (they don't need to be rewound)
+		if np.peer_id == exclude_peer_id:
+			continue
+		
+		# Only rewind players on server
+		if not MultiplayerManager or not MultiplayerManager.is_server():
+			continue
+		
+		# Rewind this player
+		if np.rewind_to_time(target_time):
+			rewound_players.append(np)
+	
+	return rewound_players
+
+## Static method to restore all rewound players
+static func restore_all_players(rewound_players: Array[NetworkedPlayer]) -> void:
+	for player in rewound_players:
+		if is_instance_valid(player):
+			player.restore_from_rewind()
 
 func force_sync(target_peer_id: int = 0) -> void:
 	if not is_multiplayer_authority() or not pawn:
@@ -866,21 +1212,32 @@ func sync_transform(pos: Vector3, rot: Vector3, view_yaw: float, view_pitch: flo
 	last_view_yaw = view_yaw
 	last_view_pitch = view_pitch
 	
-	# Snap wrapper immediately for consistency when interpolation disabled
-	if pawn_body:
-		pawn_body.global_position = pos
-		pawn_body.global_rotation = rot
-		global_position = pos
+	# Calculate velocity from previous snapshot for extrapolation
+	var current_time = Time.get_ticks_msec() / 1000.0
+	if position_history.size() > 0:
+		var last_snapshot = position_history[position_history.size() - 1]
+		var time_delta = current_time - last_snapshot["time"]
+		if time_delta > 0.0001:  # Avoid division by zero
+			last_velocity = (pos - last_snapshot["position"]) / time_delta
+		else:
+			last_velocity = Vector3.ZERO
 	else:
-		global_position = pos
+		last_velocity = Vector3.ZERO
 	
-	if pawn_horizontal_view:
-		pawn_horizontal_view.rotation.y = view_yaw
-		pawn_horizontal_view.orthonormalize()
+	# Store snapshot in history buffer for time-based interpolation
+	var snapshot = {
+		"time": current_time,
+		"position": pos,
+		"rotation": rot,
+		"view_yaw": view_yaw,
+		"view_pitch": view_pitch
+	}
 	
-	if pawn_vertical_view:
-		pawn_vertical_view.rotation.x = view_pitch
-		pawn_vertical_view.orthonormalize()
+	position_history.append(snapshot)
+	last_network_update_time = current_time
+	
+	# Clean up old history
+	_cleanup_old_history(current_time)
 
 @rpc("authority", "call_remote", "reliable")
 func update_health(new_health: float, target_peer_id: int = -1) -> void:
