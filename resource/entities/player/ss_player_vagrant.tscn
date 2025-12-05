@@ -1737,6 +1737,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.175713, -0.0987661, -0.5389
 script = ExtResource("40_ocuvf")
 camera = NodePath("..")
 ammo_indicator_path = NodePath("../../../../../HUD/Control/Center/AmmoIndicator")
+reload_timer_label_path = NodePath("../../../../../HUD/Control/Center/reloadTimer")
 
 [node name="spy_knife" parent="Interpolated Camera/Arm/Arm Anchor/Camera/WeaponManager" node_paths=PackedStringArray("player_node") instance=ExtResource("41_ksme8")]
 player_node = NodePath("../../../../../../Body")

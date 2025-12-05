@@ -7,22 +7,28 @@ class_name LobbyMenu
 # --- UI References ---
 @onready var players_label: Label = $HBoxContainer/LeftPanel/PlayersPanel/VBoxContainer/PlayersLabel
 @onready var players_list: ItemList = $HBoxContainer/LeftPanel/PlayersPanel/VBoxContainer/PlayersList
-@onready var start_game_button: Button = $HBoxContainer/LeftPanel/ButtonsContainer/StartGame
-@onready var leave_game_button: Button = $HBoxContainer/LeftPanel/ButtonsContainer/LeaveGame
+@onready var start_game_button: Button = $HBoxContainer/RightPanel/MenuContainer/StartGame
+@onready var leave_game_button: Button = $HBoxContainer/LeftPanel/LeaveGame
 
 # --- Game Settings UI ---
-@onready var game_mode_container: Control = $HBoxContainer/RightPanel/GameSettingsPanel/VBoxContainer/GameModeContainer
-@onready var score_limit_container: Control = $HBoxContainer/RightPanel/GameSettingsPanel/VBoxContainer/ScoreLimitContainer
-@onready var time_limit_container: Control = $HBoxContainer/RightPanel/GameSettingsPanel/VBoxContainer/TimeLimitContainer
-@onready var map_option: OptionButton = $HBoxContainer/RightPanel/GameSettingsPanel/VBoxContainer/MapOption
+@onready var game_mode_option: OptionButton = $HBoxContainer/RightPanel/MenuContainer/ModeRow/GameModeOption
+@onready var score_limit_container: Control = $OptionsOverlay/CenterContainer/OptionsBox/ScoreLimitContainer
+@onready var time_limit_container: Control = $OptionsOverlay/CenterContainer/OptionsBox/TimeLimitContainer
+@onready var map_option: OptionButton = $HBoxContainer/RightPanel/MenuContainer/MapRow/MapOption
+@onready var map_thumbnail: TextureRect = $HBoxContainer/RightPanel/MenuContainer/MapThumbnail
+
+# --- Options Overlay ---
+@onready var options_overlay: Control = $OptionsOverlay
+@onready var game_options_button: Button = $HBoxContainer/RightPanel/MenuContainer/GameOptionsButton
+@onready var close_options_button: Button = $OptionsOverlay/CenterContainer/OptionsBox/CloseOptionsButton
 
 # --- Session Code UI ---
-@onready var code_label: Label = $HBoxContainer/RightPanel/GameSettingsPanel/VBoxContainer/sessionCodeContainer/codeLabel
-@onready var copy_code_button: Button = $HBoxContainer/RightPanel/GameSettingsPanel/VBoxContainer/sessionCodeButtonContainer/Button
+@onready var code_label: Label = $OptionsOverlay/CenterContainer/OptionsBox/SessionCodeContainer/CodeLabel
+@onready var copy_code_button: Button = $OptionsOverlay/CenterContainer/OptionsBox/SessionCodeContainer/CopyCodeButton
 
 # --- Chat UI ---
-@onready var chat_display: RichTextLabel = $HBoxContainer/RightPanel/ChatPanel/VBoxContainer/ChatDisplay
-@onready var chat_input: LineEdit = $HBoxContainer/RightPanel/ChatPanel/VBoxContainer/ChatInput
+@onready var chat_display: RichTextLabel = $HBoxContainer/LeftPanel/ChatPanel/VBoxContainer/ChatDisplay
+@onready var chat_input: LineEdit = $HBoxContainer/LeftPanel/ChatPanel/VBoxContainer/ChatInput
 @onready var status_label: Label = $StatusBar/StatusLabel
 
 # --- State ---
@@ -34,7 +40,8 @@ var current_settings: Dictionary = {}
 
 # --- Available Maps ---
 # Maps are now populated dynamically by scanning directories
-var available_maps: Array[Dictionary] = []
+var all_maps: Array[Dictionary] = []      # Master list of all found maps
+var available_maps: Array[Dictionary] = [] # Currently filtered list based on gamemode
 
 # Map scanning configuration
 var map_directories: Array[String] = [
@@ -53,9 +60,6 @@ func _ready() -> void:
 	# Scan for available maps first
 	_scan_for_maps()
 
-	# Hide mode/score/time controls so only map selection is visible
-	_hide_unused_game_options()
-
 	# Determine if we're the host
 	is_host = MultiplayerManager.is_hosting
 
@@ -65,9 +69,14 @@ func _ready() -> void:
 	chat_input.text_submitted.connect(_on_chat_submitted)
 	copy_code_button.pressed.connect(_on_copy_code_pressed)
 	
+	# Options overlay signals
+	game_options_button.pressed.connect(func(): options_overlay.visible = true)
+	close_options_button.pressed.connect(func(): options_overlay.visible = false)
+	
 	# Only hosts can change map selection
 	if is_host:
 		map_option.item_selected.connect(_on_map_changed)
+		game_mode_option.item_selected.connect(_on_game_mode_changed)
 	else:
 		_disable_host_controls()
 	
@@ -117,34 +126,31 @@ func _initialize_settings() -> void:
 	# Only set map selection if we have maps available
 	if not available_maps.is_empty():
 		map_option.selected = current_settings.map_index
+		_update_map_thumbnail(available_maps[current_settings.map_index].name)
+	else:
+		# Keep the placeholder visible if no maps are available
+		pass
 
 func _disable_host_controls() -> void:
 	# Only host can change maps/start games
 	map_option.disabled = true
+	game_mode_option.disabled = true
 	start_game_button.disabled = true
 
-func _hide_unused_game_options() -> void:
-	if game_mode_container:
-		game_mode_container.visible = false
-	if score_limit_container:
-		score_limit_container.visible = false
-	if time_limit_container:
-		time_limit_container.visible = false
-
 func _scan_for_maps() -> void:
-	available_maps.clear()
+	all_maps.clear()
 
 	# Scan each directory for map files
 	for directory_path in map_directories:
 		_scan_directory_for_maps(directory_path)
 
 	# Sort maps alphabetically by name
-	available_maps.sort_custom(func(a, b): return a.name < b.name)
+	all_maps.sort_custom(func(a, b): return a.name < b.name)
 
-	# Populate the map option button
-	_populate_map_options()
+	# Initial filter based on default selection
+	_on_game_mode_changed(game_mode_option.selected)
 
-	print("Found %d maps: %s" % [available_maps.size(), available_maps.map(func(m): return m.name)])
+	print("Found %d total maps. Filtered to %d maps for mode %d" % [all_maps.size(), available_maps.size(), game_mode_option.selected])
 
 func _scan_directory_for_maps(directory_path: String) -> void:
 	# Use ResourceLoader.list_directory (Godot 4.4+) for PCK compatibility in exported builds
@@ -180,9 +186,10 @@ func _scan_directory_for_maps(directory_path: String) -> void:
 
 				# Verify the scene file exists and is valid
 				if ResourceLoader.exists(full_path):
-					available_maps.append({
+					all_maps.append({
 						"name": map_name,
-						"path": full_path
+						"path": full_path,
+						"filename": file_name.get_basename()
 					})
 
 		file_name = dir.get_next()
@@ -206,9 +213,10 @@ func _scan_directory_with_resource_loader(directory_path: String) -> void:
 			
 			# Verify the scene file exists and is valid
 			if ResourceLoader.exists(full_path):
-				available_maps.append({
+				all_maps.append({
 					"name": map_name,
-					"path": full_path
+					"path": full_path,
+					"filename": file_name.get_basename()
 				})
 
 func _generate_map_name(file_name: String) -> String:
@@ -216,6 +224,12 @@ func _generate_map_name(file_name: String) -> String:
 	var map_name = file_name.get_basename()
 
 	# Convert underscores to spaces and capitalize words
+	# But we also want to keep prefixes visible for sorting/grouping?
+	# User requested: "maps sorted by prefix; archstiletto_, duelists_, etc"
+	# So maybe we should keep the raw name or format it nicely but keep the prefix structure?
+	# The current logic capitalizes words. e.g. "archstiletto_nucleus" -> "Archstiletto Nucleus".
+	# This preserves the prefix word order.
+	
 	map_name = map_name.replace("_", " ")
 	var words = map_name.split(" ")
 	var capitalized_words: Array[String] = []
@@ -225,6 +239,35 @@ func _generate_map_name(file_name: String) -> String:
 			capitalized_words.append(word.capitalize())
 
 	return " ".join(capitalized_words)
+
+func _on_game_mode_changed(index: int) -> void:
+	available_maps.clear()
+	
+	# Filter maps based on selected mode
+	# Mode 0: Duel (prefix: "duelists_")
+	# Mode 1: Archstiletto (prefix: "archstiletto_")
+	
+	var prefix = ""
+	match index:
+		0: prefix = "duelists_"
+		1: prefix = "archstiletto_"
+		_: prefix = "" # Show all if unknown
+		
+	for map_data in all_maps:
+		var filename = map_data.filename.to_lower()
+		if prefix == "" or filename.begins_with(prefix):
+			available_maps.append(map_data)
+			
+	# Refresh UI
+	_populate_map_options()
+	
+	# Update current selection
+	if not available_maps.is_empty():
+		_on_map_changed(0)
+	else:
+		# No maps available - keep the placeholder thumbnail
+		current_settings.map_index = -1
+		_sync_settings()
 
 func _populate_map_options() -> void:
 	# Clear existing options
@@ -241,6 +284,44 @@ func _populate_map_options() -> void:
 		map_option.set_item_disabled(0, true)
 		print("Warning: No valid map files found!")
 
+func _update_map_thumbnail(map_name: String) -> void:
+	# Load thumbnail from pre-generated assets
+	# Thumbnails are generated by tools/generate_map_thumbs.gd and saved to res://assets/map_thumbs/
+	# If no thumbnail is found, preserve the placeholder texture set in the scene
+	
+	# If map_name is empty, keep the placeholder
+	if map_name.is_empty():
+		return
+	
+	# Find map data to get filename
+	var map_data = null
+	for m in available_maps:
+		if m.name == map_name:
+			map_data = m
+			break
+	
+	if not map_data:
+		# No map data found - keep the placeholder
+		return
+	
+	# Construct thumbnail path using the scene filename (without extension)
+	var base_name: String = map_data.get("filename", "")
+	if base_name.is_empty():
+		# No filename - keep the placeholder
+		return
+	
+	var thumb_path := "res://assets/map_thumbs/%s.png" % base_name
+	
+	# Try to load the thumbnail
+	if ResourceLoader.exists(thumb_path):
+		var thumb_texture := load(thumb_path) as Texture2D
+		if thumb_texture:
+			map_thumbnail.texture = thumb_texture
+		# If loading fails, keep the placeholder (don't set to null)
+	else:
+		# No thumbnail found - keep the placeholder texture from the scene
+		pass
+
 func _update_ui_state() -> void:
 	# Update players count
 	var player_count = connected_players.size()
@@ -250,15 +331,15 @@ func _update_ui_state() -> void:
 	# Update start button (only host can start, need at least 1 player)
 	if match_active:
 		if is_host:
-			start_game_button.text = "Match In Progress"
+			start_game_button.text = "MATCH IN PROGRESS"
 			start_game_button.disabled = true
 			status_label.text = "Match is currently active"
 		else:
-			start_game_button.text = "Join Match"
+			start_game_button.text = "JOIN MATCH"
 			start_game_button.disabled = not MultiplayerManager or not MultiplayerManager.current_game_path
 			status_label.text = "Match in progress - join to re-enter"
 	else:
-		start_game_button.text = "Start Game"
+		start_game_button.text = "START GAME"
 		if is_host:
 			start_game_button.disabled = player_count < 1
 			status_label.text = "Ready to start game" if player_count >= 1 else "Waiting for players..."
@@ -327,6 +408,10 @@ func _on_map_changed(index: int) -> void:
 	
 	current_settings.map_index = index
 	_sync_settings()
+	
+	# Update thumbnail locally for host
+	if available_maps.size() > index:
+		_update_map_thumbnail(available_maps[index].name)
 
 func _sync_settings() -> void:
 	# Sync settings to all clients
@@ -342,6 +427,7 @@ func sync_lobby_settings(settings: Dictionary) -> void:
 		# Only update map selection if we have maps and valid index
 		if not available_maps.is_empty() and settings.map_index >= 0 and settings.map_index < available_maps.size():
 			map_option.selected = settings.map_index
+			_update_map_thumbnail(available_maps[settings.map_index].name)
 
 	# Show settings change in chat
 	var map_name = "Unknown"
@@ -468,6 +554,9 @@ func _input(event: InputEvent) -> void:
 				# Focus away from chat
 				if chat_input.has_focus():
 					chat_input.release_focus()
+				# Also close options if open
+				if options_overlay.visible:
+					options_overlay.visible = false
 			KEY_F5:
 				# Refresh players list
 				_refresh_players_list()

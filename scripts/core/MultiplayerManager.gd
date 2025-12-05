@@ -276,9 +276,12 @@ func join_game_direct(address: String, player_name: String, port: int = DEFAULT_
 
 ## Disconnect from current game
 func disconnect_from_game() -> void:
-	# Prevent double cleanup
+	# If we're already fully disconnected (no peer, no game), still ensure we return
+	# to the main menu so the UI isn't stuck in the lobby.
 	if not is_connected and not is_hosting and current_game_path == "":
-		print("[MultiplayerManager] Already disconnected, skipping cleanup")
+		print("[MultiplayerManager] Already disconnected – returning to main menu UI")
+		get_tree().change_scene_to_file("res://scenes/mp_framework/main_menu.tscn")
+		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 		return
 	
 	# Use call_deferred to handle async cleanup safely
@@ -534,7 +537,12 @@ func _on_connection_failed() -> void:
 func _on_server_disconnected() -> void:
 	print("Server disconnected")
 	is_connected = false
-	disconnect_from_game()
+	# If we're a client, gracefully return to the lobby scene instead of hanging.
+	if is_hosting:
+		disconnect_from_game()
+	else:
+		print("[MultiplayerManager] Server disconnected – returning to lobby scene for client")
+		_change_to_lobby_scene()
 
 # --- Utility Methods ---
 

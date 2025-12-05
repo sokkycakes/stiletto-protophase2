@@ -30,6 +30,11 @@ class_name WeaponSystemV1
 
 var _ammo_indicator: Node = null
 
+# HUD reload timer label (optional)
+@export var reload_timer_label_path: NodePath
+
+var _reload_timer_label: Label = null
+
 # Sound effects
 @export var shot_sound: AudioStream
 @export var bigshot_sound: AudioStream
@@ -107,6 +112,10 @@ func _ready():
 	if ammo_indicator_path != NodePath("") and has_node(ammo_indicator_path):
 		_ammo_indicator = get_node(ammo_indicator_path)
 		_update_ammo_indicator()
+	
+	if reload_timer_label_path != NodePath("") and has_node(reload_timer_label_path):
+		_reload_timer_label = get_node(reload_timer_label_path)
+		_update_reload_timer_display()
 
 func _input(event):
 	# Safety check: only handle input if properly initialized
@@ -120,7 +129,7 @@ func _input(event):
 	# Handle input for shooting and reloading
 	if event.is_action_pressed("fire"):
 		shoot()
-	elif event.is_action_pressed("bigshot"):
+	elif event.is_action_pressed("altfire"):
 		bigshot()
 	elif event.is_action_pressed("reload"):
 		reload()
@@ -301,6 +310,7 @@ func reload():
 		# Use fixed reload start time
 		reload_timer.wait_time = reload_start_time
 		reload_timer.start()
+		_update_reload_timer_display()
 
 func start_reload_loop():
 	reload_stage = "loop"
@@ -349,6 +359,7 @@ func complete_reload():
 	target_bullets = 0
 	print("Reload complete! Ammo: ", current_ammo)
 	_update_ammo_indicator()
+	_update_reload_timer_display()
 
 func _on_shot_fire_timer_timeout():
 	can_fire_shot = true
@@ -364,6 +375,53 @@ func _on_reload_timer_timeout():
 
 func _on_reload_loop_timer_timeout():
 	load_bullet()
+
+func _process(_delta: float) -> void:
+	# Update reload timer display during reload
+	if is_reloading and _reload_timer_label:
+		_update_reload_timer_display()
+
+func get_remaining_reload_time() -> float:
+	"""Calculate the total remaining time for the reload process"""
+	if not is_reloading:
+		return 0.0
+	
+	match reload_stage:
+		"start":
+			# Time left in start stage + loop time + end time
+			var remaining_start = max(0.0, reload_timer.time_left)
+			var loop_time = target_bullets * reload_bullet_time
+			var end_time = reload_end_time
+			return remaining_start + loop_time + end_time
+		
+		"loop":
+			# Time left in current bullet + remaining bullets + end time
+			var remaining_bullet = max(0.0, reload_loop_timer.time_left)
+			var remaining_bullets = max(0, target_bullets - bullets_loaded - 1)
+			var remaining_loop_time = remaining_bullets * reload_bullet_time
+			var end_time = reload_end_time
+			return remaining_bullet + remaining_loop_time + end_time
+		
+		"end":
+			# Time left in end stage
+			return max(0.0, reload_timer.time_left)
+		
+		_:
+			return 0.0
+
+func _update_reload_timer_display() -> void:
+	"""Update the reload timer label with countdown"""
+	if not _reload_timer_label:
+		return
+	
+	if is_reloading:
+		var remaining_time = get_remaining_reload_time()
+		# Format to 1 decimal place, countdown
+		_reload_timer_label.text = "%.1f" % remaining_time
+		_reload_timer_label.visible = true
+	else:
+		_reload_timer_label.visible = false
+		_reload_timer_label.text = "0.0"
 
 func perform_melee_attack() -> void:
 	"""Perform the hook melee attack"""

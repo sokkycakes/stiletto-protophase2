@@ -63,11 +63,53 @@ func _ready():
 	
 	print("BulletJumpModule: Initialized for ", get_parent().name)
 
+func _is_local_player() -> bool:
+	"""Check if this module belongs to the local player"""
+	var networked_player = _find_networked_player()
+	if networked_player:
+		return networked_player.is_local_player()
+	return false
+
+func _find_networked_player() -> Node:
+	"""Find the NetworkedPlayer parent node"""
+	var node: Node = self
+	while node:
+		# Check if this is a NetworkedPlayer by checking for the is_local_player method
+		# NetworkedPlayer is the only class that has this method in the player hierarchy
+		if node.has_method("is_local_player") and node.has_method("get_pawn"):
+			return node
+		node = node.get_parent()
+	return null
+
+func _play_sound_3d(sound: AudioStream, position: Vector3) -> void:
+	"""Play a 3D positional sound at the given position for all players"""
+	if not sound:
+		return
+	
+	var player_3d = AudioStreamPlayer3D.new()
+	player_3d.stream = sound
+	player_3d.bus = audio_bus
+	player_3d.global_position = position
+	player_3d.max_distance = 50.0
+	player_3d.attenuation_model = AudioStreamPlayer3D.ATTENUATION_INVERSE_DISTANCE
+	
+	# Add to scene tree
+	var scene_root = get_tree().current_scene
+	if scene_root:
+		scene_root.add_child(player_3d)
+		player_3d.play()
+		# Clean up when finished
+		player_3d.finished.connect(func(): player_3d.queue_free())
+
 func _process(delta: float):
 	if not enabled:
 		return
 	
 	if not player:
+		return
+	
+	# Only process input for local player
+	if not _is_local_player():
 		return
 	
 	# Track ground state to prevent ground jumps
@@ -218,8 +260,13 @@ func attempt_bullet_jump() -> bool:
 	
 	# Play sound effect
 	if bullet_jump_sound:
+		if _is_local_player():
+			# Local player: play 2D sound (always audible)
 		audio_player.stream = bullet_jump_sound
 		audio_player.play()
+		
+		# All players: play 3D positional sound at player location
+		_play_sound_3d(bullet_jump_sound, player.global_position)
 	
 	print("BulletJumpModule: Bullet jump executed! Consumed ", bullet_cost, " bullets. Remaining ammo: ", _get_weapon_ammo(), " (cooldown: ", cooldown_time, "s)")
 	return true

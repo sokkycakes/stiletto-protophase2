@@ -26,6 +26,10 @@ var weapon_sync_timer: Timer
 var network_recoil: Vector2 = Vector2.ZERO
 var network_spread_penalty: float = 0.0
 
+# --- Reload Timer Display ---
+@export var reload_timer_label_path: NodePath
+var _reload_timer_label: Label = null
+
 # --- New Signals ---
 signal weapon_fired_networked(weapon_name: String, shot_data: Dictionary)
 signal weapon_hit_confirmed(shot_id: int, hit_data: Dictionary)
@@ -42,6 +46,11 @@ func _ready() -> void:
 	
 	if not is_authority():
 		weapon_sync_timer.start()
+	
+	# Get reload timer label if path is provided
+	if reload_timer_label_path != NodePath("") and has_node(reload_timer_label_path):
+		_reload_timer_label = get_node(reload_timer_label_path)
+		_update_reload_timer_display()
 
 func _input(_event: InputEvent) -> void:
 	# Only process input if we have authority
@@ -402,6 +411,7 @@ func reject_weapon_fire(shot_id: int) -> void:
 func sync_weapon_reload(weapon_name: String) -> void:
 	if not is_authority() and current_weapon and current_weapon.name == weapon_name:
 		current_weapon.start_reload()
+		_update_reload_timer_display()
 
 @rpc("authority", "call_local", "reliable")
 func sync_weapon_switch(weapon_index: int) -> void:
@@ -501,6 +511,12 @@ func _get_fire_direction() -> Vector3:
 	
 	return direction
 
+func _process(_delta: float) -> void:
+	super._process(_delta)
+	# Update reload timer display during reload
+	if current_weapon and _reload_timer_label:
+		_update_reload_timer_display()
+
 func _sync_weapon_state() -> void:
 	if is_authority() and current_weapon:
 		var is_reloading = current_weapon._reload_timer.time_left > 0
@@ -513,11 +529,70 @@ func _cleanup_old_predictions() -> void:
 		if current_time - predicted_shots[i]["timestamp"] > prediction_timeout:
 			predicted_shots.remove_at(i)
 
+func get_remaining_reload_time() -> float:
+	"""Calculate the remaining reload time for the current weapon"""
+	if not current_weapon:
+		return 0.0
+	
+	# Check if weapon is reloading
+	var time_left = current_weapon._reload_timer.time_left
+	if time_left > 0:
+		return time_left
+	
+	# For weapons with custom reload systems (like revolver with bullet-by-bullet)
+	if current_weapon.has_method("is_weapon_reloading") and current_weapon.is_weapon_reloading():
+		# Try to get remaining time from weapon's custom method
+		if current_weapon.has_method("get_remaining_reload_time"):
+			return current_weapon.get_remaining_reload_time()
+		# Fallback: check reload timer again
+		return max(0.0, current_weapon._reload_timer.time_left)
+	
+	return 0.0
+
+func _update_reload_timer_display() -> void:
+	"""Update the reload timer label with countdown"""
+	if not _reload_timer_label:
+		return
+	
+	var remaining_time = get_remaining_reload_time()
+	
+	if remaining_time > 0:
+		# Format to 1 decimal place, countdown
+		_reload_timer_label.text = "%.1f" % remaining_time
+		_reload_timer_label.visible = true
+	else:
+		_reload_timer_label.visible = false
+		_reload_timer_label.text = "0.0"
+
 # --- Override parent methods to add networking ---
+
+func _reload_current_weapon() -> void:
+	super._reload_current_weapon()
+	_update_reload_timer_display()
+
+func _connect_weapon_signals() -> void:
+	super._connect_weapon_signals()
+	if not current_weapon:
+		return
+	
+	# Connect to reload_started signal if available
+	if current_weapon.has_signal("reload_started"):
+		if not current_weapon.reload_started.is_connected(_on_weapon_reload_started):
+			current_weapon.reload_started.connect(_on_weapon_reload_started)
+
+func _on_weapon_reload_started() -> void:
+	_update_reload_timer_display()
+
+func _on_weapon_reloaded() -> void:
+	# Call parent implementation
+	super._on_weapon_reloaded()
+	# Update reload timer display
+	_update_reload_timer_display()
 
 func _switch_weapon(weapon_index: int) -> void:
 	super._switch_weapon(weapon_index)
 	last_weapon_index = weapon_index
+	_update_reload_timer_display()
  
 @rpc("any_peer", "call_remote", "unreliable")
 func spawn_weapon_projectile(origin: Vector3, direction: Vector3, projectile_path: String, owner_peer_id: int = -1) -> void:

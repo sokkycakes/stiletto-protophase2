@@ -1,4 +1,4 @@
-[gd_scene load_steps=79 format=4 uid="uid://dkceuetagrsdr"]
+[gd_scene load_steps=81 format=4 uid="uid://dkceuetagrsdr"]
 
 [ext_resource type="Script" uid="uid://b8548jsvjq2xi" path="res://addons/GoldGdt/src/GoldGdt_Pawn.gd" id="1_r0jho"]
 [ext_resource type="Texture2D" uid="uid://pttrbdbpfhei" path="res://assets/ui/huddeco-quickinfo.png" id="2_c7pb2"]
@@ -12,6 +12,7 @@
 [ext_resource type="Script" uid="uid://bjckdo3hpcpnp" path="res://resource/scripts/player/crosshair_accuracy.gd" id="10_bqgxa"]
 [ext_resource type="PackedScene" uid="uid://upoffslexyvo" path="res://scenes/ui/hp.tscn" id="11_o2x33"]
 [ext_resource type="Texture2D" uid="uid://db4ev8cd668xc" path="res://assets/ui/dashring.png" id="12_4krh6"]
+[ext_resource type="FontFile" uid="uid://tuitm4lc211o" path="res://assets/ui/IosevkaStiletto-Condensed.ttf" id="12_c7pb2"]
 [ext_resource type="Texture2D" uid="uid://cavblxs3242pk" path="res://assets/ui/huddeco-ring.png" id="13_0shrp"]
 [ext_resource type="Texture2D" uid="uid://ejhifqj5u008" path="res://assets/ui/huddeco-ring2.png" id="14_vonu7"]
 [ext_resource type="Texture2D" uid="uid://b6b431skkevau" path="res://assets/ui/huddeco-bcenter.png" id="15_j2c4b"]
@@ -67,6 +68,11 @@ font = SubResource("SystemFont_afy4n")
 font = ExtResource("5_8uc0i")
 outline_size = 8
 outline_color = Color(0.539063, 0.539063, 0.539063, 1)
+
+[sub_resource type="LabelSettings" id="LabelSettings_ovxla"]
+font = ExtResource("12_c7pb2")
+outline_size = 9
+outline_color = Color(0.171875, 0.171875, 0.171875, 1)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_tinvq"]
 bg_color = Color(0, 0, 0, 1)
@@ -1378,6 +1384,15 @@ offset_bottom = -1.513
 scale = Vector2(0.93, 0.93)
 pivot_offset = Vector2(16.925, 18.65)
 
+[node name="reloadTimer" type="Label" parent="HUD/Control/Center"]
+layout_mode = 0
+offset_left = 61.0
+offset_top = 40.0
+offset_right = 101.0
+offset_bottom = 63.0
+text = "0.0"
+label_settings = SubResource("LabelSettings_ovxla")
+
 [node name="huddeco-dashring" type="TextureRect" parent="HUD/Control"]
 visible = false
 modulate = Color(0.339844, 0.339844, 0.339844, 0.603922)
@@ -1679,7 +1694,6 @@ Parameters = ExtResource("21_wbys6")
 Body = NodePath("../Body")
 
 [node name="Body" type="CharacterBody3D" parent="." node_paths=PackedStringArray("View", "collision_hull", "duck_timer")]
-visible = false
 collision_layer = 2
 collision_mask = 5
 floor_constant_speed = true
@@ -2130,7 +2144,7 @@ bones/54/scale = Vector3(1, 1, 1)
 
 [node name="SokkyComm" type="MeshInstance3D" parent="Body/PlayerModel/Rig_SokkyComm/Skeleton3D"]
 transform = Transform3D(1.14567, 0, 0, 0, 1.14567, 0, 0, 0, 1.14567, 0, 0, 0)
-layers = 2
+layers = 32
 mesh = SubResource("ArrayMesh_hwnqk")
 skin = SubResource("Skin_4wdfr")
 surface_material_override/0 = ExtResource("36_tmhdc")
@@ -2142,7 +2156,7 @@ libraries = {
 
 [node name="compass" parent="Body" instance=ExtResource("38_fe2pp")]
 transform = Transform3D(-3.95636e-15, 7.54979e-08, 1, -1, -4.37114e-08, -6.56243e-16, 4.37114e-08, -1, 7.54979e-08, -0.000407696, 0.90691, 0.0113742)
-layers = 2
+layers = 32
 skeleton = NodePath("../../Interpolated Camera/Arm/Arm Anchor/Camera")
 
 [node name="Interpolated Camera" type="Node3D" parent="." node_paths=PackedStringArray("target", "camera_arm", "camera_anchor", "camera")]
@@ -2164,7 +2178,7 @@ editor_description = "
 
 [node name="Camera" type="Camera3D" parent="Interpolated Camera/Arm/Arm Anchor"]
 transform = Transform3D(1.0014, 0, 0, 0, 1.0014, 0, 0, 0, 1.0014, -0.000407696, -0.0071907, 0.0215712)
-cull_mask = 4294967295
+cull_mask = 4294967263
 near = 0.001
 script = ExtResource("40_knaw2")
 
@@ -2176,10 +2190,26 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.249081, -0.0265188, -0.7471
 [node name="WeaponManager" type="Node3D" parent="Interpolated Camera/Arm/Arm Anchor/Camera" node_paths=PackedStringArray("camera")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.175713, -0.0987661, -0.538904)
 script = ExtResource("41_2g3dw")
+reload_timer_label_path = NodePath("../../../../../HUD/Control/Center/reloadTimer")
 camera = NodePath("..")
 ammo_indicator_path = NodePath("../../../../../HUD/Control/Center/AmmoIndicator")
 
 [node name="revolver_projectile" parent="Interpolated Camera/Arm/Arm Anchor/Camera/WeaponManager" instance=ExtResource("42_mjux2")]
+projectile_speed = null
+projectile_damage = null
+reload_start_time = null
+reload_bullet_time = null
+reload_end_time = null
+auto_reload_enabled = null
+clip_size = null
+ammo_in_clip = null
+fire_rate = null
+reload_time = null
+maximum_distance = null
+spread_degrees = null
+audio_bus = null
+bullet_decal_size = null
+bullet_decal_lifetime = null
 
 [node name="muzzle" parent="Interpolated Camera/Arm/Arm Anchor/Camera/WeaponManager/revolver_projectile" index="0"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0854853, 0.0601114, -0.179187)
@@ -2212,11 +2242,18 @@ visible = false
 transform = Transform3D(0.707107, 0, -0.707107, 0, 1, 0, 0.707107, 0, 0.707107, 0, 0, 0)
 script = ExtResource("53_hook_melee")
 attack_damage = 2.0
+attack_range = null
+attack_arc_degrees = null
+attack_duration = null
 attack_cooldown = 0.6
+can_parry_projectiles = null
+parry_reflect_speed_multiplier = null
 hook_mesh_path = NodePath("stinger_melee_mesh")
 hook_rotation_speed = 0.6
+sweep_direction = null
 swing_sound = ExtResource("44_p545h")
 hit_sound = ExtResource("45_1qv0p")
+audio_bus = null
 
 [node name="AttackHitbox" type="Area3D" parent="Interpolated Camera/Arm/Arm Anchor/Camera/HookMeleeAttack"]
 collision_layer = 0

@@ -44,7 +44,7 @@ var _parry_component: ParryComponent = null
 @export var max_throw_knives: int = 3  # Maximum number of knives that can be thrown
 @export var knife_recharge_time: float = 5.0  # Time to recharge one knife
 @export var throw_sound: AudioStream  # Sound when throwing knife
-@export var alt_fire_action: String = "bigshot"  # Input action for alt fire
+@export var alt_fire_action: String = "altfire"  # Input action for alt fire
 @export var debug_logging: bool = false
 
 # Internal boost state

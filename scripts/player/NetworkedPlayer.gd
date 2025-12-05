@@ -137,16 +137,24 @@ func _spawn_pawn() -> void:
 		last_view_yaw = pawn_horizontal_view.rotation.y if pawn_horizontal_view else 0.0
 		last_view_pitch = pawn_vertical_view.rotation.x if pawn_vertical_view else 0.0
 		
+		# Configure visibility based on whether this is the LOCAL player (not authority)
+		# The host has authority over all players, but only the local player should hide their own model
+		if is_local_player():
+			# Local player: move our own world model to a local-only layer and configure camera
+			_configure_local_player_model_visibility()
+			_configure_local_camera_visibility()
+		else:
+			# Remote player: ensure model is on the visible world layer
+			_configure_remote_player_model_visibility()
+		
 		# Disable input for non-authority players
 		if not _has_local_authority():
 			_disable_pawn_input()
 			_disable_pawn_hud()
 		else:
-			# Local player: enable input/HUD and move our own world model to a local-only layer.
-			_configure_local_player_model_visibility()
+			# Authority player: enable input/HUD
 			_enable_pawn_input()
 			_enable_pawn_hud()
-			_configure_local_camera_visibility()
 		
 		# Set up weapon manager
 		_setup_weapon_manager()
@@ -206,6 +214,22 @@ func _configure_local_player_model_visibility() -> void:
 	# Also hide the compass (if it exists)
 	_configure_compass_visibility()
 
+func _configure_remote_player_model_visibility() -> void:
+	"""Ensure remote player models are on the visible world layer so they can be seen by all players."""
+	var model_root := _get_player_model_root()
+	if not model_root:
+		print("[NetworkedPlayer] WARNING: Could not find player model root for remote player: ", player_name)
+		return
+	
+	print("[NetworkedPlayer] Configuring remote player model visibility for: ", player_name, " (peer_id: ", peer_id, ")")
+	print("[NetworkedPlayer] Setting model to PLAYER_WORLD_MODEL_LAYER (layer 2, bitmask: ", PLAYER_WORLD_MODEL_LAYER, ")")
+	
+	# Explicitly set remote player models to the shared world layer so they're visible to everyone
+	for child in model_root.get_children():
+		_set_mesh_layer_recursive(child, PLAYER_WORLD_MODEL_LAYER)
+	
+	print("[NetworkedPlayer] Remote player model configured for: ", player_name)
+
 func _set_mesh_layer_recursive(node: Node, layer_mask: int) -> void:
 	if node is MeshInstance3D:
 		(node as MeshInstance3D).layers = layer_mask
@@ -239,6 +263,13 @@ func _configure_local_camera_visibility() -> void:
 	# Hide ONLY the local-only layer for this camera; remote players remain visible
 	# on the shared PLAYER_WORLD_MODEL_LAYER.
 	pawn_camera.cull_mask &= ~LOCAL_OWN_MODEL_LAYER
+	
+	# Explicitly ensure PLAYER_WORLD_MODEL_LAYER is visible (should already be, but be explicit)
+	pawn_camera.cull_mask |= PLAYER_WORLD_MODEL_LAYER
+	
+	print("[NetworkedPlayer] Camera cull mask configured for local player: ", pawn_camera.cull_mask)
+	print("[NetworkedPlayer] PLAYER_WORLD_MODEL_LAYER (", PLAYER_WORLD_MODEL_LAYER, ") is ", "VISIBLE" if (pawn_camera.cull_mask & PLAYER_WORLD_MODEL_LAYER) != 0 else "HIDDEN")
+	print("[NetworkedPlayer] LOCAL_OWN_MODEL_LAYER (", LOCAL_OWN_MODEL_LAYER, ") is ", "VISIBLE" if (pawn_camera.cull_mask & LOCAL_OWN_MODEL_LAYER) != 0 else "HIDDEN")
 
 func _disable_pawn_input() -> void:
 	if not pawn:

@@ -8,7 +8,7 @@
 [ext_resource type="Texture2D" uid="uid://bjcq8axgqat8g" path="res://materials/dev/texture_08.vtf" id="6_2wxny"]
 [ext_resource type="PackedScene" uid="uid://c3owyv3c2oaku" path="res://resource/entities/enemy_spawner.tscn" id="7_r4d4j"]
 [ext_resource type="PackedScene" uid="uid://b2v1e0gbgvyqo" path="res://scenes/enemies/KnightV2.tscn" id="8_qno66"]
-[ext_resource type="PackedScene" uid="uid://bpk4g3n3a8iw5" path="res://resource/entities/player/ss_player_beaumont.tscn" id="9_b12ee"]
+[ext_resource type="PackedScene" uid="uid://b8c2iryckvfvy" path="res://resource/entities/player/ss_player_angel.tscn" id="9_b12ee"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_67aua"]
 albedo_texture = ExtResource("6_2wxny")
@@ -98,5 +98,4 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -14.679, 0)
 transform = Transform3D(0.164406, 0, 0, 0, 0.164406, 0, 0, 0, 0.164406, 0, -10.3462, -22.1767)
 enemy_scene = ExtResource("8_qno66")
 
-[node name="ss_player_beaumont" parent="." instance=ExtResource("9_b12ee")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -12.6363, 0)
+[node name="ss_player_angel" parent="." instance=ExtResource("9_b12ee")]

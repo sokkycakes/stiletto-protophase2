@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="GameModeDefinition" load_steps=8 format=3 uid="uid://duelmodedef"]
+[gd_resource type="Resource" script_class="GameModeDefinition" load_steps=9 format=3 uid="uid://duelmodedef"]
 
 [ext_resource type="Script" uid="uid://c0tmvgbom2o05" path="res://scripts/core/GameModeDefinition.gd" id="1_gamemode"]
 [ext_resource type="PackedScene" uid="uid://duelmodetscn" path="res://scenes/gamemodes/duel_mode_logic.tscn" id="2_logic"]
@@ -30,6 +30,14 @@ scene_path = "res://resource/entities/player/ss_player_vagrant.tscn"
 description = ""
 is_unlocked = true
 
+[sub_resource type="Resource" id="angel_char"]
+script = ExtResource("4_chardef")
+id = "angel"
+display_name = "Angel"
+scene_path = "res://resource/entities/player/ss_player_angel.tscn"
+description = ""
+is_unlocked = true
+
 [resource]
 script = ExtResource("1_gamemode")
 display_name = "Duel"
@@ -41,4 +49,4 @@ default_time_limit_minutes = 3.0
 default_score_limit = 5
 logic_scene = ExtResource("2_logic")
 character_select_ui_scene = ExtResource("3_charselect")
-available_characters = Array[ExtResource("4_chardef")]([SubResource("collier_char"), SubResource("Resource_038gu"), SubResource("vagrant_char")])
+available_characters = Array[ExtResource("4_chardef")]([SubResource("collier_char"), SubResource("Resource_038gu"), SubResource("vagrant_char"), SubResource("angel_char")])

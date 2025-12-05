@@ -27,7 +27,8 @@ class_name JetsModule
 var player: CharacterBody3D
 var move_module: Node  # GoldGdt_Move module
 var controls_module: Node  # GoldGdt_Controls module
-var audio_player: AudioStreamPlayer
+var audio_player: AudioStreamPlayer  # 2D sound for local player
+var audio_player_3d: AudioStreamPlayer3D  # 3D sound for other players
 
 # State tracking
 var jets_active: bool = false
@@ -54,16 +55,43 @@ func _ready():
 		push_error("JetsModule: Could not find player Body node!")
 		return
 	
-	# Setup audio player
+	# Setup 2D audio player (for local player)
 	audio_player = AudioStreamPlayer.new()
 	audio_player.bus = audio_bus
 	audio_player.volume_db = jets_sound_min_volume_db
 	add_child(audio_player)
 	
+	# Setup 3D audio player (for other players) - attach to player body
+	if player:
+		audio_player_3d = AudioStreamPlayer3D.new()
+		audio_player_3d.bus = audio_bus
+		audio_player_3d.volume_db = jets_sound_max_volume_db
+		audio_player_3d.max_distance = 50.0
+		audio_player_3d.attenuation_model = AudioStreamPlayer3D.ATTENUATION_INVERSE_DISTANCE
+		player.add_child(audio_player_3d)
+	
 	# Find movement modules
 	_find_movement_modules()
 	
 	print("JetsModule: Initialized for ", get_parent().name)
+
+func _is_local_player() -> bool:
+	"""Check if this module belongs to the local player"""
+	var networked_player = _find_networked_player()
+	if networked_player:
+		return networked_player.is_local_player()
+	return false
+
+func _find_networked_player() -> Node:
+	"""Find the NetworkedPlayer parent node"""
+	var node: Node = self
+	while node:
+		# Check if this is a NetworkedPlayer by checking for the is_local_player method
+		# NetworkedPlayer is the only class that has this method in the player hierarchy
+		if node.has_method("is_local_player") and node.has_method("get_pawn"):
+			return node
+		node = node.get_parent()
+	return null
 
 func _find_movement_modules():
 	# Find GoldGdt_Move module
@@ -103,6 +131,9 @@ func _process(delta: float):
 	if not player:
 		return
 	
+	# Only process input and update state for local player
+	var is_local = _is_local_player()
+	
 	# Track ground state to prevent ground activation
 	var is_currently_on_floor = player.is_on_floor()
 	
@@ -124,8 +155,8 @@ func _process(delta: float):
 		time_since_left_ground += delta
 		was_on_floor_previous_frame = false
 	
-	# Update jets timer if active
-	if jets_active:
+	# Update jets timer if active (only for local player)
+	if jets_active and is_local:
 		jets_timer -= delta
 		if jets_timer <= 0.0:
 			deactivate_jets()
@@ -136,8 +167,8 @@ func _process(delta: float):
 			# Update jet sound volume based on speed
 			_update_jet_sound_volume()
 	
-	# Update cooldown timer
-	if is_on_cooldown:
+	# Update cooldown timer (only for local player)
+	if is_on_cooldown and is_local:
 		cooldown_timer -= delta
 		if cooldown_timer <= 0.0:
 			is_on_cooldown = false
@@ -145,8 +176,8 @@ func _process(delta: float):
 			jets_cooldown_ended.emit()
 			print("JetsModule: Cooldown ended")
 	
-	# Check for activation input
-	if Input.is_action_just_pressed(jets_activation_action):
+	# Check for activation input (only for local player)
+	if is_local and Input.is_action_just_pressed(jets_activation_action):
 		# Can only activate while truly in midair (like double jump)
 		if _is_truly_in_midair() and not is_on_cooldown and not jets_active:
 			activate_jets()
@@ -158,8 +189,8 @@ func _physics_process(delta: float):
 	if not player:
 		return
 	
-	# Only apply jets movement if active
-	if jets_active and not player.is_on_floor():
+	# Only apply jets movement if active and this is the local player
+	if jets_active and _is_local_player() and not player.is_on_floor():
 		# Override normal air movement with jets movement
 		# We apply jets movement which effectively replaces normal air acceleration
 		# by applying stronger acceleration in the desired direction
@@ -185,9 +216,18 @@ func activate_jets():
 	
 	# Play looping sound
 	if jets_sound:
-		audio_player.stream = jets_sound
-		audio_player.volume_db = jets_sound_min_volume_db
-		audio_player.play()
+		# Local player: play 2D sound (always audible for the player who triggered it)
+		if _is_local_player() and audio_player:
+			audio_player.stream = jets_sound
+			audio_player.volume_db = jets_sound_min_volume_db
+			audio_player.play()
+		
+		# All players: play 3D positional sound (follows player, heard by everyone)
+		# This plays for the player who owns this module, so others can hear it
+		if audio_player_3d:
+			audio_player_3d.stream = jets_sound
+			audio_player_3d.volume_db = jets_sound_max_volume_db
+			audio_player_3d.play()
 	
 	jets_activated.emit()
 	print("JetsModule: Jets activated for ", jets_duration, " seconds")
@@ -199,9 +239,11 @@ func deactivate_jets():
 	jets_active = false
 	jets_timer = 0.0
 	
-	# Stop sound
+	# Stop sounds
 	if audio_player:
 		audio_player.stop()
+	if audio_player_3d:
+		audio_player_3d.stop()
 	
 	jets_deactivated.emit()
 	print("JetsModule: Jets deactivated")
@@ -229,7 +271,7 @@ func get_cooldown_time_remaining() -> float:
 	return max(0.0, cooldown_timer)
 
 func _update_jet_sound_volume():
-	if not audio_player or not jets_sound:
+	if not jets_sound:
 		return
 	
 	if not player:
@@ -260,8 +302,14 @@ func _update_jet_sound_volume():
 	# Clamp to ensure we don't go below minimum
 	target_volume = max(jets_sound_min_volume_db, target_volume)
 	
-	# Update volume
-	audio_player.volume_db = target_volume
+	# Update volume for local player (2D sound)
+	if _is_local_player() and audio_player:
+		audio_player.volume_db = target_volume
+	
+	# Update volume for 3D sound (all players hear this)
+	if audio_player_3d:
+		# For 3D sound, use max volume as base (distance attenuation handles the rest)
+		audio_player_3d.volume_db = jets_sound_max_volume_db + (target_volume - jets_sound_min_volume_db)
 
 func _is_truly_in_midair() -> bool:
 	# Multiple checks to ensure player is truly in midair, not on ground

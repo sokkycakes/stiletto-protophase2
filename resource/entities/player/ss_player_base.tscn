@@ -1,4 +1,4 @@
-[gd_scene load_steps=58 format=4 uid="uid://bqy4bixjl3qf6"]
+[gd_scene load_steps=60 format=4 uid="uid://bqy4bixjl3qf6"]
 
 [ext_resource type="Script" uid="uid://b8548jsvjq2xi" path="res://addons/GoldGdt/src/GoldGdt_Pawn.gd" id="1_dkgp6"]
 [ext_resource type="Texture2D" uid="uid://pttrbdbpfhei" path="res://assets/ui/huddeco-quickinfo.png" id="2_aakih"]
@@ -10,6 +10,7 @@
 [ext_resource type="Script" uid="uid://hdhqo1agrmi2" path="res://addons/grappling_hook_3d/src/charge_indicatorv2.gd" id="8_pevyk"]
 [ext_resource type="Script" uid="uid://bin6n1tblnjm4" path="res://resource/scripts/player/ammo_indicator_v2.gd" id="9_wd3it"]
 [ext_resource type="Script" uid="uid://bjckdo3hpcpnp" path="res://resource/scripts/player/crosshair_accuracy.gd" id="10_ryxqd"]
+[ext_resource type="FontFile" uid="uid://tuitm4lc211o" path="res://assets/ui/IosevkaStiletto-Condensed.ttf" id="11_aakih"]
 [ext_resource type="Texture2D" uid="uid://db4ev8cd668xc" path="res://assets/ui/dashring.png" id="11_lfqxj"]
 [ext_resource type="Texture2D" uid="uid://cavblxs3242pk" path="res://assets/ui/huddeco-ring.png" id="12_5mst3"]
 [ext_resource type="Texture2D" uid="uid://ejhifqj5u008" path="res://assets/ui/huddeco-ring2.png" id="13_xoes3"]
@@ -51,6 +52,11 @@
 
 [sub_resource type="LabelSettings" id="LabelSettings_bskcs"]
 font = ExtResource("5_7xxr1")
+
+[sub_resource type="LabelSettings" id="LabelSettings_6d3rl"]
+font = ExtResource("11_aakih")
+outline_size = 9
+outline_color = Color(0.171875, 0.171875, 0.171875, 1)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_j7pn1"]
 size = Vector3(0.813, 1.829, 0.813)
@@ -1192,6 +1198,15 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("10_ryxqd")
 
+[node name="reloadTimer" type="Label" parent="HUD/Control/Center"]
+layout_mode = 0
+offset_left = 61.0
+offset_top = 40.0
+offset_right = 101.0
+offset_bottom = 63.0
+text = "0.0"
+label_settings = SubResource("LabelSettings_6d3rl")
+
 [node name="Control" type="TextureRect" parent="HUD/Control"]
 visible = false
 modulate = Color(0.339844, 0.339844, 0.339844, 0.603922)
@@ -1897,7 +1912,7 @@ bones/54/rotation = Quaternion(-0.106199, 0.515137, 0.850401, 0.0132127)
 bones/54/scale = Vector3(1, 1, 1)
 
 [node name="SokkyComm" type="MeshInstance3D" parent="Body/PlayerModel/Rig_SokkyComm/Skeleton3D"]
-layers = 2
+layers = 32
 mesh = SubResource("ArrayMesh_hwnqk")
 skin = SubResource("Skin_4wdfr")
 surface_material_override/0 = ExtResource("36_pfhaa")
@@ -1909,7 +1924,7 @@ libraries = {
 
 [node name="compass" parent="Body" instance=ExtResource("37_ww0s7")]
 transform = Transform3D(-3.95636e-15, 7.54979e-08, 1, -1, -4.37114e-08, -6.56243e-16, 4.37114e-08, -1, 7.54979e-08, -0.000407696, 0.90691, 0.0113742)
-layers = 2
+layers = 32
 skeleton = NodePath("../../Interpolated Camera/Arm/Arm Anchor/Camera")
 
 [node name="Interpolated Camera" type="Node3D" parent="." node_paths=PackedStringArray("target", "camera_arm", "camera_anchor", "camera")]
@@ -1931,7 +1946,7 @@ editor_description = "
 
 [node name="Camera" type="Camera3D" parent="Interpolated Camera/Arm/Arm Anchor"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.000407696, -0.0071907, 0.0215712)
-cull_mask = 4294967295
+cull_mask = 4294967263
 near = 0.001
 script = ExtResource("39_d546i")
 
@@ -1942,6 +1957,7 @@ script = ExtResource("39_d546i")
 [node name="WeaponManager" type="Node3D" parent="Interpolated Camera/Arm/Arm Anchor/Camera" node_paths=PackedStringArray("camera")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.175713, -0.0987661, -0.538904)
 script = ExtResource("40_6f0r4")
+reload_timer_label_path = NodePath("../../../../../HUD/Control/Center/reloadTimer")
 camera = NodePath("..")
 ammo_indicator_path = NodePath("../../../../../HUD/Control/Center/AmmoIndicator")
 

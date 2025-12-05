@@ -1,4 +1,4 @@
-[gd_scene load_steps=79 format=4 uid="uid://bpk4g3n3a8iw5"]
+[gd_scene load_steps=81 format=4 uid="uid://bpk4g3n3a8iw5"]
 
 [ext_resource type="Script" uid="uid://b8548jsvjq2xi" path="res://addons/GoldGdt/src/GoldGdt_Pawn.gd" id="1_2v30e"]
 [ext_resource type="Texture2D" uid="uid://pttrbdbpfhei" path="res://assets/ui/huddeco-quickinfo.png" id="2_3yx81"]
@@ -11,6 +11,7 @@
 [ext_resource type="Script" uid="uid://bin6n1tblnjm4" path="res://resource/scripts/player/ammo_indicator_v2.gd" id="9_xttcp"]
 [ext_resource type="Script" uid="uid://bjckdo3hpcpnp" path="res://resource/scripts/player/crosshair_accuracy.gd" id="10_lud54"]
 [ext_resource type="PackedScene" uid="uid://upoffslexyvo" path="res://scenes/ui/hp.tscn" id="11_7i4pd"]
+[ext_resource type="FontFile" uid="uid://tuitm4lc211o" path="res://assets/ui/IosevkaStiletto-Condensed.ttf" id="12_3yx81"]
 [ext_resource type="Texture2D" uid="uid://db4ev8cd668xc" path="res://assets/ui/dashring.png" id="12_55cpb"]
 [ext_resource type="Texture2D" uid="uid://cavblxs3242pk" path="res://assets/ui/huddeco-ring.png" id="13_fk7cy"]
 [ext_resource type="Texture2D" uid="uid://ejhifqj5u008" path="res://assets/ui/huddeco-ring2.png" id="14_si6cd"]
@@ -68,6 +69,11 @@ font = SubResource("SystemFont_afy4n")
 font = ExtResource("5_kjewg")
 outline_size = 8
 outline_color = Color(0.539063, 0.539063, 0.539063, 1)
+
+[sub_resource type="LabelSettings" id="LabelSettings_q7tov"]
+font = ExtResource("12_3yx81")
+outline_size = 9
+outline_color = Color(0.171875, 0.171875, 0.171875, 1)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_tinvq"]
 bg_color = Color(0, 0, 0, 1)
@@ -1378,6 +1384,15 @@ offset_bottom = -1.513
 scale = Vector2(0.93, 0.93)
 pivot_offset = Vector2(16.925, 18.65)
 
+[node name="reloadTimer" type="Label" parent="HUD/Control/Center"]
+layout_mode = 0
+offset_left = 61.0
+offset_top = 40.0
+offset_right = 101.0
+offset_bottom = 63.0
+text = "0.0"
+label_settings = SubResource("LabelSettings_q7tov")
+
 [node name="huddeco-dashring" type="TextureRect" parent="HUD/Control"]
 visible = false
 modulate = Color(0.339844, 0.339844, 0.339844, 0.603922)
@@ -2175,20 +2190,35 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.249081, -0.0265188, -0.7471
 [node name="WeaponManager" type="Node3D" parent="Interpolated Camera/Arm/Arm Anchor/Camera" node_paths=PackedStringArray("camera")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.175713, -0.0987661, -0.538904)
 script = ExtResource("40_rdfmp")
+reload_timer_label_path = NodePath("../../../../../HUD/Control/Center/reloadTimer")
 camera = NodePath("..")
 ammo_indicator_path = NodePath("../../../../../HUD/Control/Center/AmmoIndicator")
 
 [node name="revolver_projectile" type="Node3D" parent="Interpolated Camera/Arm/Arm Anchor/Camera/WeaponManager"]
 script = ExtResource("41_ysxur")
 projectile_scene = ExtResource("42_ypu2d")
+projectile_speed = null
+projectile_damage = null
 fire_sound = ExtResource("43_fexma")
+reload_start_time = null
 reload_bullet_time = 0.2
+reload_end_time = null
 auto_reload_delay = 0.35
+auto_reload_enabled = null
+clip_size = null
+ammo_in_clip = null
+fire_rate = null
+reload_time = null
 bullet_damage = 25
+maximum_distance = null
+spread_degrees = null
 muzzle_flash_scene = ExtResource("44_xttcp")
 impact_effect_scene = ExtResource("45_lud54")
 muzzle_path = NodePath("muzzle")
+audio_bus = null
 bullet_decal_texture = ExtResource("46_7i4pd")
+bullet_decal_size = null
+bullet_decal_lifetime = null
 
 [node name="muzzle" type="Marker3D" parent="Interpolated Camera/Arm/Arm Anchor/Camera/WeaponManager/revolver_projectile"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0854853, 0.0601114, -0.179187)
@@ -2232,8 +2262,12 @@ audio_bus = "sfx"
 
 [node name="BulletJump" type="Node3D" parent="."]
 script = ExtResource("57_bulletjump")
+enabled = null
+bullet_cost = null
 jump_force = 18.0
+cooldown_time = null
 bullet_jump_sound = ExtResource("53_2v30e")
+audio_bus = null
 
 [node name="Dashring" type="Sprite2D" parent="."]
 position = Vector2(401, 314)

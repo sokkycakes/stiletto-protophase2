@@ -1,14 +1,17 @@
-[gd_scene load_steps=5 format=3 uid="uid://dbewby5ehfcm2"]
+[gd_scene load_steps=7 format=3 uid="uid://dbewby5ehfcm2"]
 
 [ext_resource type="Script" uid="uid://dcgmehu2jb5bo" path="res://resource/scripts/weapons/angel_sniper.gd" id="1_script"]
 [ext_resource type="PackedScene" uid="uid://dwj32j2s2rfaa" path="res://resource/entities/player/angel_flechette.tscn" id="2_flechette"]
 [ext_resource type="ArrayMesh" uid="uid://bxxrbo0srt2x8" path="res://assets/player/model/ss_player_angel/angel_rifle.res" id="3_c872p"]
+[ext_resource type="AudioStream" uid="uid://o8rj0fhdt1dn" path="res://assets/snd/weapon/angel_rifle/angel_rifle_gunshot.ogg" id="3_xhfof"]
 [ext_resource type="PackedScene" uid="uid://p262qaitjp3" path="res://scenes/effects/bullet_impact.tscn" id="3_yj2ei"]
+[ext_resource type="AudioStream" uid="uid://dve6ouv5l6fre" path="res://assets/snd/weapon/angel_rifle/angel_airblast.ogg" id="4_5m1y6"]
 
 [node name="AngelSniper" type="Node3D"]
 script = ExtResource("1_script")
 flechette_scene = ExtResource("2_flechette")
-airblast_cooldown = 1.5
+fire_sound = ExtResource("3_xhfof")
+airblast_sound = ExtResource("4_5m1y6")
 airblast_ammo_cost = 3
 clip_size = 3
 ammo_in_clip = 3

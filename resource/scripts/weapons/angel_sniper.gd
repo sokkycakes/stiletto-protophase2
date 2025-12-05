@@ -47,6 +47,70 @@ func shoot():
 		_play_sound(fire_sound)
 	
 	spawn_flechette()
+	
+	# Auto-reload when magazine is empty
+	if ammo_in_clip <= 0:
+		_auto_reload()
+
+func start_reload() -> void:
+	# Ignore manual reload - Angel's rifle auto-reloads only
+	pass
+
+func _auto_reload() -> void:
+	# Auto-reload when magazine is empty
+	if ammo_in_clip == clip_size or _reload_timer.time_left > 0:
+		return
+	_can_fire = false
+	_reload_timer.start(reload_time)
+	emit_signal("reload_started")
+
+func _quick_reload_single() -> void:
+	# Quick reload for single bullet (0.8 seconds)
+	if ammo_in_clip >= clip_size or _reload_timer.time_left > 0:
+		return
+	_can_fire = false
+	_reload_timer.start(0.8)  # Quick reload time
+	emit_signal("reload_started")
+
+func _quick_reload_full() -> void:
+	# Quick full reload (0.8 seconds) - fills entire magazine
+	if ammo_in_clip == clip_size or _reload_timer.time_left > 0:
+		return
+	_can_fire = false
+	_reload_timer.start(0.8)  # Quick reload time
+	emit_signal("reload_started")
+
+func return_flechette_ammo() -> void:
+	# Return 1 ammo to the magazine when destroying own flechette
+	if ammo_in_clip < clip_size:
+		ammo_in_clip += 1
+		emit_signal("ammo_changed", ammo_in_clip, clip_size)
+		
+		# Trigger quick reload if not already reloading
+		if _reload_timer.time_left <= 0:
+			_quick_reload_single()
+
+func _on_reload_timeout() -> void:
+	# Check if this was a quick reload (0.8 seconds) or full reload
+	var was_quick_reload = abs(_reload_timer.wait_time - 0.8) < 0.01
+	
+	if was_quick_reload:
+		# Quick reload - could be single bullet (ammo already added) or full reload
+		# Check if we're already at max from single bullet return, otherwise fill to max
+		if ammo_in_clip < clip_size:
+			# Quick full reload - fill to max
+			ammo_in_clip = clip_size
+		else:
+			# Single bullet quick reload - ammo was already added in return_flechette_ammo()
+			# Just ensure we're at max if we somehow exceeded it
+			ammo_in_clip = min(ammo_in_clip, clip_size)
+	else:
+		# Normal full reload - fill to max
+		ammo_in_clip = clip_size
+	
+	_can_fire = true
+	emit_signal("ammo_changed", ammo_in_clip, clip_size)
+	emit_signal("reload_finished")
 
 func spawn_flechette():
 	if not flechette_scene:
@@ -116,19 +180,31 @@ func register_flechette(f: AngelFlechette, fid: int):
 			# Find ID of old
 			var old_id = networked_flechettes.find_key(old)
 			if old_id != null:
-				destroy_flechette_networked(old_id)
+				# Auto-destroy old flechette to make room - no ammo return
+				destroy_flechette_networked(old_id, false, false)  # is_detonation=false, allow_ammo_return=false
 			else:
 				old.destroy()
 			
 	active_flechettes.append(f)
 
-func destroy_flechette_networked(fid: int):
+func destroy_flechette_networked(fid: int, is_detonation: bool = false, allow_ammo_return: bool = true):
 	if networked_flechettes.has(fid):
 		var f = networked_flechettes[fid]
 		if is_instance_valid(f):
-			f.destroy()
+			# Check if this is the owner's flechette (for ammo return)
+			var is_owner_flechette = false
+			if not is_detonation and allow_ammo_return:
+				var owner_id = f.owner_peer_id
+				if multiplayer.has_multiplayer_peer():
+					is_owner_flechette = (owner_id == multiplayer.get_unique_id())
+			
+			f.destroy(not is_detonation)  # Play sound only if not detonation
+			
+			# Return ammo to magazine if destroying own flechette manually (not detonating, and ammo return allowed)
+			if is_owner_flechette and not is_detonation and allow_ammo_return:
+				return_flechette_ammo()
 	
-	client_destroy_flechette.rpc(fid)
+	client_destroy_flechette.rpc(fid, is_detonation)
 
 @rpc("authority", "call_remote", "reliable")
 func client_destroy_flechette(fid: int, is_detonation: bool = false):
@@ -183,8 +259,12 @@ func check_reload_interaction() -> bool:
 			# (2 connected can be removed individually, only 3 connected fence area triggers detonation)
 			var fid = networked_flechettes.find_key(flechette)
 			if fid != null:
-				destroy_flechette_networked(fid)
+				destroy_flechette_networked(fid, false)  # false = not a detonation
 			else:
+				# Check if this is owner's flechette for ammo return
+				var owner_id = flechette.owner_peer_id
+				if multiplayer.has_multiplayer_peer() and owner_id == multiplayer.get_unique_id():
+					return_flechette_ammo()
 				flechette.destroy()
 			return true 
 
@@ -255,6 +335,10 @@ func detonate_network():
 	if not all_connected:
 		return
 	
+	# Check if all 3 flechettes belong to the owner (for quick reload)
+	var owner_id = multiplayer.get_unique_id() if multiplayer.has_multiplayer_peer() else -1
+	var all_owner_flechettes = (f1.owner_peer_id == owner_id and f2.owner_peer_id == owner_id and f3.owner_peer_id == owner_id)
+	
 	# Kill players inside the perimeter (explosion damage)
 	kill_inside_perimeter(stuck)
 	
@@ -278,6 +362,10 @@ func detonate_network():
 			client_destroy_flechette.rpc(fid, true)  # true = is_detonation
 		else:
 			f.destroy(false)
+	
+	# Trigger quick full reload if all flechettes belonged to the owner
+	if all_owner_flechettes:
+		_quick_reload_full()
 
 func kill_inside_perimeter(flechettes: Array):
 	var points = flechettes.map(func(f): return f.global_position)
@@ -324,6 +412,10 @@ func perform_airblast():
 	if airblast_ammo_cost > 0:
 		ammo_in_clip -= airblast_ammo_cost
 		emit_signal("ammo_changed", ammo_in_clip, clip_size)
+		
+		# Trigger auto-reload if magazine is empty
+		if ammo_in_clip <= 0:
+			_auto_reload()
 	
 	# Play sound
 	if airblast_sound:
@@ -458,22 +550,65 @@ func _reflect_projectile(proj: Projectile, airblast_dir: Vector3):
 	print("Airblast: Reflected projectile from owner ", old_owner_id, " to owner ", new_owner_id)
 
 func _push_player(player: Node, airblast_dir: Vector3, to_player: Vector3):
-	if not player.has_method("apply_impulse") and not player is CharacterBody3D:
-		return
-	
 	# Calculate push force (away from airblast origin, with upward component)
 	var push_dir = to_player
 	push_dir.y += 0.3  # Add upward component
 	push_dir = push_dir.normalized()
 	
-	var force = push_dir * airblast_force
+	# Calculate target velocity (like lasso hook does)
+	# This ensures the player actually moves instead of just getting a tiny velocity boost
+	var target_velocity = push_dir * airblast_force
 	
+	# Find NetworkedPlayer wrapper if this is a CharacterBody3D
+	var net_player: NetworkedPlayer = null
+	var body: CharacterBody3D = null
+	
+	if player is NetworkedPlayer:
+		net_player = player as NetworkedPlayer
+		body = net_player.pawn_body if net_player.has("pawn_body") else null
+	elif player is CharacterBody3D:
+		body = player as CharacterBody3D
+		# Find NetworkedPlayer wrapper
+		net_player = _find_networked_player(body)
+	
+	# Use NetworkedPlayer knockback RPC system for networked players
+	if net_player and body:
+		var current_vel = body.velocity
+		var impulse = target_velocity - current_vel
+		
+		var attacker_peer_id = multiplayer.get_unique_id() if multiplayer.has_multiplayer_peer() else -1
+		NetworkedPlayer.apply_knockback_to_player(net_player, impulse, attacker_peer_id)
+		print("Airblast: Pushed NetworkedPlayer ", net_player.player_name, " via RPC (impulse: ", impulse, ")")
+		return
+	
+	# Fallback for non-networked players (enemies, etc.)
 	if player is CharacterBody3D:
-		player.velocity += force * 0.016  # Approximate for 60fps
+		player.velocity = target_velocity
 	elif player.has_method("apply_impulse"):
-		player.apply_impulse(force)
+		player.apply_impulse(push_dir * airblast_force)
 	
 	print("Airblast: Pushed player ", player.name)
+
+func _find_networked_player(body: CharacterBody3D) -> NetworkedPlayer:
+	"""Find NetworkedPlayer wrapper from a CharacterBody3D (Body node)"""
+	if not body:
+		return null
+	
+	# Search up the hierarchy for NetworkedPlayer
+	var current = body
+	while current:
+		if current is NetworkedPlayer:
+			return current as NetworkedPlayer
+		# Also check if parent has a reference
+		var parent = current.get_parent()
+		if parent:
+			# Check siblings for NetworkedPlayer wrapper
+			for sibling in parent.get_children():
+				if sibling is NetworkedPlayer:
+					return sibling as NetworkedPlayer
+		current = parent
+	
+	return null
 
 func _get_owner_player() -> Node3D:
 	# Find the player that owns this weapon

@@ -1112,6 +1112,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.175713, -0.0987661, -0.5389
 script = ExtResource("41_40hfx")
 camera = NodePath("..")
 ammo_indicator_path = NodePath("../../../../../HUD/Control/Center/AmmoIndicator")
+reload_timer_label_path = NodePath("../../../../../HUD/Control/Center/reloadTimer")
 
 [node name="HookRopeStart" type="Marker3D" parent="Interpolated Camera/Arm/Arm Anchor/Camera"]
 transform = Transform3D(0.193021, 0.476234, 3.81445, -0.350946, 0.669893, -2.32394, -0.924805, -0.154815, 1.67802, -0.198825, -0.102318, -0.553146)
